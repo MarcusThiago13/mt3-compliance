@@ -9,6 +9,7 @@ import Layout from './components/Layout'
 import Tenants from './pages/Tenants'
 import Onboarding from './pages/Onboarding'
 import ClauseView from './pages/ClauseView'
+import Intelligence from './pages/Intelligence'
 
 const App = () => (
   <AppProvider>
@@ -21,6 +22,7 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/tenants" element={<Tenants />} />
             <Route path="/onboarding" element={<Onboarding />} />
+            <Route path="/intelligence" element={<Intelligence />} />
             <Route path="/clause/:id" element={<ClauseView />} />
           </Route>
           <Route path="*" element={<NotFound />} />

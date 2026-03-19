@@ -77,10 +77,18 @@ export function AppSidebar() {
                 </SidebarMenuItem>
               )}
               <SidebarMenuItem>
+                <SidebarMenuButton asChild isActive={location.pathname.startsWith('/intelligence')}>
+                  <Link to="/intelligence">
+                    <Activity />
+                    <span>Inteligência & Certificação</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
                 <SidebarMenuButton asChild>
                   <Link to="#">
                     <FileText />
-                    <span>Relatórios</span>
+                    <span>Relatórios Genéricos</span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
