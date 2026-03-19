@@ -24,6 +24,9 @@ import { RiskAssessment } from './specific/RiskAssessment'
 import { LeadershipCommitment } from './specific/LeadershipCommitment'
 import { CompliancePolicy } from './specific/CompliancePolicy'
 import { ResponsibilityMatrix } from './specific/ResponsibilityMatrix'
+import { ActionsRiskOpp61 } from './specific/ActionsRiskOpp61'
+import { ComplianceObjectives62 } from './specific/ComplianceObjectives62'
+import { ChangePlanning63 } from './specific/ChangePlanning63'
 import { TrainingLms } from './specific/TrainingLms'
 import { DocumentLibrary } from './specific/DocumentLibrary'
 import { WhistleblowingCanal } from './specific/WhistleblowingCanal'
@@ -50,6 +53,12 @@ export function UniversalClause({ clause }: { clause: IsoClause }) {
         return <CompliancePolicy />
       case '5.3':
         return <ResponsibilityMatrix />
+      case '6.1':
+        return <ActionsRiskOpp61 />
+      case '6.2':
+        return <ComplianceObjectives62 />
+      case '6.3':
+        return <ChangePlanning63 />
       case '7.2':
         return <TrainingLms />
       case '7.5':
