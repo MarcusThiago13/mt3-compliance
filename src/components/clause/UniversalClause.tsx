@@ -21,6 +21,9 @@ import { ScopeSGC } from './specific/ScopeSGC'
 import { FunctionalDashboard } from './specific/FunctionalDashboard'
 import { Obligations } from './specific/Obligations'
 import { RiskAssessment } from './specific/RiskAssessment'
+import { LeadershipCommitment } from './specific/LeadershipCommitment'
+import { CompliancePolicy } from './specific/CompliancePolicy'
+import { ResponsibilityMatrix } from './specific/ResponsibilityMatrix'
 import { TrainingLms } from './specific/TrainingLms'
 import { DocumentLibrary } from './specific/DocumentLibrary'
 import { WhistleblowingCanal } from './specific/WhistleblowingCanal'
@@ -41,6 +44,12 @@ export function UniversalClause({ clause }: { clause: IsoClause }) {
         return <Obligations />
       case '4.6':
         return <RiskAssessment />
+      case '5.1':
+        return <LeadershipCommitment />
+      case '5.2':
+        return <CompliancePolicy />
+      case '5.3':
+        return <ResponsibilityMatrix />
       case '7.2':
         return <TrainingLms />
       case '7.5':
