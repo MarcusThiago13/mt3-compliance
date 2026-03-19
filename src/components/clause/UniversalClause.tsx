@@ -27,15 +27,18 @@ import { ResponsibilityMatrix } from './specific/ResponsibilityMatrix'
 import { ActionsRiskOpp61 } from './specific/ActionsRiskOpp61'
 import { ComplianceObjectives62 } from './specific/ComplianceObjectives62'
 import { ChangePlanning63 } from './specific/ChangePlanning63'
-import { WhistleblowingCanal } from './specific/WhistleblowingCanal'
-import { InvestigationWorkflow } from './specific/InvestigationWorkflow'
-
-// Module 7 Specific components
 import { Resources71 } from './specific/Resources71'
 import { Competence72 } from './specific/Competence72'
 import { Awareness73 } from './specific/Awareness73'
 import { Communication74 } from './specific/Communication74'
 import { DocumentedInfo75 } from './specific/DocumentedInfo75'
+
+// Module 8 Specific components
+import { Module8Overview } from './specific/Module8Overview'
+import { OpPlanningControl81 } from './specific/OpPlanningControl81'
+import { EstablishingControls82 } from './specific/EstablishingControls82'
+import { WhistleblowingCanal } from './specific/WhistleblowingCanal'
+import { InvestigationWorkflow } from './specific/InvestigationWorkflow'
 
 export function UniversalClause({ clause }: { clause: IsoClause }) {
   const renderSpecificContent = () => {
@@ -74,6 +77,12 @@ export function UniversalClause({ clause }: { clause: IsoClause }) {
         return <Communication74 />
       case '7.5':
         return <DocumentedInfo75 />
+      case '8':
+        return <Module8Overview />
+      case '8.1':
+        return <OpPlanningControl81 />
+      case '8.2':
+        return <EstablishingControls82 />
       case '8.3':
         return <WhistleblowingCanal />
       case '8.4':

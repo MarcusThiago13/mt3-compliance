@@ -23,9 +23,11 @@ import {
   Rocket,
   BarChart,
   RefreshCcw,
+  Search,
 } from 'lucide-react'
 import { getParentClauses, getClausesByParent } from '@/lib/iso-data'
 import { useAppStore } from '@/stores/main'
+import { Button } from '@/components/ui/button'
 
 const phaseIcons: Record<string, any> = {
   '4': Target,
@@ -39,16 +41,25 @@ const phaseIcons: Record<string, any> = {
 
 export function AppSidebar() {
   const location = useLocation()
-  const { userRole } = useAppStore()
+  const { userRole, auditorMode, setAuditorMode } = useAppStore()
   const parentClauses = getParentClauses()
 
   return (
     <Sidebar variant="inset">
-      <SidebarHeader className="flex h-16 items-center justify-center border-b px-4">
-        <div className="flex items-center gap-2 font-bold text-primary text-xl tracking-tight w-full">
+      <SidebarHeader className="flex flex-col gap-4 border-b px-4 py-4">
+        <div className="flex items-center gap-2 font-bold text-primary text-xl tracking-tight w-full mt-2">
           <ShieldCheck className="h-6 w-6 text-accent" />
           <span>mt3 Compliance</span>
         </div>
+        <Button
+          variant={auditorMode ? 'default' : 'outline'}
+          size="sm"
+          className="w-full justify-start text-xs font-semibold"
+          onClick={() => setAuditorMode(!auditorMode)}
+        >
+          <Search className="mr-2 h-3.5 w-3.5" />
+          {auditorMode ? 'Desativar Modo Auditor' : 'Ativar Modo Auditor'}
+        </Button>
       </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>
