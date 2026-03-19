@@ -46,6 +46,11 @@ import { MonitoringEvaluation91 } from './specific/MonitoringEvaluation91'
 import { InternalAudit92 } from './specific/InternalAudit92'
 import { ManagementReview93 } from './specific/ManagementReview93'
 
+// Module 10 Specific components
+import { Module10Overview } from './specific/Module10Overview'
+import { ContinualImprovement101 } from './specific/ContinualImprovement101'
+import { Nonconformity102 } from './specific/Nonconformity102'
+
 export function UniversalClause({ clause }: { clause: IsoClause }) {
   const renderSpecificContent = () => {
     switch (clause.id) {
@@ -101,6 +106,12 @@ export function UniversalClause({ clause }: { clause: IsoClause }) {
         return <InternalAudit92 />
       case '9.3':
         return <ManagementReview93 />
+      case '10':
+        return <Module10Overview />
+      case '10.1':
+        return <ContinualImprovement101 />
+      case '10.2':
+        return <Nonconformity102 />
       default:
         return (
           <div className="space-y-4">

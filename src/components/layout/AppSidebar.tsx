@@ -97,11 +97,13 @@ export function AppSidebar() {
                 const children = getClausesByParent(parent.id)
                 return (
                   <SidebarMenuItem key={parent.id}>
-                    <SidebarMenuButton className="font-medium text-primary">
-                      <Icon className="h-4 w-4" />
-                      <span>
-                        {parent.id}. {parent.title}
-                      </span>
+                    <SidebarMenuButton className="font-medium text-primary" asChild>
+                      <Link to={`/clause/${parent.id}`}>
+                        <Icon className="h-4 w-4" />
+                        <span>
+                          {parent.id}. {parent.title}
+                        </span>
+                      </Link>
                     </SidebarMenuButton>
                     {children.length > 0 && (
                       <SidebarMenuSub>
