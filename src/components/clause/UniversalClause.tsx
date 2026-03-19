@@ -9,10 +9,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { CheckCircle2, AlertTriangle, AlertCircle, History } from 'lucide-react'
+import { CheckCircle2, AlertTriangle, AlertCircle, History, Sparkles, Loader2 } from 'lucide-react'
 import { EvidenceTab } from './EvidenceTab'
 import { CommentsTab } from './CommentsTab'
 import { Textarea } from '@/components/ui/textarea'
+import { Button } from '@/components/ui/button'
+import { Switch } from '@/components/ui/switch'
+import { Label } from '@/components/ui/label'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { useState } from 'react'
+import { callAnthropicMessage } from '@/lib/anthropic'
 
 // Specific Modules
 import { OrganizationContext } from './specific/OrganizationContext'
@@ -52,6 +58,20 @@ import { ContinualImprovement101 } from './specific/ContinualImprovement101'
 import { Nonconformity102 } from './specific/Nonconformity102'
 
 export function UniversalClause({ clause }: { clause: IsoClause }) {
+  const [aiAnalysis, setAiAnalysis] = useState<string>('')
+  const [isAnalyzing, setIsAnalyzing] = useState(false)
+  const [useSonnet, setUseSonnet] = useState(false)
+  const [isDialogOpen, setIsDialogOpen] = useState(false)
+
+  const handleAnalyze = async () => {
+    setIsAnalyzing(true)
+    setIsDialogOpen(true)
+    const prompt = `Liste as evidências necessárias para o requisito: ${clause.id} - ${clause.title}. Descrição: ${clause.description}`
+    const response = await callAnthropicMessage(prompt, 1024, useSonnet)
+    setAiAnalysis(response)
+    setIsAnalyzing(false)
+  }
+
   const renderSpecificContent = () => {
     switch (clause.id) {
       case '4.1':
@@ -140,30 +160,48 @@ export function UniversalClause({ clause }: { clause: IsoClause }) {
           <p className="text-muted-foreground mt-1 text-sm max-w-3xl">{clause.description}</p>
         </div>
 
-        <div className="flex items-center gap-3 bg-muted/50 p-2 rounded-md">
-          <span className="text-sm font-medium">Status:</span>
-          <Select defaultValue="conforme">
-            <SelectTrigger className="w-[180px] bg-background">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="conforme">
-                <div className="flex items-center">
-                  <CheckCircle2 className="mr-2 h-4 w-4 text-success" /> Conforme
-                </div>
-              </SelectItem>
-              <SelectItem value="obs">
-                <div className="flex items-center">
-                  <AlertTriangle className="mr-2 h-4 w-4 text-amber-500" /> Em Observação
-                </div>
-              </SelectItem>
-              <SelectItem value="nconf">
-                <div className="flex items-center">
-                  <AlertCircle className="mr-2 h-4 w-4 text-destructive" /> Não Conforme
-                </div>
-              </SelectItem>
-            </SelectContent>
-          </Select>
+        <div className="flex flex-col gap-2 md:items-end w-full md:w-auto mt-2 md:mt-0">
+          <div className="flex items-center gap-3 bg-muted/50 p-2 rounded-md w-full md:w-auto">
+            <span className="text-sm font-medium">Status:</span>
+            <Select defaultValue="conforme">
+              <SelectTrigger className="w-[180px] bg-background">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="conforme">
+                  <div className="flex items-center">
+                    <CheckCircle2 className="mr-2 h-4 w-4 text-success" /> Conforme
+                  </div>
+                </SelectItem>
+                <SelectItem value="obs">
+                  <div className="flex items-center">
+                    <AlertTriangle className="mr-2 h-4 w-4 text-amber-500" /> Em Observação
+                  </div>
+                </SelectItem>
+                <SelectItem value="nconf">
+                  <div className="flex items-center">
+                    <AlertCircle className="mr-2 h-4 w-4 text-destructive" /> Não Conforme
+                  </div>
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="flex items-center gap-2 mt-1 justify-end w-full">
+            <div className="flex items-center space-x-2 mr-2">
+              <Switch id="use-sonnet" checked={useSonnet} onCheckedChange={setUseSonnet} />
+              <Label htmlFor="use-sonnet" className="text-xs text-muted-foreground cursor-pointer">
+                Usar Sonnet
+              </Label>
+            </div>
+            <Button
+              onClick={handleAnalyze}
+              size="sm"
+              className="bg-purple-600 hover:bg-purple-700 text-white"
+            >
+              <Sparkles className="mr-2 h-4 w-4" />
+              Análise Inteligente de Requisito
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -185,7 +223,7 @@ export function UniversalClause({ clause }: { clause: IsoClause }) {
           <TabsContent value="evidence">
             <Card>
               <CardContent className="pt-6">
-                <EvidenceTab />
+                <EvidenceTab clause={clause} />
               </CardContent>
             </Card>
           </TabsContent>
@@ -218,6 +256,29 @@ export function UniversalClause({ clause }: { clause: IsoClause }) {
           </TabsContent>
         </div>
       </Tabs>
+
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Sparkles className="h-5 w-5 text-purple-600" />
+              Análise Inteligente de Requisito
+            </DialogTitle>
+          </DialogHeader>
+          <div className="mt-4 min-h-[100px]">
+            {isAnalyzing ? (
+              <div className="flex flex-col items-center justify-center py-8 text-muted-foreground">
+                <Loader2 className="h-8 w-8 animate-spin mb-4 text-purple-600" />
+                <p>Analisando requisito com Claude AI...</p>
+              </div>
+            ) : (
+              <div className="prose prose-sm max-w-none text-foreground whitespace-pre-wrap">
+                {aiAnalysis}
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
