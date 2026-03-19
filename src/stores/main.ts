@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react'
+import React, { createContext, useContext, useState } from 'react'
 
 export interface Tenant {
   id: string
@@ -18,11 +18,8 @@ interface AppState {
 const AppContext = createContext<AppState | null>(null)
 
 export const AppProvider = ({ children }: { children: React.ReactNode }) => {
-  const [tenants] = useState<Tenant[]>([
-    { id: 't1', name: 'Acme Corp', cnpj: '12.345.678/0001-90' },
-    { id: 't2', name: 'Global Tech', cnpj: '98.765.432/0001-10' },
-  ])
-  const [activeTenant, setActiveTenant] = useState<Tenant | null>(tenants[0])
+  const [tenants] = useState<Tenant[]>([])
+  const [activeTenant, setActiveTenant] = useState<Tenant | null>(null)
   const [userRole] = useState<'superadmin' | 'tenantadmin'>('superadmin')
   const [auditorMode, setAuditorMode] = useState(false)
 

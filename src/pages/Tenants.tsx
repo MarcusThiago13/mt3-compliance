@@ -1,6 +1,15 @@
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
-import { Plus, Building2, MoreVertical, ShieldAlert, Loader2 } from 'lucide-react'
+import { Link, useNavigate } from 'react-router-dom'
+import {
+  Plus,
+  Building2,
+  MoreVertical,
+  ShieldAlert,
+  Loader2,
+  Edit,
+  Power,
+  Trash2,
+} from 'lucide-react'
 import { supabase } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -13,22 +22,81 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
+import { toast } from '@/hooks/use-toast'
 
 export default function Tenants() {
+  const navigate = useNavigate()
   const [tenants, setTenants] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+  const [tenantToDelete, setTenantToDelete] = useState<any>(null)
+
+  const fetchTenants = async () => {
+    setLoading(true)
+    const { data } = await supabase
+      .from('tenants')
+      .select('*')
+      .order('created_at', { ascending: false })
+    if (data) setTenants(data)
+    setLoading(false)
+  }
 
   useEffect(() => {
-    const fetchTenants = async () => {
-      const { data } = await supabase
-        .from('tenants')
-        .select('*')
-        .order('created_at', { ascending: false })
-      if (data) setTenants(data)
-      setLoading(false)
-    }
     fetchTenants()
   }, [])
+
+  const handleToggleStatus = async (tenant: any) => {
+    const newStatus = tenant.status === 'active' ? 'inactive' : 'active'
+    const { error } = await supabase
+      .from('tenants')
+      .update({ status: newStatus })
+      .eq('id', tenant.id)
+    if (error) {
+      toast({
+        title: 'Erro',
+        description: 'Não foi possível alterar o status.',
+        variant: 'destructive',
+      })
+    } else {
+      toast({
+        title: 'Sucesso',
+        description: `Status alterado para ${newStatus === 'active' ? 'Ativo' : 'Inativo'}.`,
+      })
+      fetchTenants()
+    }
+  }
+
+  const handleDelete = async () => {
+    if (!tenantToDelete) return
+    const { error } = await supabase.from('tenants').delete().eq('id', tenantToDelete.id)
+    if (error) {
+      toast({
+        title: 'Erro',
+        description: 'Não foi possível excluir o cliente.',
+        variant: 'destructive',
+      })
+    } else {
+      toast({ title: 'Sucesso', description: 'Cliente excluído com sucesso.' })
+      fetchTenants()
+    }
+    setTenantToDelete(null)
+  }
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -76,7 +144,6 @@ export default function Tenants() {
                   <TableHead>Nome da Organização</TableHead>
                   <TableHead>CNPJ</TableHead>
                   <TableHead>Status</TableHead>
-                  <TableHead>Maturidade Inicial (Perfil)</TableHead>
                   <TableHead className="text-right">Ações</TableHead>
                 </TableRow>
               </TableHeader>
@@ -88,29 +155,38 @@ export default function Tenants() {
                     <TableCell>
                       {t.status === 'active' ? (
                         <Badge className="bg-success hover:bg-success text-white">Ativo</Badge>
+                      ) : t.status === 'inactive' ? (
+                        <Badge variant="destructive">Inativo</Badge>
                       ) : (
                         <Badge variant="secondary" className="bg-muted text-muted-foreground">
                           Rascunho
                         </Badge>
                       )}
                     </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <div className="h-2 w-32 bg-secondary rounded-full overflow-hidden">
-                          <div
-                            className={`h-full ${t.status === 'active' ? 'bg-primary' : 'bg-muted-foreground'}`}
-                            style={{ width: t.status === 'active' ? '100%' : '30%' }}
-                          ></div>
-                        </div>
-                        <span className="text-xs font-medium text-muted-foreground">
-                          {t.status === 'active' ? 'Completo' : 'Incompleto'}
-                        </span>
-                      </div>
-                    </TableCell>
                     <TableCell className="text-right">
-                      <Button variant="ghost" size="icon">
-                        <MoreVertical className="h-4 w-4" />
-                      </Button>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon">
+                            <MoreVertical className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => navigate(`/onboarding?id=${t.id}`)}>
+                            <Edit className="mr-2 h-4 w-4" /> Editar
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleToggleStatus(t)}>
+                            <Power className="mr-2 h-4 w-4" />{' '}
+                            {t.status === 'active' ? 'Inativar' : 'Ativar'}
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem
+                            className="text-destructive focus:text-destructive"
+                            onClick={() => setTenantToDelete(t)}
+                          >
+                            <Trash2 className="mr-2 h-4 w-4" /> Excluir
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -131,6 +207,27 @@ export default function Tenants() {
           </p>
         </div>
       </div>
+
+      <AlertDialog open={!!tenantToDelete} onOpenChange={(o) => !o && setTenantToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Excluir Cliente</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja excluir o cliente <strong>{tenantToDelete?.name}</strong>? Esta
+              ação não pode ser desfeita e todos os dados associados serão permanentemente perdidos.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Excluir
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }
