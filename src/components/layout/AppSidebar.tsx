@@ -14,7 +14,6 @@ import {
   SidebarMenuSubItem,
 } from '@/components/ui/sidebar'
 import {
-  LayoutDashboard,
   Users,
   FileText,
   Activity,
@@ -56,14 +55,6 @@ export function AppSidebar() {
           <SidebarGroupLabel>Geral</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild isActive={location.pathname === '/'}>
-                  <Link to="/">
-                    <LayoutDashboard />
-                    <span>Dashboard PDCA</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
               {userRole === 'superadmin' && (
                 <SidebarMenuItem>
                   <SidebarMenuButton asChild isActive={location.pathname.startsWith('/tenants')}>

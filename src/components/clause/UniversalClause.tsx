@@ -12,10 +12,15 @@ import {
 import { CheckCircle2, AlertTriangle, AlertCircle, History } from 'lucide-react'
 import { EvidenceTab } from './EvidenceTab'
 import { CommentsTab } from './CommentsTab'
-import { RiskMatrix } from '../shared/RiskMatrix'
 import { Textarea } from '@/components/ui/textarea'
 
 // Specific Modules
+import { OrganizationContext } from './specific/OrganizationContext'
+import { Stakeholders } from './specific/Stakeholders'
+import { ScopeSGC } from './specific/ScopeSGC'
+import { FunctionalDashboard } from './specific/FunctionalDashboard'
+import { Obligations } from './specific/Obligations'
+import { RiskAssessment } from './specific/RiskAssessment'
 import { TrainingLms } from './specific/TrainingLms'
 import { DocumentLibrary } from './specific/DocumentLibrary'
 import { WhistleblowingCanal } from './specific/WhistleblowingCanal'
@@ -24,13 +29,18 @@ import { InvestigationWorkflow } from './specific/InvestigationWorkflow'
 export function UniversalClause({ clause }: { clause: IsoClause }) {
   const renderSpecificContent = () => {
     switch (clause.id) {
+      case '4.1':
+        return <OrganizationContext />
+      case '4.2':
+        return <Stakeholders />
+      case '4.3':
+        return <ScopeSGC />
+      case '4.4':
+        return <FunctionalDashboard />
+      case '4.5':
+        return <Obligations />
       case '4.6':
-        return (
-          <div className="space-y-4">
-            <h3 className="font-semibold text-lg border-b pb-2">Matriz de Riscos de Compliance</h3>
-            <RiskMatrix />
-          </div>
-        )
+        return <RiskAssessment />
       case '7.2':
         return <TrainingLms />
       case '7.5':

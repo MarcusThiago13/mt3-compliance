@@ -1,6 +1,12 @@
 import { useMemo } from 'react'
 
-export function RiskMatrix() {
+export interface RiskPoint {
+  id: string
+  i: number
+  p: number
+}
+
+export function RiskMatrix({ points }: { points?: RiskPoint[] }) {
   const getRiskLevel = (impact: number, prob: number) => {
     const score = impact * prob
     if (score <= 4) return 'bg-success/80 text-white' // Baixo
@@ -9,8 +15,8 @@ export function RiskMatrix() {
     return 'bg-destructive/80 text-white' // Extremo
   }
 
-  // Generate mock dots for risks
-  const risks = useMemo(
+  // Generate mock dots for risks if none provided
+  const defaultRisks = useMemo(
     () => [
       { id: 'R1', i: 4, p: 3 },
       { id: 'R2', i: 2, p: 2 },
@@ -19,6 +25,8 @@ export function RiskMatrix() {
     ],
     [],
   )
+
+  const risks = points || defaultRisks
 
   return (
     <div className="flex flex-col items-center max-w-2xl mx-auto p-4">
@@ -41,7 +49,7 @@ export function RiskMatrix() {
               return (
                 <div
                   key={`${prob}-${impact}`}
-                  className={`aspect-square rounded-md border border-white/20 relative flex items-center justify-center ${getRiskLevel(impact, prob)} hover:opacity-100 transition-opacity cursor-pointer shadow-sm`}
+                  className={`aspect-square rounded-md border border-white/20 relative flex items-center justify-center ${getRiskLevel(impact, prob)} hover:opacity-100 transition-opacity shadow-sm`}
                 >
                   <span className="absolute top-1 left-1 text-[10px] opacity-50">
                     {impact * prob}
