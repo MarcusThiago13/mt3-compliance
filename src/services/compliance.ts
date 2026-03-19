@@ -59,4 +59,20 @@ export const complianceService = {
     if (error) throw new Error(error.message)
     return data
   },
+  async getRisks() {
+    const { data } = await supabase
+      .from('risks')
+      .select('*')
+      .order('created_at', { ascending: true })
+    return data || []
+  },
+  async updateRisk(id: string, impact: number, probability: number) {
+    const { data } = await supabase
+      .from('risks')
+      .update({ impact, probability })
+      .eq('id', id)
+      .select()
+      .single()
+    return data
+  },
 }

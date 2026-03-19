@@ -2,8 +2,14 @@ import { useEffect, useState } from 'react'
 import { complianceService } from '@/services/compliance'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
-import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart'
-import { Bar, BarChart, LineChart, Line, CartesianGrid, XAxis, YAxis } from 'recharts'
+import {
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+  ChartLegend,
+  ChartLegendContent,
+} from '@/components/ui/chart'
+import { ComposedChart, Bar, Line, CartesianGrid, XAxis, YAxis } from 'recharts'
 import {
   Target,
   ShieldCheck,
@@ -83,23 +89,49 @@ export function CockpitOverview() {
           <CardContent>
             {history.length > 0 ? (
               <ChartContainer
-                config={{ score: { label: 'Conformidade (%)', color: 'hsl(var(--primary))' } }}
+                config={{
+                  conformity_score: { label: 'Conformidade (%)', color: 'hsl(var(--primary))' },
+                  deviations: { label: 'Desvios', color: 'hsl(var(--destructive))' },
+                }}
                 className="h-[250px] w-full"
               >
-                <LineChart data={history} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                <ComposedChart data={history} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} />
                   <XAxis dataKey="month" fontSize={12} tickLine={false} axisLine={false} />
-                  <YAxis fontSize={12} tickLine={false} axisLine={false} domain={[0, 100]} />
+                  <YAxis
+                    yAxisId="left"
+                    fontSize={12}
+                    tickLine={false}
+                    axisLine={false}
+                    domain={[0, 100]}
+                  />
+                  <YAxis
+                    yAxisId="right"
+                    orientation="right"
+                    fontSize={12}
+                    tickLine={false}
+                    axisLine={false}
+                  />
                   <ChartTooltip content={<ChartTooltipContent />} />
+                  <ChartLegend content={<ChartLegendContent />} />
+                  <Bar
+                    yAxisId="right"
+                    dataKey="deviations"
+                    fill="var(--color-deviations)"
+                    radius={[4, 4, 0, 0]}
+                    barSize={20}
+                    opacity={0.6}
+                  />
                   <Line
+                    yAxisId="left"
                     type="monotone"
                     dataKey="conformity_score"
-                    stroke="var(--color-score)"
+                    stroke="var(--color-conformity_score)"
                     strokeWidth={3}
                     dot={{ r: 4 }}
                     activeDot={{ r: 6 }}
                   />
-                </LineChart>
+                </ComposedChart>
               </ChartContainer>
             ) : (
               <div className="h-[250px] flex items-center justify-center text-muted-foreground">

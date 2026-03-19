@@ -13,6 +13,24 @@ import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Card, CardContent } from '@/components/ui/card'
 import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogDescription,
+} from '@/components/ui/dialog'
+import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
+import { Label } from '@/components/ui/label'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import {
   Download,
   Plus,
   AlertTriangle,
@@ -22,6 +40,8 @@ import {
   ShieldAlert,
 } from 'lucide-react'
 import { toast } from '@/hooks/use-toast'
+import { useAuth } from '@/hooks/use-auth'
+import { complianceService } from '@/services/compliance'
 
 const initialNonconformities = [
   {
@@ -45,26 +65,51 @@ const initialNonconformities = [
 export function Nonconformity102() {
   const location = useLocation()
   const prefillGap = location.state?.prefillGap
+  const { user } = useAuth()
+
   const [events, setEvents] = useState(initialNonconformities)
   const [activeTab, setActiveTab] = useState('events')
 
+  const [isFormOpen, setIsFormOpen] = useState(false)
+  const [formData, setFormData] = useState({ description: '', rule: '', severity: 'Média' })
+
   useEffect(() => {
-    if (prefillGap) {
-      setEvents([
-        {
-          id: `NC-NEW-${prefillGap.id.substring(0, 4).toUpperCase()}`,
-          event: prefillGap.description,
-          origin: 'Análise de Gaps (AI)',
-          date: new Date().toLocaleDateString(),
-          severity: prefillGap.severity,
-          status: 'Análise Inicial',
-        },
-        ...initialNonconformities,
-      ])
+    if (prefillGap && events.length === initialNonconformities.length) {
+      setFormData({
+        description: prefillGap.description || '',
+        rule: prefillGap.rule || '',
+        severity: prefillGap.severity || 'Média',
+      })
       setActiveTab('events')
-      toast({ title: 'Ação Criada', description: 'Gap importado com sucesso para tratamento.' })
+      setIsFormOpen(true)
+      // Clear location state to prevent re-opening on mount
+      window.history.replaceState({}, document.title)
     }
-  }, [prefillGap])
+  }, [prefillGap, events.length])
+
+  const handleSavePlan = async () => {
+    const newEvent = {
+      id: `NC-NEW-${Math.floor(Math.random() * 10000)}`,
+      event: formData.description,
+      origin: `Análise de Gaps (AI) - ${formData.rule}`,
+      date: new Date().toLocaleDateString(),
+      severity: formData.severity,
+      status: 'Análise Inicial',
+    }
+    setEvents([newEvent, ...events])
+    setIsFormOpen(false)
+
+    await complianceService.addAuditLog(
+      '10.2',
+      `Plano de Ação criado a partir de gap: ${formData.rule}`,
+      user?.email || 'Sistema',
+    )
+
+    toast({
+      title: 'Plano de Ação Salvo',
+      description: 'O plano de ação foi registrado com sucesso.',
+    })
+  }
 
   const handleTrigger = () => {
     toast({
@@ -86,7 +131,7 @@ export function Nonconformity102() {
           <Button variant="outline">
             <Download className="mr-2 h-4 w-4" /> Relatório de Eventos
           </Button>
-          <Button>
+          <Button onClick={() => setIsFormOpen(true)}>
             <Plus className="mr-2 h-4 w-4" /> Registrar Não Conformidade
           </Button>
         </div>
@@ -202,6 +247,60 @@ export function Nonconformity102() {
           </div>
         </TabsContent>
       </Tabs>
+
+      <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Criar Plano de Ação</DialogTitle>
+            <DialogDescription>
+              Verifique os dados importados do Gap e ajuste se necessário antes de salvar a ação
+              corretiva.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="space-y-2">
+              <Label>Descrição do Desvio / Evento</Label>
+              <Textarea
+                value={formData.description}
+                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                rows={3}
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Regra Referência (ISO/Legislação)</Label>
+                <Input
+                  value={formData.rule}
+                  onChange={(e) => setFormData({ ...formData, rule: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Gravidade</Label>
+                <Select
+                  value={formData.severity}
+                  onValueChange={(val) => setFormData({ ...formData, severity: val })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Baixa">Baixa</SelectItem>
+                    <SelectItem value="Média">Média</SelectItem>
+                    <SelectItem value="Alta">Alta</SelectItem>
+                    <SelectItem value="Crítica">Crítica</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsFormOpen(false)}>
+              Cancelar
+            </Button>
+            <Button onClick={handleSavePlan}>Salvar Plano de Ação</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
