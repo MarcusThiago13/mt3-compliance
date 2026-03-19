@@ -1,4 +1,5 @@
 import { useMemo } from 'react'
+import { Sparkles } from 'lucide-react'
 
 export interface RiskPoint {
   id: string
@@ -6,16 +7,21 @@ export interface RiskPoint {
   p: number
 }
 
-export function RiskMatrix({ points }: { points?: RiskPoint[] }) {
+export function RiskMatrix({
+  points,
+  aiSuggestion,
+}: {
+  points?: RiskPoint[]
+  aiSuggestion?: string
+}) {
   const getRiskLevel = (impact: number, prob: number) => {
     const score = impact * prob
-    if (score <= 4) return 'bg-success/80 text-white' // Baixo
-    if (score <= 10) return 'bg-yellow-500/80 text-white' // Médio
-    if (score <= 16) return 'bg-orange-500/80 text-white' // Alto
-    return 'bg-destructive/80 text-white' // Extremo
+    if (score <= 4) return 'bg-success/80 text-white'
+    if (score <= 10) return 'bg-yellow-500/80 text-white'
+    if (score <= 16) return 'bg-orange-500/80 text-white'
+    return 'bg-destructive/80 text-white'
   }
 
-  // Generate mock dots for risks if none provided
   const defaultRisks = useMemo(
     () => [
       { id: 'R1', i: 4, p: 3 },
@@ -29,7 +35,16 @@ export function RiskMatrix({ points }: { points?: RiskPoint[] }) {
   const risks = points || defaultRisks
 
   return (
-    <div className="flex flex-col items-center max-w-2xl mx-auto p-4">
+    <div className="flex flex-col items-center max-w-2xl mx-auto p-4 relative">
+      {aiSuggestion && (
+        <div className="absolute top-0 right-0 z-10 w-48 bg-purple-50 border border-purple-200 text-purple-900 text-[10px] p-2 rounded shadow-md animate-fade-in-up">
+          <span className="font-bold flex items-center gap-1 mb-1">
+            <Sparkles className="w-3 h-3" /> AI Suggestion
+          </span>
+          {aiSuggestion}
+        </div>
+      )}
+
       <div className="flex w-full mb-2">
         <div className="w-12"></div>
         <div className="flex-1 text-center font-semibold text-sm text-muted-foreground">
@@ -63,20 +78,6 @@ export function RiskMatrix({ points }: { points?: RiskPoint[] }) {
               )
             }),
           )}
-        </div>
-      </div>
-      <div className="flex justify-between w-full mt-4 text-xs font-medium pl-14">
-        <div className="flex items-center gap-1">
-          <span className="w-3 h-3 rounded-sm bg-success"></span> Baixo
-        </div>
-        <div className="flex items-center gap-1">
-          <span className="w-3 h-3 rounded-sm bg-yellow-500"></span> Médio
-        </div>
-        <div className="flex items-center gap-1">
-          <span className="w-3 h-3 rounded-sm bg-orange-500"></span> Alto
-        </div>
-        <div className="flex items-center gap-1">
-          <span className="w-3 h-3 rounded-sm bg-destructive"></span> Extremo
         </div>
       </div>
     </div>

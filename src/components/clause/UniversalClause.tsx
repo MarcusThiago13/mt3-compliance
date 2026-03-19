@@ -9,16 +9,29 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { CheckCircle2, AlertTriangle, AlertCircle, History, Sparkles, Loader2 } from 'lucide-react'
+import {
+  CheckCircle2,
+  AlertTriangle,
+  AlertCircle,
+  History,
+  Sparkles,
+  Loader2,
+  Calendar,
+  FileText,
+} from 'lucide-react'
 import { EvidenceTab } from './EvidenceTab'
 import { CommentsTab } from './CommentsTab'
 import { Textarea } from '@/components/ui/textarea'
 import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
 import { Label } from '@/components/ui/label'
+import { Input } from '@/components/ui/input'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { callAnthropicMessage } from '@/lib/anthropic'
+import { complianceService } from '@/services/compliance'
+import { useAuth } from '@/hooks/use-auth'
+import { toast } from '@/hooks/use-toast'
 
 // Specific Modules
 import { OrganizationContext } from './specific/OrganizationContext'
@@ -62,6 +75,48 @@ export function UniversalClause({ clause }: { clause: IsoClause }) {
   const [isAnalyzing, setIsAnalyzing] = useState(false)
   const [useSonnet, setUseSonnet] = useState(false)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
+
+  const { user } = useAuth()
+  const [auditLogs, setAuditLogs] = useState<any[]>([])
+  const [nextReview, setNextReview] = useState('')
+
+  useEffect(() => {
+    if (clause.id) complianceService.getAuditLogs(clause.id).then(setAuditLogs)
+  }, [clause.id])
+
+  const handleStatusChange = async (val: string) => {
+    if (clause.id) {
+      await complianceService.addAuditLog(
+        clause.id,
+        `Status alterado para ${val}`,
+        user?.email || 'Sistema',
+      )
+      const logs = await complianceService.getAuditLogs(clause.id)
+      setAuditLogs(logs)
+      toast({ title: 'Status Atualizado', description: 'Log de auditoria registrado (ISO 7.5)' })
+    }
+  }
+
+  const handleSchedule = async () => {
+    if (clause.id && nextReview) {
+      await complianceService.addAssessmentSchedule(clause.id, nextReview)
+      toast({
+        title: 'Auto-Avaliação Agendada',
+        description: 'O workflow será ativado na data definida.',
+      })
+      setNextReview('')
+    }
+  }
+
+  const handleExportDossier = async () => {
+    try {
+      const res = await complianceService.generateDossier(clause.id)
+      toast({ title: 'Dossier PDF/A Gerado', description: res.message })
+      window.open(res.url, '_blank')
+    } catch (e: any) {
+      toast({ title: 'Erro ao gerar Dossier', description: e.message, variant: 'destructive' })
+    }
+  }
 
   const handleAnalyze = async () => {
     setIsAnalyzing(true)
@@ -163,7 +218,7 @@ export function UniversalClause({ clause }: { clause: IsoClause }) {
         <div className="flex flex-col gap-2 md:items-end w-full md:w-auto mt-2 md:mt-0">
           <div className="flex items-center gap-3 bg-muted/50 p-2 rounded-md w-full md:w-auto">
             <span className="text-sm font-medium">Status:</span>
-            <Select defaultValue="conforme">
+            <Select defaultValue="conforme" onValueChange={handleStatusChange}>
               <SelectTrigger className="w-[180px] bg-background">
                 <SelectValue />
               </SelectTrigger>
@@ -199,7 +254,15 @@ export function UniversalClause({ clause }: { clause: IsoClause }) {
               className="bg-purple-600 hover:bg-purple-700 text-white"
             >
               <Sparkles className="mr-2 h-4 w-4" />
-              Análise Inteligente de Requisito
+              Análise de Requisito
+            </Button>
+            <Button
+              onClick={handleExportDossier}
+              size="sm"
+              variant="outline"
+              className="border-primary text-primary hover:bg-primary/5"
+            >
+              <FileText className="mr-2 h-4 w-4" /> Dossier PDF/A
             </Button>
           </div>
         </div>
@@ -210,7 +273,7 @@ export function UniversalClause({ clause }: { clause: IsoClause }) {
           <TabsTrigger value="main">Conteúdo</TabsTrigger>
           <TabsTrigger value="evidence">Evidências</TabsTrigger>
           <TabsTrigger value="comments">Comentários</TabsTrigger>
-          <TabsTrigger value="history">Histórico</TabsTrigger>
+          <TabsTrigger value="history">Histórico (ISO 7.5)</TabsTrigger>
         </TabsList>
 
         <div className="mt-6">
@@ -237,19 +300,53 @@ export function UniversalClause({ clause }: { clause: IsoClause }) {
 
           <TabsContent value="history">
             <Card>
-              <CardContent className="pt-6 space-y-4">
-                <div className="flex items-start gap-4 text-sm">
-                  <div className="bg-muted p-2 rounded-full">
-                    <History className="h-4 w-4" />
+              <CardContent className="pt-6 space-y-6">
+                <div className="flex flex-col gap-3 pb-6 border-b">
+                  <h4 className="font-semibold flex items-center gap-2">
+                    <Calendar className="h-4 w-4 text-primary" /> Auto-Avaliação (Self-Assessment)
+                  </h4>
+                  <div className="flex items-center gap-2">
+                    <Input
+                      type="date"
+                      value={nextReview}
+                      onChange={(e) => setNextReview(e.target.value)}
+                      className="w-[180px]"
+                    />
+                    <Button onClick={handleSchedule} size="sm">
+                      Agendar Próxima Revisão
+                    </Button>
                   </div>
-                  <div>
-                    <p className="font-semibold">
-                      Status alterado para <span className="text-success">Conforme</span>
-                    </p>
-                    <p className="text-muted-foreground">
-                      Por Sistema Automático - 10/10/2023 09:00
-                    </p>
-                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    O sistema notificará os responsáveis nesta data para garantir melhoria contínua
+                    (ISO 10.1).
+                  </p>
+                </div>
+
+                <div className="space-y-4">
+                  <h4 className="font-semibold flex items-center gap-2">
+                    <History className="h-4 w-4 text-primary" /> Trilha de Auditoria (Audit Trail
+                    Imutável)
+                  </h4>
+                  {auditLogs.map((log) => (
+                    <div
+                      key={log.id}
+                      className="flex items-start gap-4 text-sm bg-muted/30 p-3 rounded-md border border-dashed"
+                    >
+                      <div className="bg-primary/10 p-2 rounded-full shrink-0">
+                        <History className="h-4 w-4 text-primary" />
+                      </div>
+                      <div>
+                        <p className="font-semibold text-foreground">{log.action}</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          Por <strong>{log.user_email}</strong> em{' '}
+                          {new Date(log.created_at).toLocaleString()}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                  {auditLogs.length === 0 && (
+                    <p className="text-muted-foreground text-sm">Nenhum histórico registrado.</p>
+                  )}
                 </div>
               </CardContent>
             </Card>

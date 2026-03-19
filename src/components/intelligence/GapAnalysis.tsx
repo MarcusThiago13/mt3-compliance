@@ -1,33 +1,19 @@
+import { useEffect, useState } from 'react'
+import { complianceService } from '@/services/compliance'
+import { useNavigate } from 'react-router-dom'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { AlertTriangle, ChevronRight, Zap } from 'lucide-react'
 
-const gaps = [
-  {
-    id: 'GAP-01',
-    rule: 'ISO 7.2',
-    desc: 'Registros de treinamento ausentes ou vencidos para 3 cargos de alta liderança.',
-    severity: 'Alta',
-    action: 'Agendar Retreinamento',
-  },
-  {
-    id: 'GAP-02',
-    rule: 'Art. 57 (XIII)',
-    desc: 'Due Diligence pendente para 15 fornecedores críticos homologados no último trimestre.',
-    severity: 'Crítica',
-    action: 'Iniciar DD / Bloquear',
-  },
-  {
-    id: 'GAP-03',
-    rule: 'ISO 6.3',
-    desc: 'Mudança no ERP financeiro sem registro formal no fluxo de Planejamento de Mudanças.',
-    severity: 'Média',
-    action: 'Preencher Log',
-  },
-]
-
 export function GapAnalysis() {
+  const [gaps, setGaps] = useState<any[]>([])
+  const navigate = useNavigate()
+
+  useEffect(() => {
+    complianceService.getGaps().then(setGaps)
+  }, [])
+
   return (
     <div className="space-y-6 animate-fade-in-up">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -76,15 +62,16 @@ export function GapAnalysis() {
                       Grau: {g.severity}
                     </span>
                   </div>
-                  <p className="text-sm font-medium text-foreground">{g.desc}</p>
+                  <p className="text-sm font-medium text-foreground">{g.description}</p>
                 </div>
               </div>
               <Button
                 size="sm"
                 variant="secondary"
                 className="shrink-0 w-full md:w-auto mt-2 md:mt-0"
+                onClick={() => navigate('/clause/10.2', { state: { prefillGap: g } })}
               >
-                {g.action} <ChevronRight className="ml-2 h-4 w-4" />
+                Criar Plano de Ação <ChevronRight className="ml-2 h-4 w-4" />
               </Button>
             </CardContent>
           </Card>

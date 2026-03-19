@@ -2,10 +2,12 @@ import { SidebarTrigger } from '@/components/ui/sidebar'
 import { Bell, UserCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useAppStore } from '@/stores/main'
-import { Badge } from '@/components/ui/badge'
+import { useAuth } from '@/hooks/use-auth'
+import { Progress } from '@/components/ui/progress'
 
 export function Header() {
   const { activeTenant } = useAppStore()
+  const { user, signOut } = useAuth()
 
   return (
     <header className="sticky top-0 z-10 flex h-16 shrink-0 items-center gap-2 border-b bg-background/80 backdrop-blur-md px-4 shadow-sm transition-all duration-300 w-full">
@@ -24,6 +26,17 @@ export function Header() {
             </div>
           )}
         </div>
+
+        <div className="hidden md:flex items-center gap-3 px-4 flex-1 max-w-sm border-l border-r mx-4">
+          <div className="flex flex-col w-full">
+            <div className="flex justify-between text-[10px] uppercase font-bold text-muted-foreground mb-1">
+              <span>Prontidão para Auditoria (SGC)</span>
+              <span className="text-primary">85%</span>
+            </div>
+            <Progress value={85} className="h-1.5" />
+          </div>
+        </div>
+
         <div className="flex items-center gap-4">
           <Button
             variant="ghost"
@@ -33,11 +46,17 @@ export function Header() {
             <Bell className="h-5 w-5" />
             <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-destructive border-2 border-background"></span>
           </Button>
-          <div className="flex items-center gap-2 bg-muted/50 p-1.5 pr-3 rounded-full border border-border">
+          <div
+            className="flex items-center gap-2 bg-muted/50 p-1.5 pr-3 rounded-full border border-border cursor-pointer hover:bg-muted transition-colors"
+            onClick={signOut}
+            title="Sair do Sistema"
+          >
             <div className="h-7 w-7 rounded-full bg-primary/10 flex items-center justify-center">
               <UserCircle className="h-5 w-5 text-primary" />
             </div>
-            <span className="text-sm font-medium hidden sm:block">Admin</span>
+            <span className="text-sm font-medium hidden sm:block truncate max-w-[120px]">
+              {user?.email || 'Admin'}
+            </span>
           </div>
         </div>
       </div>

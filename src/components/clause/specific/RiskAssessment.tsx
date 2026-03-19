@@ -33,7 +33,7 @@ const risksData = [
     i: 5,
     p: 2,
     ri: 5,
-    rp: 1,
+    rp: 4,
     treat: 'Evitar',
   },
   {
@@ -47,17 +47,6 @@ const risksData = [
     rp: 2,
     treat: 'Mitigar',
   },
-  {
-    id: 'R04',
-    cat: 'Dados',
-    event: 'Vazamento LGPD',
-    controls: 'Firewall, DLP',
-    i: 4,
-    p: 4,
-    ri: 3,
-    rp: 2,
-    treat: 'Transferir',
-  },
 ]
 
 export function RiskAssessment() {
@@ -68,6 +57,11 @@ export function RiskAssessment() {
     i: view === 'inherent' ? r.i : r.ri,
     p: view === 'inherent' ? r.p : r.rp,
   }))
+
+  const hasCritical = risksData.some((r) => r.ri >= 4 && r.rp >= 4)
+  const aiSuggestion = hasCritical
+    ? 'AI Risk Agent: Detectamos alta probabilidade de R02 (Corrupção) em operações recentes. Sugerimos elevar controles (8.1) e rever Impacto Residual.'
+    : undefined
 
   return (
     <div className="space-y-6">
@@ -132,7 +126,9 @@ export function RiskAssessment() {
                           className={
                             scoreResidual <= 4
                               ? 'bg-green-50 text-green-700'
-                              : 'bg-yellow-50 text-yellow-700'
+                              : scoreResidual >= 16
+                                ? 'bg-red-50 text-red-700 border-red-200'
+                                : 'bg-yellow-50 text-yellow-700'
                           }
                         >
                           {scoreResidual} ({r.rp}x{r.ri})
@@ -158,12 +154,8 @@ export function RiskAssessment() {
               <TabsTrigger value="residual">Residual</TabsTrigger>
             </TabsList>
             <div className="bg-white p-2 rounded border shadow-sm">
-              <RiskMatrix points={matrixPoints} />
+              <RiskMatrix points={matrixPoints} aiSuggestion={aiSuggestion} />
             </div>
-            <p className="text-xs text-center text-muted-foreground mt-4">
-              O risco {view === 'inherent' ? 'inerente não considera' : 'residual considera'} os
-              controles existentes.
-            </p>
           </Tabs>
         </div>
       </div>

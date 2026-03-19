@@ -1,3 +1,5 @@
+import { useEffect, useState } from 'react'
+import { useLocation } from 'react-router-dom'
 import {
   Table,
   TableBody,
@@ -21,7 +23,7 @@ import {
 } from 'lucide-react'
 import { toast } from '@/hooks/use-toast'
 
-const nonconformities = [
+const initialNonconformities = [
   {
     id: 'NC-2023-01',
     event: 'Pagamento sem aprovação dupla',
@@ -40,20 +42,30 @@ const nonconformities = [
   },
 ]
 
-const analysis = [
-  {
-    id: 'NC-2023-01',
-    rootCause: 'Falta de trava sistêmica no ERP (bypass manual possível)',
-    failures: ['Controle Operacional (8.1)', 'Procedimento Sistêmico'],
-  },
-  {
-    id: 'NC-2023-02',
-    rootCause: 'Ausência de notificação automática de vencimento aos gestores',
-    failures: ['Recursos Tecnológicos (7.1)', 'Comunicação (7.4)'],
-  },
-]
-
 export function Nonconformity102() {
+  const location = useLocation()
+  const prefillGap = location.state?.prefillGap
+  const [events, setEvents] = useState(initialNonconformities)
+  const [activeTab, setActiveTab] = useState('events')
+
+  useEffect(() => {
+    if (prefillGap) {
+      setEvents([
+        {
+          id: `NC-NEW-${prefillGap.id.substring(0, 4).toUpperCase()}`,
+          event: prefillGap.description,
+          origin: 'Análise de Gaps (AI)',
+          date: new Date().toLocaleDateString(),
+          severity: prefillGap.severity,
+          status: 'Análise Inicial',
+        },
+        ...initialNonconformities,
+      ])
+      setActiveTab('events')
+      toast({ title: 'Ação Criada', description: 'Gap importado com sucesso para tratamento.' })
+    }
+  }, [prefillGap])
+
   const handleTrigger = () => {
     toast({
       title: 'Módulo Atualizado',
@@ -80,7 +92,7 @@ export function Nonconformity102() {
         </div>
       </div>
 
-      <Tabs defaultValue="events">
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 mb-4 h-auto p-1 gap-1">
           <TabsTrigger value="events" className="py-2 text-xs sm:text-sm">
             Registro de Eventos
@@ -110,7 +122,7 @@ export function Nonconformity102() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {nonconformities.map((nc) => (
+                {events.map((nc) => (
                   <TableRow key={nc.id}>
                     <TableCell className="font-mono text-xs text-muted-foreground">
                       {nc.id}
@@ -124,9 +136,11 @@ export function Nonconformity102() {
                       <Badge
                         variant="outline"
                         className={
-                          nc.severity === 'Alta'
+                          nc.severity === 'Crítica'
                             ? 'text-destructive border-destructive'
-                            : 'text-amber-500'
+                            : nc.severity === 'Alta'
+                              ? 'text-orange-500 border-orange-500'
+                              : 'text-amber-500'
                         }
                       >
                         {nc.severity}
@@ -143,43 +157,12 @@ export function Nonconformity102() {
         </TabsContent>
 
         <TabsContent value="analysis">
-          <div className="rounded-md border bg-card overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Ref. Evento</TableHead>
-                  <TableHead>Causa-Raiz Determinada (5 Porquês / Ishikawa)</TableHead>
-                  <TableHead>Falhas Sistêmicas Identificadas</TableHead>
-                  <TableHead className="text-right">Ação</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {analysis.map((an) => (
-                  <TableRow key={an.id}>
-                    <TableCell className="font-mono text-xs">{an.id}</TableCell>
-                    <TableCell className="text-sm">{an.rootCause}</TableCell>
-                    <TableCell>
-                      <div className="flex flex-col gap-1">
-                        {an.failures.map((f, i) => (
-                          <span
-                            key={i}
-                            className="text-[10px] bg-muted px-2 py-0.5 rounded-md inline-block w-fit"
-                          >
-                            {f}
-                          </span>
-                        ))}
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <Button variant="ghost" size="sm">
-                        <Search className="h-4 w-4" />
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
+          <Card className="border-dashed bg-muted/30">
+            <CardContent className="p-8 text-center text-muted-foreground">
+              <Search className="h-10 w-10 mx-auto mb-3 opacity-50" />
+              <p className="text-sm">Área de análise de causa raiz 5 Porquês / Ishikawa.</p>
+            </CardContent>
+          </Card>
         </TabsContent>
 
         <TabsContent value="actions">
@@ -196,8 +179,7 @@ export function Nonconformity102() {
                   <p className="text-sm text-muted-foreground max-w-2xl">
                     As ações definidas para eliminar as causas-raiz da não conformidade são
                     automaticamente integradas ao{' '}
-                    <strong>Módulo 6.1 (Ações para Abordar Riscos)</strong>. Dependendo da natureza
-                    da falha, é necessário engatilhar atualizações em outros módulos.
+                    <strong>Módulo 6.1 (Ações para Abordar Riscos)</strong>.
                   </p>
                   <div className="flex flex-wrap gap-2 pt-2">
                     <Button size="sm" variant="outline" onClick={handleTrigger} className="text-xs">
@@ -216,11 +198,7 @@ export function Nonconformity102() {
         <TabsContent value="efficacy">
           <div className="p-4 bg-blue-50 border border-blue-100 rounded-lg text-sm text-blue-900 flex gap-3">
             <Activity className="h-5 w-5 shrink-0 text-blue-700" />
-            <p>
-              O status de uma Não Conformidade só pode ser alterado para "Encerrada" após a{' '}
-              <strong>Verificação de Eficácia</strong> da ação corretiva, garantindo que o problema
-              original não voltou a ocorrer após o período de maturação.
-            </p>
+            <p>O status só pode ser alterado para "Encerrada" após a Verificação de Eficácia.</p>
           </div>
         </TabsContent>
       </Tabs>
