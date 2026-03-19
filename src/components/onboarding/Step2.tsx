@@ -4,8 +4,10 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Switch } from '@/components/ui/switch'
 import { Button } from '@/components/ui/button'
-import { Plus, Trash2, UploadCloud, Loader2 } from 'lucide-react'
+import { Plus, Trash2, UploadCloud, Loader2, ExternalLink } from 'lucide-react'
 import { uploadDocument } from '@/lib/upload'
+import { supabase } from '@/lib/supabase/client'
+import { toast } from '@/hooks/use-toast'
 
 export function Step2({ data, updateData }: { data: any; updateData: (d: any) => void }) {
   const setField = (k: string, v: any) => updateData({ ...data, [k]: v })
@@ -31,6 +33,53 @@ export function Step2({ data, updateData }: { data: any; updateData: (d: any) =>
     const path = await uploadDocument(e.target.files[0])
     if (path) setField(key, path)
     setUploading((prev) => ({ ...prev, [key]: false }))
+  }
+
+  const handleViewFile = async (path: string) => {
+    try {
+      const { data, error } = await supabase.storage
+        .from('tenant_documents')
+        .createSignedUrl(path, 3600)
+      if (error) throw error
+      if (data?.signedUrl) {
+        window.open(data.signedUrl, '_blank')
+      }
+    } catch (err: any) {
+      toast({
+        title: 'Erro ao abrir arquivo',
+        description: 'O arquivo não foi encontrado ou não está acessível.',
+        variant: 'destructive',
+      })
+    }
+  }
+
+  const renderSavedFile = (path: string) => {
+    if (!path) return null
+    const filename = path.split('/').pop() || 'Arquivo'
+    return (
+      <div className="flex items-center justify-between mt-2 p-2 bg-muted/30 rounded-md border">
+        <div className="flex items-center min-w-0 mr-2">
+          <UploadCloud className="w-4 h-4 mr-2 text-green-600 dark:text-green-500 shrink-0" />
+          <div className="flex flex-col min-w-0">
+            <span className="text-[10px] font-bold text-green-600 dark:text-green-500 uppercase tracking-wider">
+              Salvo
+            </span>
+            <span className="text-xs font-medium text-muted-foreground truncate" title={filename}>
+              {filename}
+            </span>
+          </div>
+        </div>
+        <Button
+          type="button"
+          variant="secondary"
+          size="sm"
+          className="h-7 text-xs shrink-0"
+          onClick={() => handleViewFile(path)}
+        >
+          <ExternalLink className="w-3 h-3 mr-1.5" /> Abrir
+        </Button>
+      </div>
+    )
   }
 
   return (
@@ -91,39 +140,35 @@ export function Step2({ data, updateData }: { data: any; updateData: (d: any) =>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-2 border p-4 rounded-md">
           <Label>Organograma</Label>
-          <div className="flex items-center gap-2">
-            <Input
-              type="file"
-              onChange={(e) => handleFile(e, 'organograma_url')}
-              disabled={uploading['organograma_url']}
-            />
-            {uploading['organograma_url'] && (
-              <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-            )}
-            {data.organograma_url && !uploading['organograma_url'] && (
-              <span className="text-xs font-medium text-success flex items-center shrink-0">
-                <UploadCloud className="w-4 h-4 mr-1" /> Salvo
-              </span>
-            )}
-          </div>
+          <Input
+            type="file"
+            onChange={(e) => handleFile(e, 'organograma_url')}
+            disabled={uploading['organograma_url']}
+          />
+          {uploading['organograma_url'] && (
+            <div className="flex items-center mt-2 text-sm text-muted-foreground">
+              <Loader2 className="h-4 w-4 animate-spin mr-2" /> Enviando arquivo...
+            </div>
+          )}
+          {data.organograma_url &&
+            !uploading['organograma_url'] &&
+            renderSavedFile(data.organograma_url)}
         </div>
         <div className="space-y-2 border p-4 rounded-md">
           <Label>Contrato / Estatuto Social</Label>
-          <div className="flex items-center gap-2">
-            <Input
-              type="file"
-              onChange={(e) => handleFile(e, 'contrato_social_url')}
-              disabled={uploading['contrato_social_url']}
-            />
-            {uploading['contrato_social_url'] && (
-              <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-            )}
-            {data.contrato_social_url && !uploading['contrato_social_url'] && (
-              <span className="text-xs font-medium text-success flex items-center shrink-0">
-                <UploadCloud className="w-4 h-4 mr-1" /> Salvo
-              </span>
-            )}
-          </div>
+          <Input
+            type="file"
+            onChange={(e) => handleFile(e, 'contrato_social_url')}
+            disabled={uploading['contrato_social_url']}
+          />
+          {uploading['contrato_social_url'] && (
+            <div className="flex items-center mt-2 text-sm text-muted-foreground">
+              <Loader2 className="h-4 w-4 animate-spin mr-2" /> Enviando arquivo...
+            </div>
+          )}
+          {data.contrato_social_url &&
+            !uploading['contrato_social_url'] &&
+            renderSavedFile(data.contrato_social_url)}
         </div>
       </div>
 
