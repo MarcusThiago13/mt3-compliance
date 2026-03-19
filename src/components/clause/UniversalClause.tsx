@@ -40,6 +40,12 @@ import { EstablishingControls82 } from './specific/EstablishingControls82'
 import { WhistleblowingCanal } from './specific/WhistleblowingCanal'
 import { InvestigationWorkflow } from './specific/InvestigationWorkflow'
 
+// Module 9 Specific components
+import { Module9Overview } from './specific/Module9Overview'
+import { MonitoringEvaluation91 } from './specific/MonitoringEvaluation91'
+import { InternalAudit92 } from './specific/InternalAudit92'
+import { ManagementReview93 } from './specific/ManagementReview93'
+
 export function UniversalClause({ clause }: { clause: IsoClause }) {
   const renderSpecificContent = () => {
     switch (clause.id) {
@@ -87,6 +93,14 @@ export function UniversalClause({ clause }: { clause: IsoClause }) {
         return <WhistleblowingCanal />
       case '8.4':
         return <InvestigationWorkflow />
+      case '9':
+        return <Module9Overview />
+      case '9.1':
+        return <MonitoringEvaluation91 />
+      case '9.2':
+        return <InternalAudit92 />
+      case '9.3':
+        return <ManagementReview93 />
       default:
         return (
           <div className="space-y-4">
