@@ -37,8 +37,8 @@ Deno.serve(async (req: Request) => {
 
     if (invError || !invitation) throw new Error('Invitation not found')
 
-    let actionLink = undefined
-    let newUserId = null
+    let actionLink = undefined;
+    let newUserId = null;
 
     if (type === 'email') {
       const { data, error } = await supabaseAdmin.auth.admin.inviteUserByEmail(invitation.email, {
@@ -62,13 +62,10 @@ Deno.serve(async (req: Request) => {
     }
 
     if (newUserId) {
-      const { error: utError } = await supabaseAdmin.from('user_tenants').upsert(
-        {
-          user_id: newUserId,
-          tenant_id: invitation.tenant_id,
-        },
-        { onConflict: 'user_id,tenant_id' },
-      )
+      const { error: utError } = await supabaseAdmin.from('user_tenants').upsert({
+        user_id: newUserId,
+        tenant_id: invitation.tenant_id
+      }, { onConflict: 'user_id,tenant_id' })
       if (utError) console.error('Error linking user:', utError)
     }
 

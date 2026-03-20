@@ -37,7 +37,7 @@ Deno.serve(async (req: Request) => {
         if (tenant_id) {
           query = query.eq('tenant_id', tenant_id)
         }
-
+        
         const { data: utData, error: utError } = await query
         if (utError) throw utError
 
@@ -66,7 +66,7 @@ Deno.serve(async (req: Request) => {
           status: 200,
         })
       }
-
+      
       return new Response(JSON.stringify({ error: 'Ação não suportada' }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 400,
