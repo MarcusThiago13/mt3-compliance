@@ -28,15 +28,17 @@ Deno.serve(async (req: Request) => {
       data: { user },
       error: userError,
     } = await supabaseClient.auth.getUser(token)
-    
+
     if (userError || !user) {
-      throw new Error(`Não autorizado (Token inválido): ${userError?.message || 'Sessão não identificada'}`)
+      throw new Error(
+        `Não autorizado (Token inválido): ${userError?.message || 'Sessão não identificada'}`,
+      )
     }
 
     const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey)
 
     const body = await req.json().catch(() => ({}))
-    const { invitation_id, type, redirectUrl } = body
+    const { invitation_id, redirectUrl } = body
 
     if (!invitation_id) throw new Error('O ID do convite (invitation_id) é obrigatório.')
 
@@ -48,49 +50,50 @@ Deno.serve(async (req: Request) => {
 
     if (invError || !invitation) throw new Error('Convite não encontrado.')
 
-    let actionLink = undefined;
-    let newUserId = null;
+    // Sempre geramos o link de convite em vez de usar inviteUserByEmail.
+    // Isso evita o envio de e-mails em inglês (padrão do Supabase)
+    // e nos permite interceptar a URL final no frontend para compartilhar.
+    const { data, error } = await supabaseAdmin.auth.admin.generateLink({
+      type: 'invite',
+      email: invitation.email,
+      data: { name: invitation.name },
+      options: { redirectTo: redirectUrl || undefined },
+    })
 
-    if (type === 'email') {
-      const { data, error } = await supabaseAdmin.auth.admin.inviteUserByEmail(invitation.email, {
-        data: { name: invitation.name },
-        redirectTo: redirectUrl || undefined,
-      })
-      
-      if (error) {
-        if (error.status === 422 || error.message.includes('already registered')) {
-          throw new Error(`O usuário com e-mail ${invitation.email} já está registrado. O sistema logo suportará a vinculação de usuários existentes.`)
-        }
-        throw new Error(`Erro ao enviar e-mail: ${error.message}`)
+    if (error) {
+      if (error.status === 422 || error.message.includes('already registered')) {
+        throw new Error(
+          `O usuário com e-mail ${invitation.email} já está registrado. O sistema logo suportará a vinculação de usuários existentes.`,
+        )
       }
-      newUserId = data.user.id
-      
-    } else if (type === 'link') {
-      const { data, error } = await supabaseAdmin.auth.admin.generateLink({
-        type: 'invite',
-        email: invitation.email,
-        data: { name: invitation.name },
-        options: { redirectTo: redirectUrl || undefined },
-      })
-      
-      if (error) {
-        if (error.status === 422 || error.message.includes('already registered')) {
-          throw new Error(`O usuário com e-mail ${invitation.email} já está registrado. O sistema logo suportará a vinculação de usuários existentes.`)
-        }
-        throw new Error(`Erro ao gerar link: ${error.message}`)
+      throw new Error(`Erro ao gerar link: ${error.message}`)
+    }
+
+    let actionLink = data.properties?.action_link
+    const newUserId = data.user?.id
+
+    // Substitui o domínio padrão (localhost:3000) pela URL de redirecionamento real
+    if (actionLink && redirectUrl) {
+      try {
+        const parsedAction = new URL(actionLink)
+        const parsedRedirect = new URL(redirectUrl)
+        parsedAction.protocol = parsedRedirect.protocol
+        parsedAction.host = parsedRedirect.host
+        parsedAction.port = parsedRedirect.port
+        actionLink = parsedAction.toString()
+      } catch (e) {
+        console.error('Falha ao processar URL de redirecionamento', e)
       }
-      actionLink = data.properties?.action_link
-      newUserId = data.user?.id
-      
-    } else {
-      throw new Error('Tipo de convite inválido.')
     }
 
     if (newUserId) {
-      const { error: utError } = await supabaseAdmin.from('user_tenants').upsert({
-        user_id: newUserId,
-        tenant_id: invitation.tenant_id
-      }, { onConflict: 'user_id,tenant_id' })
+      const { error: utError } = await supabaseAdmin.from('user_tenants').upsert(
+        {
+          user_id: newUserId,
+          tenant_id: invitation.tenant_id,
+        },
+        { onConflict: 'user_id,tenant_id' },
+      )
       if (utError) console.error('Error linking user:', utError)
     }
 

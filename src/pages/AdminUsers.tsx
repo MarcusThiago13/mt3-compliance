@@ -151,21 +151,38 @@ export default function AdminUsers() {
     }
   }
 
-  const handleSendEmail = async (invitationId: string) => {
+  const selectedTenant = tenants.find((t) => t.id === selectedTenantId)
+
+  const handleSendEmail = async (invitationId: string, userEmail: string, userName: string) => {
     try {
-      await sendInvitation(invitationId, 'email')
-      toast({ title: 'Sucesso', description: 'E-mail de convite enviado.' })
+      const data = await sendInvitation(invitationId, 'link')
+      const tenantName = selectedTenant?.name || ''
+
+      const subject = `Convite de Acesso - mt3 Compliance`
+      const body = `Olá ${userName || 'Usuário'},
+
+Você foi convidado(a) para acessar o sistema mt3 Compliance da organização ${tenantName}.
+
+Por favor, acesse o link abaixo para criar sua senha e entrar no seu ambiente seguro:
+${data.link}
+
+Atenciosamente,
+Equipe mt3 Compliance`
+
+      window.location.href = `mailto:${userEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`
+
+      toast({ title: 'Sucesso', description: 'Abrindo o cliente de e-mail para envio do convite.' })
       fetchTenantUsers(selectedTenantId)
     } catch (error: any) {
       toast({ title: 'Erro', description: error.message, variant: 'destructive' })
     }
   }
 
-  const handleSendWhatsApp = async (invitationId: string, phoneStr?: string) => {
+  const handleSendWhatsApp = async (invitationId: string, phoneStr: string, userName: string) => {
     try {
       const data = await sendInvitation(invitationId, 'link')
-      const tenantName = tenants.find((t) => t.id === selectedTenantId)?.name || ''
-      const message = `Olá! Você foi convidado para acessar o sistema mt3 Compliance da organização ${tenantName}. Defina sua senha através deste link para acessar o seu ambiente seguro: ${data.link}`
+      const tenantName = selectedTenant?.name || ''
+      const message = `Olá ${userName || ''}! Você foi convidado(a) para acessar o sistema mt3 Compliance da organização ${tenantName}. Defina sua senha através deste link para acessar o seu ambiente seguro: ${data.link}`
       const waPhone = phoneStr ? phoneStr.replace(/\D/g, '') : ''
       window.open(`https://wa.me/${waPhone}?text=${encodeURIComponent(message)}`, '_blank')
       fetchTenantUsers(selectedTenantId)
@@ -173,8 +190,6 @@ export default function AdminUsers() {
       toast({ title: 'Erro', description: error.message, variant: 'destructive' })
     }
   }
-
-  const selectedTenant = tenants.find((t) => t.id === selectedTenantId)
 
   return (
     <div className="space-y-6 animate-fade-in pb-12">
@@ -326,7 +341,7 @@ export default function AdminUsers() {
                             <Button
                               variant="outline"
                               size="sm"
-                              onClick={() => handleSendEmail(r.id)}
+                              onClick={() => handleSendEmail(r.id, r.email, r.name)}
                               title="Enviar por E-mail"
                             >
                               <Mail className="h-4 w-4 sm:mr-1" />{' '}
@@ -336,7 +351,7 @@ export default function AdminUsers() {
                               variant="default"
                               size="sm"
                               className="bg-[#25D366] hover:bg-[#20bd5a] text-white border-none"
-                              onClick={() => handleSendWhatsApp(r.id, r.phone)}
+                              onClick={() => handleSendWhatsApp(r.id, r.phone || '', r.name)}
                               title="Enviar por WhatsApp"
                             >
                               <MessageCircle className="h-4 w-4 sm:mr-1" />{' '}
@@ -349,7 +364,7 @@ export default function AdminUsers() {
                             <Button
                               variant="ghost"
                               size="sm"
-                              onClick={() => handleSendEmail(r.id)}
+                              onClick={() => handleSendEmail(r.id, r.email, r.name)}
                               title="Reenviar por E-mail"
                             >
                               <Mail className="h-4 w-4 sm:mr-1" />{' '}
