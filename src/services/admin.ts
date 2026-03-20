@@ -26,20 +26,40 @@ export const getInvitations = async (tenantId?: string) => {
 }
 
 export const createInvitation = async (
-  email: string,
+  rawEmail: string,
   name: string,
   tenant_id: string,
   phone?: string,
   role: string = 'viewer',
   classification: string = 'Usuário Colaborador',
 ) => {
-  const { data, error } = await supabase
+  const email = rawEmail.trim().toLowerCase()
+
+  const { data: existing } = await supabase
     .from('invitations' as any)
-    .insert([{ email, name, tenant_id, phone, status: 'pending', role, classification }])
-    .select()
-    .single()
-  if (error) throw error
-  return data
+    .select('id')
+    .eq('email', email)
+    .eq('tenant_id', tenant_id)
+    .maybeSingle()
+
+  if (existing) {
+    const { data, error } = await supabase
+      .from('invitations' as any)
+      .update({ name, phone, status: 'pending', role, classification })
+      .eq('id', existing.id)
+      .select()
+      .single()
+    if (error) throw error
+    return data
+  } else {
+    const { data, error } = await supabase
+      .from('invitations' as any)
+      .insert([{ email, name, tenant_id, phone, status: 'pending', role, classification }])
+      .select()
+      .single()
+    if (error) throw error
+    return data
+  }
 }
 
 export const sendInvitation = async (invitation_id: string, type: 'email' | 'link') => {

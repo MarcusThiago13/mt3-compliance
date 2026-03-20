@@ -174,9 +174,23 @@ export default function AdminUsers() {
       return
     }
 
+    const cleanEmail = email.trim().toLowerCase()
+    const alreadyActive = records.find(
+      (r) => r.type === 'active' && r.email?.trim().toLowerCase() === cleanEmail,
+    )
+
+    if (alreadyActive) {
+      toast({
+        title: 'Atenção',
+        description: 'Este usuário já possui acesso ativo nesta organização.',
+        variant: 'destructive',
+      })
+      return
+    }
+
     setIsSubmitting(true)
     try {
-      await createInvitation(email, name, selectedTenantId, phone, role, classification)
+      await createInvitation(cleanEmail, name, selectedTenantId, phone, role, classification)
       toast({ title: 'Sucesso', description: 'Convite criado. Você já pode enviá-lo.' })
       setIsDialogOpen(false)
       setEmail('')
@@ -238,10 +252,9 @@ export default function AdminUsers() {
   const handleSendEmail = async (invitationId: string, userEmail: string, userName: string) => {
     try {
       const data = await sendInvitation(invitationId, 'link')
+
       if (data.message) {
         toast({ title: 'Vínculo Automático', description: data.message })
-        fetchTenantUsers(selectedTenantId)
-        return
       }
 
       const tenantName = selectedTenant?.name || ''
@@ -250,7 +263,7 @@ export default function AdminUsers() {
 
 Você foi convidado(a) para acessar o sistema mt3 Compliance da organização ${tenantName}.
 
-Por favor, acesse o link abaixo para criar sua senha e entrar no seu ambiente seguro:
+${data.message ? 'Como você já possui cadastro, basta acessar o sistema com suas credenciais:' : 'Por favor, acesse o link abaixo para criar sua senha e entrar no seu ambiente seguro:'}
 ${data.link}
 
 Atenciosamente,
@@ -258,7 +271,13 @@ Equipe mt3 Compliance`
 
       window.location.href = `mailto:${userEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`
 
-      toast({ title: 'Sucesso', description: 'Abrindo o cliente de e-mail para envio do convite.' })
+      if (!data.message) {
+        toast({
+          title: 'Sucesso',
+          description: 'Abrindo o cliente de e-mail para envio do convite.',
+        })
+      }
+
       fetchTenantUsers(selectedTenantId)
     } catch (error: any) {
       toast({ title: 'Erro', description: error.message, variant: 'destructive' })
@@ -267,17 +286,28 @@ Equipe mt3 Compliance`
 
   const handleSendWhatsApp = async (invitationId: string, phoneStr: string, userName: string) => {
     try {
-      const data = await sendInvitation(invitationId, 'link')
-      if (data.message) {
-        toast({ title: 'Vínculo Automático', description: data.message })
-        fetchTenantUsers(selectedTenantId)
+      const waPhone = phoneStr ? phoneStr.replace(/\D/g, '') : ''
+
+      if (!waPhone) {
+        toast({
+          title: 'Atenção',
+          description: 'O usuário não possui um número de WhatsApp cadastrado.',
+          variant: 'destructive',
+        })
         return
       }
 
+      const data = await sendInvitation(invitationId, 'link')
+
+      if (data.message) {
+        toast({ title: 'Vínculo Automático', description: data.message })
+      }
+
       const tenantName = selectedTenant?.name || ''
-      const message = `Olá ${userName || ''}! Você foi convidado(a) para acessar o sistema mt3 Compliance da organização ${tenantName}. Defina sua senha através deste link para acessar o seu ambiente seguro: ${data.link}`
-      const waPhone = phoneStr ? phoneStr.replace(/\D/g, '') : ''
+      const message = `Olá ${userName || ''}! Você foi convidado(a) para acessar o sistema mt3 Compliance da organização ${tenantName}. ${data.message ? 'Como você já possui cadastro, basta acessar o sistema:' : 'Defina sua senha através deste link para acessar o seu ambiente seguro:'} ${data.link}`
+
       window.open(`https://wa.me/${waPhone}?text=${encodeURIComponent(message)}`, '_blank')
+
       fetchTenantUsers(selectedTenantId)
     } catch (error: any) {
       toast({ title: 'Erro', description: error.message, variant: 'destructive' })
