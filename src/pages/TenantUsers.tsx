@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
-import { Mail, MessageCircle, Loader2, ShieldCheck, UserPlus, ShieldAlert } from 'lucide-react'
+import { useParams, Navigate } from 'react-router-dom'
+import { Mail, MessageCircle, Loader2, ShieldCheck, UserPlus, Users } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   Table,
   TableBody,
@@ -12,8 +13,8 @@ import {
 } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
 import { toast } from '@/hooks/use-toast'
-import { supabase } from '@/lib/supabase/client'
 import { getUsers, getInvitations, createInvitation, sendInvitation } from '@/services/admin'
+import { useAppStore } from '@/stores/main'
 import { useAuth } from '@/hooks/use-auth'
 import {
   Dialog,
@@ -25,24 +26,19 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
 import { Label } from '@/components/ui/label'
 
-export default function Users() {
+export default function TenantUsers() {
+  const { tenantId } = useParams<{ tenantId: string }>()
+  const { activeTenant } = useAppStore()
   const { user: currentUser } = useAuth()
+
   const isAdmin =
     currentUser?.email === 'admin@example.com' ||
     currentUser?.app_metadata?.role === 'admin' ||
     currentUser?.user_metadata?.is_admin
 
   const [records, setRecords] = useState<any[]>([])
-  const [tenants, setTenants] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -50,15 +46,14 @@ export default function Users() {
   const [email, setEmail] = useState('')
   const [name, setName] = useState('')
   const [phone, setPhone] = useState('')
-  const [tenantId, setTenantId] = useState('')
 
   const fetchInitialData = async () => {
+    if (!tenantId) return
     setLoading(true)
     try {
-      const [fetchedUsers, fetchedInvites, { data: fetchedTenants }] = await Promise.all([
-        getUsers().catch(() => []),
-        getInvitations().catch(() => []),
-        supabase.from('tenants').select('id, name').order('name'),
+      const [fetchedUsers, fetchedInvites] = await Promise.all([
+        getUsers(tenantId).catch(() => []),
+        getInvitations(tenantId).catch(() => []),
       ])
 
       const combined = [
@@ -71,7 +66,6 @@ export default function Users() {
           id: i.id,
           name: i.name || '-',
           email: i.email,
-          tenants: i.tenant ? [i.tenant] : [],
           phone: i.phone,
           status: i.status === 'pending' ? 'Pendente' : i.status === 'sent' ? 'Enviado' : 'Aceito',
           type: 'invitation',
@@ -79,7 +73,6 @@ export default function Users() {
       ]
 
       setRecords(combined)
-      setTenants(fetchedTenants || [])
     } catch (error: any) {
       toast({ title: 'Erro', description: error.message, variant: 'destructive' })
     } finally {
@@ -88,26 +81,15 @@ export default function Users() {
   }
 
   useEffect(() => {
-    if (isAdmin) fetchInitialData()
-  }, [isAdmin])
+    if (isAdmin && tenantId) fetchInitialData()
+  }, [isAdmin, tenantId])
 
   if (!isAdmin) {
-    return (
-      <div className="flex justify-center items-center h-[60vh] animate-fade-in">
-        <div className="text-center space-y-4 max-w-sm">
-          <ShieldAlert className="mx-auto h-16 w-16 text-muted-foreground opacity-50" />
-          <h2 className="text-2xl font-bold text-foreground">Acesso Restrito</h2>
-          <p className="text-muted-foreground">
-            Você não possui privilégios de administrador para visualizar o painel de gestão de
-            usuários.
-          </p>
-        </div>
-      </div>
-    )
+    return <Navigate to={`/${tenantId}/clause/4.1`} replace />
   }
 
   const handleCreateUser = async () => {
-    if (!email || !name || !tenantId) {
+    if (!email || !name) {
       toast({
         title: 'Atenção',
         description: 'Preencha os campos obrigatórios.',
@@ -115,6 +97,8 @@ export default function Users() {
       })
       return
     }
+    if (!tenantId) return
+
     setIsSubmitting(true)
     try {
       await createInvitation(email, name, tenantId, phone)
@@ -123,7 +107,6 @@ export default function Users() {
       setEmail('')
       setName('')
       setPhone('')
-      setTenantId('')
       fetchInitialData()
     } catch (error: any) {
       toast({ title: 'Erro', description: error.message, variant: 'destructive' })
@@ -145,7 +128,7 @@ export default function Users() {
   const handleSendWhatsApp = async (invitationId: string, phoneStr?: string) => {
     try {
       const data = await sendInvitation(invitationId, 'link')
-      const message = `Olá! Você foi convidado para acessar o sistema mt3 Compliance. Defina sua senha através deste link: ${data.link}`
+      const message = `Olá! Você foi convidado para acessar o sistema mt3 Compliance da organização ${activeTenant?.name}. Defina sua senha através deste link para acessar o seu ambiente seguro: ${data.link}`
       const waPhone = phoneStr ? phoneStr.replace(/\D/g, '') : ''
       window.open(`https://wa.me/${waPhone}?text=${encodeURIComponent(message)}`, '_blank')
       fetchInitialData()
@@ -155,11 +138,16 @@ export default function Users() {
   }
 
   return (
-    <div className="space-y-6 animate-fade-in">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+    <div className="space-y-6 animate-fade-in pb-12">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b pb-4">
         <div>
-          <h1 className="text-3xl font-bold text-primary">Gestão de Usuários</h1>
-          <p className="text-muted-foreground">Administração de acessos e convites do sistema</p>
+          <h1 className="text-3xl font-bold text-primary flex items-center gap-3">
+            <Users className="h-8 w-8" />
+            Acessos: {activeTenant?.name || 'Carregando...'}
+          </h1>
+          <p className="text-muted-foreground mt-1">
+            Gestão centralizada de usuários e convites específicos desta organização.
+          </p>
         </div>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
@@ -169,10 +157,9 @@ export default function Users() {
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Cadastrar Novo Usuário</DialogTitle>
+              <DialogTitle>Convidar para {activeTenant?.name}</DialogTitle>
               <DialogDescription>
-                Crie um convite para adicionar o usuário à uma organização. O convite deve ser
-                enviado manualmente depois.
+                Crie um convite para adicionar um usuário exclusivamente a este ambiente isolado.
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4 py-4">
@@ -201,29 +188,13 @@ export default function Users() {
                   placeholder="5511999999999"
                 />
               </div>
-              <div className="space-y-2">
-                <Label>Organização (Tenant) *</Label>
-                <Select value={tenantId} onValueChange={setTenantId}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione uma organização" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {tenants.map((t) => (
-                      <SelectItem key={t.id} value={t.id}>
-                        {t.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
                 Cancelar
               </Button>
               <Button onClick={handleCreateUser} disabled={isSubmitting}>
-                {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Salvar
+                {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />} Salvar
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -233,17 +204,20 @@ export default function Users() {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <ShieldCheck className="h-5 w-5" /> Usuários e Convites
+            <ShieldCheck className="h-5 w-5" /> Membros Ativos e Pendentes
           </CardTitle>
         </CardHeader>
         <CardContent>
           {loading ? (
             <div className="flex justify-center items-center py-12 text-muted-foreground">
-              <Loader2 className="h-8 w-8 animate-spin mr-2 text-primary" /> Carregando usuários...
+              <Loader2 className="h-8 w-8 animate-spin mr-2 text-primary" /> Buscando dados de
+              acesso...
             </div>
           ) : records.length === 0 ? (
             <div className="text-center py-12">
-              <p className="text-muted-foreground">Nenhum usuário ou convite encontrado.</p>
+              <p className="text-muted-foreground">
+                Nenhum usuário ou convite encontrado para esta organização.
+              </p>
             </div>
           ) : (
             <Table>
@@ -251,9 +225,8 @@ export default function Users() {
                 <TableRow>
                   <TableHead>Nome</TableHead>
                   <TableHead>E-mail</TableHead>
-                  <TableHead>Organizações</TableHead>
                   <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Ações de Convite</TableHead>
+                  <TableHead className="text-right">Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -261,19 +234,6 @@ export default function Users() {
                   <TableRow key={r.id || i} className="hover:bg-muted/30">
                     <TableCell className="font-medium text-primary">{r.name}</TableCell>
                     <TableCell className="text-muted-foreground">{r.email}</TableCell>
-                    <TableCell>
-                      <div className="flex flex-wrap gap-1">
-                        {r.tenants && r.tenants.length > 0 ? (
-                          r.tenants.map((t: any) => (
-                            <Badge key={t.id} variant="outline" className="bg-muted text-xs">
-                              {t.name}
-                            </Badge>
-                          ))
-                        ) : (
-                          <span className="text-xs text-muted-foreground">-</span>
-                        )}
-                      </div>
-                    </TableCell>
                     <TableCell>
                       {r.status === 'Ativo' ? (
                         <Badge className="bg-green-100 text-green-800 hover:bg-green-100 border-none">

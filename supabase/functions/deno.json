@@ -1,5 +1,6 @@
 {
   "_versions": {
-    "admin-invite": 1
+    "admin-invite": 2,
+    "admin-users": 1
   }
 }

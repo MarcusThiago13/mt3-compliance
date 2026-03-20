@@ -25,62 +25,49 @@ Deno.serve(async (req: Request) => {
 
     const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey)
 
-    if (req.method === 'GET') {
-      const { data: usersData, error: usersError } = await supabaseAdmin.auth.admin.listUsers()
-      if (usersError) throw usersError
-
-      const { data: utData, error: utError } = await supabaseAdmin
-        .from('user_tenants')
-        .select('user_id, tenant_id, tenants(name)')
-      if (utError) throw utError
-
-      const users = usersData.users.map((u: any) => {
-        const uts = utData.filter((ut: any) => ut.user_id === u.id)
-        return {
-          id: u.id,
-          email: u.email,
-          name: u.user_metadata?.name || 'Sem Nome',
-          status: u.email_confirmed_at ? 'Ativo' : 'Pendente',
-          tenants: uts.map((ut: any) => ({
-            id: ut.tenant_id,
-            name: ut.tenants?.name,
-          })),
-        }
-      })
-
-      return new Response(JSON.stringify({ users }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 200,
-      })
-    }
-
     if (req.method === 'POST') {
-      const body = await req.json()
-      const { email, name, tenant_id } = body
+      const body = await req.json().catch(() => ({}))
+      const { action, tenant_id } = body
 
-      const { data: existingUsers } = await supabaseAdmin.auth.admin.listUsers()
-      let authUser = existingUsers.users.find((u: any) => u.email === email)
+      if (action === 'get_users') {
+        const { data: usersData, error: usersError } = await supabaseAdmin.auth.admin.listUsers()
+        if (usersError) throw usersError
 
-      if (!authUser) {
-        const { data, error } = await supabaseAdmin.auth.admin.createUser({
-          email,
-          user_metadata: { name },
-          email_confirm: false,
+        let query = supabaseAdmin.from('user_tenants').select('user_id, tenant_id, tenants(name)')
+        if (tenant_id) {
+          query = query.eq('tenant_id', tenant_id)
+        }
+
+        const { data: utData, error: utError } = await query
+        if (utError) throw utError
+
+        const relevantUserIds = new Set(utData.map((ut: any) => ut.user_id))
+
+        const users = usersData.users
+          .filter((u: any) => !tenant_id || relevantUserIds.has(u.id))
+          .map((u: any) => {
+            const uts = utData.filter((ut: any) => ut.user_id === u.id)
+            return {
+              id: u.id,
+              email: u.email,
+              name: u.user_metadata?.name || 'Sem Nome',
+              status: u.email_confirmed_at ? 'Ativo' : 'Pendente',
+              tenants: uts.map((ut: any) => ({
+                id: ut.tenant_id,
+                name: ut.tenants?.name,
+              })),
+            }
+          })
+
+        return new Response(JSON.stringify({ users }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 200,
         })
-        if (error) throw error
-        authUser = data.user
       }
 
-      if (tenant_id) {
-        const { error: insertError } = await supabaseAdmin
-          .from('user_tenants')
-          .upsert({ user_id: authUser.id, tenant_id })
-        if (insertError) throw insertError
-      }
-
-      return new Response(JSON.stringify({ user: authUser }), {
+      return new Response(JSON.stringify({ error: 'Ação não suportada' }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 200,
+        status: 400,
       })
     }
 

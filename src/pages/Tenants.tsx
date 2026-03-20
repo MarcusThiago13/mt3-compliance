@@ -9,6 +9,7 @@ import {
   Edit,
   Power,
   Trash2,
+  Users,
 } from 'lucide-react'
 import { supabase } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
@@ -272,9 +273,13 @@ export default function Tenants() {
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => navigate(`/${t.id}/users`)}>
+                            <Users className="mr-2 h-4 w-4" /> Gerenciar Usuários
+                          </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => navigate(`/${t.id}/onboarding`)}>
                             <Edit className="mr-2 h-4 w-4" /> Editar Perfil
                           </DropdownMenuItem>
+                          <DropdownMenuSeparator />
                           <DropdownMenuItem onClick={() => handleToggleStatus(t)}>
                             <Power className="mr-2 h-4 w-4" />{' '}
                             {t.status === 'active' ? 'Inativar' : 'Ativar'}
