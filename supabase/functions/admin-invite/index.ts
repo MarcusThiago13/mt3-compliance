@@ -28,11 +28,9 @@ Deno.serve(async (req: Request) => {
       data: { user },
       error: userError,
     } = await supabaseClient.auth.getUser(token)
-
+    
     if (userError || !user) {
-      throw new Error(
-        `Não autorizado (Token inválido): ${userError?.message || 'Sessão não identificada'}`,
-      )
+      throw new Error(`Não autorizado (Token inválido): ${userError?.message || 'Sessão não identificada'}`)
     }
 
     const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey)
@@ -50,8 +48,8 @@ Deno.serve(async (req: Request) => {
 
     if (invError || !invitation) throw new Error('Convite não encontrado.')
 
-    // Sempre geramos o link de convite em vez de usar inviteUserByEmail.
-    // Isso evita o envio de e-mails em inglês (padrão do Supabase)
+    // Sempre geramos o link de convite em vez de usar inviteUserByEmail. 
+    // Isso evita o envio de e-mails em inglês (padrão do Supabase) 
     // e nos permite interceptar a URL final no frontend para compartilhar.
     const { data, error } = await supabaseAdmin.auth.admin.generateLink({
       type: 'invite',
@@ -59,16 +57,14 @@ Deno.serve(async (req: Request) => {
       data: { name: invitation.name },
       options: { redirectTo: redirectUrl || undefined },
     })
-
+    
     if (error) {
       if (error.status === 422 || error.message.includes('already registered')) {
-        throw new Error(
-          `O usuário com e-mail ${invitation.email} já está registrado. O sistema logo suportará a vinculação de usuários existentes.`,
-        )
+        throw new Error(`O usuário com e-mail ${invitation.email} já está registrado. O sistema logo suportará a vinculação de usuários existentes.`)
       }
       throw new Error(`Erro ao gerar link: ${error.message}`)
     }
-
+    
     let actionLink = data.properties?.action_link
     const newUserId = data.user?.id
 
@@ -87,13 +83,10 @@ Deno.serve(async (req: Request) => {
     }
 
     if (newUserId) {
-      const { error: utError } = await supabaseAdmin.from('user_tenants').upsert(
-        {
-          user_id: newUserId,
-          tenant_id: invitation.tenant_id,
-        },
-        { onConflict: 'user_id,tenant_id' },
-      )
+      const { error: utError } = await supabaseAdmin.from('user_tenants').upsert({
+        user_id: newUserId,
+        tenant_id: invitation.tenant_id
+      }, { onConflict: 'user_id,tenant_id' })
       if (utError) console.error('Error linking user:', utError)
     }
 
