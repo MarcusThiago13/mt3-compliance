@@ -28,11 +28,9 @@ Deno.serve(async (req: Request) => {
       data: { user },
       error: userError,
     } = await supabaseClient.auth.getUser(token)
-
+    
     if (userError || !user) {
-      throw new Error(
-        `Não autorizado (Token inválido): ${userError?.message || 'Sessão não identificada'}`,
-      )
+      throw new Error(`Não autorizado (Token inválido): ${userError?.message || 'Sessão não identificada'}`)
     }
 
     const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey)
@@ -49,7 +47,7 @@ Deno.serve(async (req: Request) => {
         if (tenant_id) {
           query = query.eq('tenant_id', tenant_id)
         }
-
+        
         const { data: utData, error: utError } = await query
         if (utError) throw new Error(`Erro ao buscar permissões: ${utError.message}`)
 
@@ -78,7 +76,7 @@ Deno.serve(async (req: Request) => {
           status: 200,
         })
       }
-
+      
       throw new Error('Ação não suportada.')
     }
 

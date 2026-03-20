@@ -28,11 +28,9 @@ Deno.serve(async (req: Request) => {
       data: { user },
       error: userError,
     } = await supabaseClient.auth.getUser(token)
-
+    
     if (userError || !user) {
-      throw new Error(
-        `Não autorizado (Token inválido): ${userError?.message || 'Sessão não identificada'}`,
-      )
+      throw new Error(`Não autorizado (Token inválido): ${userError?.message || 'Sessão não identificada'}`)
     }
 
     const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey)
@@ -50,24 +48,23 @@ Deno.serve(async (req: Request) => {
 
     if (invError || !invitation) throw new Error('Convite não encontrado.')
 
-    let actionLink = undefined
-    let newUserId = null
+    let actionLink = undefined;
+    let newUserId = null;
 
     if (type === 'email') {
       const { data, error } = await supabaseAdmin.auth.admin.inviteUserByEmail(invitation.email, {
         data: { name: invitation.name },
         redirectTo: redirectUrl || undefined,
       })
-
+      
       if (error) {
         if (error.status === 422 || error.message.includes('already registered')) {
-          throw new Error(
-            `O usuário com e-mail ${invitation.email} já está registrado. O sistema logo suportará a vinculação de usuários existentes.`,
-          )
+          throw new Error(`O usuário com e-mail ${invitation.email} já está registrado. O sistema logo suportará a vinculação de usuários existentes.`)
         }
         throw new Error(`Erro ao enviar e-mail: ${error.message}`)
       }
       newUserId = data.user.id
+      
     } else if (type === 'link') {
       const { data, error } = await supabaseAdmin.auth.admin.generateLink({
         type: 'invite',
@@ -75,29 +72,25 @@ Deno.serve(async (req: Request) => {
         data: { name: invitation.name },
         options: { redirectTo: redirectUrl || undefined },
       })
-
+      
       if (error) {
         if (error.status === 422 || error.message.includes('already registered')) {
-          throw new Error(
-            `O usuário com e-mail ${invitation.email} já está registrado. O sistema logo suportará a vinculação de usuários existentes.`,
-          )
+          throw new Error(`O usuário com e-mail ${invitation.email} já está registrado. O sistema logo suportará a vinculação de usuários existentes.`)
         }
         throw new Error(`Erro ao gerar link: ${error.message}`)
       }
       actionLink = data.properties?.action_link
       newUserId = data.user?.id
+      
     } else {
       throw new Error('Tipo de convite inválido.')
     }
 
     if (newUserId) {
-      const { error: utError } = await supabaseAdmin.from('user_tenants').upsert(
-        {
-          user_id: newUserId,
-          tenant_id: invitation.tenant_id,
-        },
-        { onConflict: 'user_id,tenant_id' },
-      )
+      const { error: utError } = await supabaseAdmin.from('user_tenants').upsert({
+        user_id: newUserId,
+        tenant_id: invitation.tenant_id
+      }, { onConflict: 'user_id,tenant_id' })
       if (utError) console.error('Error linking user:', utError)
     }
 
