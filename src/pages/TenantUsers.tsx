@@ -276,6 +276,19 @@ export default function TenantUsers() {
                           </Button>
                         </div>
                       )}
+                      {r.type === 'invitation' && r.status === 'Enviado' && (
+                        <div className="flex justify-end gap-2">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleSendEmail(r.id)}
+                            title="Reenviar por E-mail"
+                          >
+                            <Mail className="h-4 w-4 sm:mr-1" />{' '}
+                            <span className="hidden sm:inline">Reenviar</span>
+                          </Button>
+                        </div>
+                      )}
                     </TableCell>
                   </TableRow>
                 ))}

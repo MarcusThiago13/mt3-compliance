@@ -37,16 +37,18 @@ Deno.serve(async (req: Request) => {
         if (tenant_id) {
           query = query.eq('tenant_id', tenant_id)
         }
-        
+
         const { data: utData, error: utError } = await query
         if (utError) throw utError
 
-        const relevantUserIds = new Set(utData.map((ut: any) => ut.user_id))
+        const userTenantsArray = utData || []
+        const relevantUserIds = new Set(userTenantsArray.map((ut: any) => ut.user_id))
+        const rawUsers = usersData?.users || []
 
-        const users = usersData.users
+        const users = rawUsers
           .filter((u: any) => !tenant_id || relevantUserIds.has(u.id))
           .map((u: any) => {
-            const uts = utData.filter((ut: any) => ut.user_id === u.id)
+            const uts = userTenantsArray.filter((ut: any) => ut.user_id === u.id)
             return {
               id: u.id,
               email: u.email,
@@ -64,7 +66,7 @@ Deno.serve(async (req: Request) => {
           status: 200,
         })
       }
-      
+
       return new Response(JSON.stringify({ error: 'Ação não suportada' }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 400,

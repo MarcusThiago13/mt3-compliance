@@ -15,6 +15,7 @@ import Layout from './components/Layout'
 import TenantContext from './components/layout/TenantContext'
 import Tenants from './pages/Tenants'
 import TenantUsers from './pages/TenantUsers'
+import AdminUsers from './pages/AdminUsers'
 import Onboarding from './pages/Onboarding'
 import ClauseView from './pages/ClauseView'
 import Intelligence from './pages/Intelligence'
@@ -78,6 +79,7 @@ const App = () => (
               <Route element={<Layout />}>
                 <Route path="/" element={<Index />} />
                 <Route path="/tenants" element={<Tenants />} />
+                <Route path="/admin/users" element={<AdminUsers />} />
                 <Route path="/onboarding" element={<Onboarding />} />
 
                 <Route path="/:tenantId" element={<TenantContext />}>
