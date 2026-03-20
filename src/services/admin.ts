@@ -8,29 +8,35 @@ export const getUsers = async () => {
   return data.users
 }
 
-export const createUser = async (email: string, name: string, tenant_id: string) => {
-  const { data, error } = await supabase.functions.invoke('admin-users', {
-    method: 'POST',
-    body: { email, name, tenant_id },
-  })
-  if (error) throw error
-  return data.user
-}
-
-export const sendInviteEmail = async (email: string) => {
-  const { data, error } = await supabase.functions.invoke('admin-invite', {
-    method: 'POST',
-    body: { email, type: 'email', redirectUrl: window.location.origin },
-  })
+export const getInvitations = async () => {
+  const { data, error } = await supabase
+    .from('invitations' as any)
+    .select('*, tenant:tenants(id, name)')
+    .order('created_at', { ascending: false })
   if (error) throw error
   return data
 }
 
-export const generateInviteLink = async (email: string) => {
+export const createInvitation = async (
+  email: string,
+  name: string,
+  tenant_id: string,
+  phone?: string,
+) => {
+  const { data, error } = await supabase
+    .from('invitations' as any)
+    .insert([{ email, name, tenant_id, phone, status: 'pending' }])
+    .select()
+    .single()
+  if (error) throw error
+  return data
+}
+
+export const sendInvitation = async (invitation_id: string, type: 'email' | 'link') => {
   const { data, error } = await supabase.functions.invoke('admin-invite', {
     method: 'POST',
-    body: { email, type: 'link', redirectUrl: window.location.origin },
+    body: { invitation_id, type, redirectUrl: window.location.origin },
   })
   if (error) throw error
-  return data.link
+  return data
 }

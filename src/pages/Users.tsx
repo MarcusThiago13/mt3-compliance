@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Mail, MessageCircle, Loader2, ShieldCheck, UserPlus } from 'lucide-react'
+import { Mail, MessageCircle, Loader2, ShieldCheck, UserPlus, ShieldAlert } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import {
@@ -13,7 +13,8 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { toast } from '@/hooks/use-toast'
 import { supabase } from '@/lib/supabase/client'
-import { getUsers, createUser, sendInviteEmail, generateInviteLink } from '@/services/admin'
+import { getUsers, getInvitations, createInvitation, sendInvitation } from '@/services/admin'
+import { useAuth } from '@/hooks/use-auth'
 import {
   Dialog,
   DialogContent,
@@ -34,7 +35,13 @@ import {
 import { Label } from '@/components/ui/label'
 
 export default function Users() {
-  const [users, setUsers] = useState<any[]>([])
+  const { user: currentUser } = useAuth()
+  const isAdmin =
+    currentUser?.email === 'admin@example.com' ||
+    currentUser?.app_metadata?.role === 'admin' ||
+    currentUser?.user_metadata?.is_admin
+
+  const [records, setRecords] = useState<any[]>([])
   const [tenants, setTenants] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
@@ -42,16 +49,36 @@ export default function Users() {
 
   const [email, setEmail] = useState('')
   const [name, setName] = useState('')
+  const [phone, setPhone] = useState('')
   const [tenantId, setTenantId] = useState('')
 
   const fetchInitialData = async () => {
     setLoading(true)
     try {
-      const [fetchedUsers, { data: fetchedTenants }] = await Promise.all([
-        getUsers(),
+      const [fetchedUsers, fetchedInvites, { data: fetchedTenants }] = await Promise.all([
+        getUsers().catch(() => []),
+        getInvitations().catch(() => []),
         supabase.from('tenants').select('id, name').order('name'),
       ])
-      setUsers(fetchedUsers || [])
+
+      const combined = [
+        ...fetchedUsers.map((u: any) => ({
+          ...u,
+          type: 'active',
+          status: 'Ativo',
+        })),
+        ...fetchedInvites.map((i: any) => ({
+          id: i.id,
+          name: i.name || '-',
+          email: i.email,
+          tenants: i.tenant ? [i.tenant] : [],
+          phone: i.phone,
+          status: i.status === 'pending' ? 'Pendente' : i.status === 'sent' ? 'Enviado' : 'Aceito',
+          type: 'invitation',
+        })),
+      ]
+
+      setRecords(combined)
       setTenants(fetchedTenants || [])
     } catch (error: any) {
       toast({ title: 'Erro', description: error.message, variant: 'destructive' })
@@ -61,21 +88,41 @@ export default function Users() {
   }
 
   useEffect(() => {
-    fetchInitialData()
-  }, [])
+    if (isAdmin) fetchInitialData()
+  }, [isAdmin])
+
+  if (!isAdmin) {
+    return (
+      <div className="flex justify-center items-center h-[60vh] animate-fade-in">
+        <div className="text-center space-y-4 max-w-sm">
+          <ShieldAlert className="mx-auto h-16 w-16 text-muted-foreground opacity-50" />
+          <h2 className="text-2xl font-bold text-foreground">Acesso Restrito</h2>
+          <p className="text-muted-foreground">
+            Você não possui privilégios de administrador para visualizar o painel de gestão de
+            usuários.
+          </p>
+        </div>
+      </div>
+    )
+  }
 
   const handleCreateUser = async () => {
     if (!email || !name || !tenantId) {
-      toast({ title: 'Atenção', description: 'Preencha todos os campos.', variant: 'destructive' })
+      toast({
+        title: 'Atenção',
+        description: 'Preencha os campos obrigatórios.',
+        variant: 'destructive',
+      })
       return
     }
     setIsSubmitting(true)
     try {
-      await createUser(email, name, tenantId)
-      toast({ title: 'Sucesso', description: 'Usuário criado com sucesso.' })
+      await createInvitation(email, name, tenantId, phone)
+      toast({ title: 'Sucesso', description: 'Convite criado. Você já pode enviá-lo.' })
       setIsDialogOpen(false)
       setEmail('')
       setName('')
+      setPhone('')
       setTenantId('')
       fetchInitialData()
     } catch (error: any) {
@@ -85,21 +132,23 @@ export default function Users() {
     }
   }
 
-  const handleSendEmail = async (userEmail: string) => {
+  const handleSendEmail = async (invitationId: string) => {
     try {
-      await sendInviteEmail(userEmail)
+      await sendInvitation(invitationId, 'email')
       toast({ title: 'Sucesso', description: 'E-mail de convite enviado.' })
+      fetchInitialData()
     } catch (error: any) {
       toast({ title: 'Erro', description: error.message, variant: 'destructive' })
     }
   }
 
-  const handleSendWhatsApp = async (userEmail: string) => {
+  const handleSendWhatsApp = async (invitationId: string, phoneStr?: string) => {
     try {
-      const link = await generateInviteLink(userEmail)
-      const message = `Olá! Você foi convidado para acessar o mt3 Compliance. Defina sua senha e acesse a plataforma aqui: ${link}`
-      const encodedMessage = encodeURIComponent(message)
-      window.open(`https://wa.me/?text=${encodedMessage}`, '_blank')
+      const data = await sendInvitation(invitationId, 'link')
+      const message = `Olá! Você foi convidado para acessar o sistema mt3 Compliance. Defina sua senha através deste link: ${data.link}`
+      const waPhone = phoneStr ? phoneStr.replace(/\D/g, '') : ''
+      window.open(`https://wa.me/${waPhone}?text=${encodeURIComponent(message)}`, '_blank')
+      fetchInitialData()
     } catch (error: any) {
       toast({ title: 'Erro', description: error.message, variant: 'destructive' })
     }
@@ -110,7 +159,7 @@ export default function Users() {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-3xl font-bold text-primary">Gestão de Usuários</h1>
-          <p className="text-muted-foreground">Administração de acessos e convites</p>
+          <p className="text-muted-foreground">Administração de acessos e convites do sistema</p>
         </div>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
@@ -122,12 +171,13 @@ export default function Users() {
             <DialogHeader>
               <DialogTitle>Cadastrar Novo Usuário</DialogTitle>
               <DialogDescription>
-                Adicione um novo usuário e vincule-o a uma organização.
+                Crie um convite para adicionar o usuário à uma organização. O convite deve ser
+                enviado manualmente depois.
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4 py-4">
               <div className="space-y-2">
-                <Label>Nome Completo</Label>
+                <Label>Nome Completo *</Label>
                 <Input
                   value={name}
                   onChange={(e) => setName(e.target.value)}
@@ -135,7 +185,7 @@ export default function Users() {
                 />
               </div>
               <div className="space-y-2">
-                <Label>E-mail</Label>
+                <Label>E-mail *</Label>
                 <Input
                   type="email"
                   value={email}
@@ -144,7 +194,15 @@ export default function Users() {
                 />
               </div>
               <div className="space-y-2">
-                <Label>Organização (Tenant)</Label>
+                <Label>WhatsApp (Opcional)</Label>
+                <Input
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  placeholder="5511999999999"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Organização (Tenant) *</Label>
                 <Select value={tenantId} onValueChange={setTenantId}>
                   <SelectTrigger>
                     <SelectValue placeholder="Selecione uma organização" />
@@ -175,7 +233,7 @@ export default function Users() {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <ShieldCheck className="h-5 w-5" /> Usuários Cadastrados
+            <ShieldCheck className="h-5 w-5" /> Usuários e Convites
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -183,9 +241,9 @@ export default function Users() {
             <div className="flex justify-center items-center py-12 text-muted-foreground">
               <Loader2 className="h-8 w-8 animate-spin mr-2 text-primary" /> Carregando usuários...
             </div>
-          ) : users.length === 0 ? (
+          ) : records.length === 0 ? (
             <div className="text-center py-12">
-              <p className="text-muted-foreground">Nenhum usuário encontrado.</p>
+              <p className="text-muted-foreground">Nenhum usuário ou convite encontrado.</p>
             </div>
           ) : (
             <Table>
@@ -195,18 +253,18 @@ export default function Users() {
                   <TableHead>E-mail</TableHead>
                   <TableHead>Organizações</TableHead>
                   <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Convites</TableHead>
+                  <TableHead className="text-right">Ações de Convite</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {users.map((u) => (
-                  <TableRow key={u.id} className="hover:bg-muted/30">
-                    <TableCell className="font-medium text-primary">{u.name}</TableCell>
-                    <TableCell className="text-muted-foreground">{u.email}</TableCell>
+                {records.map((r, i) => (
+                  <TableRow key={r.id || i} className="hover:bg-muted/30">
+                    <TableCell className="font-medium text-primary">{r.name}</TableCell>
+                    <TableCell className="text-muted-foreground">{r.email}</TableCell>
                     <TableCell>
                       <div className="flex flex-wrap gap-1">
-                        {u.tenants && u.tenants.length > 0 ? (
-                          u.tenants.map((t: any) => (
+                        {r.tenants && r.tenants.length > 0 ? (
+                          r.tenants.map((t: any) => (
                             <Badge key={t.id} variant="outline" className="bg-muted text-xs">
                               {t.name}
                             </Badge>
@@ -217,9 +275,13 @@ export default function Users() {
                       </div>
                     </TableCell>
                     <TableCell>
-                      {u.status === 'Ativo' ? (
+                      {r.status === 'Ativo' ? (
                         <Badge className="bg-green-100 text-green-800 hover:bg-green-100 border-none">
                           Ativo
+                        </Badge>
+                      ) : r.status === 'Enviado' ? (
+                        <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-100 border-none">
+                          Enviado
                         </Badge>
                       ) : (
                         <Badge
@@ -231,12 +293,12 @@ export default function Users() {
                       )}
                     </TableCell>
                     <TableCell className="text-right">
-                      {u.status === 'Pendente' && (
+                      {r.type === 'invitation' && r.status === 'Pendente' && (
                         <div className="flex justify-end gap-2">
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => handleSendEmail(u.email)}
+                            onClick={() => handleSendEmail(r.id)}
                             title="Enviar por E-mail"
                           >
                             <Mail className="h-4 w-4 sm:mr-1" />{' '}
@@ -246,7 +308,7 @@ export default function Users() {
                             variant="default"
                             size="sm"
                             className="bg-[#25D366] hover:bg-[#20bd5a] text-white border-none"
-                            onClick={() => handleSendWhatsApp(u.email)}
+                            onClick={() => handleSendWhatsApp(r.id, r.phone)}
                             title="Enviar por WhatsApp"
                           >
                             <MessageCircle className="h-4 w-4 sm:mr-1" />{' '}

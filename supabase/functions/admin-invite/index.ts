@@ -25,31 +25,57 @@ Deno.serve(async (req: Request) => {
 
     const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey)
 
-    const { email, type, redirectUrl } = await req.json()
+    const { invitation_id, type, redirectUrl } = await req.json()
+
+    if (!invitation_id) throw new Error('invitation_id is required')
+
+    const { data: invitation, error: invError } = await supabaseAdmin
+      .from('invitations')
+      .select('*')
+      .eq('id', invitation_id)
+      .single()
+
+    if (invError || !invitation) throw new Error('Invitation not found')
+
+    let actionLink = undefined
+    let newUserId = null
 
     if (type === 'email') {
-      const { data, error } = await supabaseAdmin.auth.admin.inviteUserByEmail(email, {
+      const { data, error } = await supabaseAdmin.auth.admin.inviteUserByEmail(invitation.email, {
+        data: { name: invitation.name },
         redirectTo: redirectUrl || undefined,
       })
       if (error) throw error
-      return new Response(JSON.stringify({ success: true }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
+      newUserId = data.user.id
     } else if (type === 'link') {
       const { data, error } = await supabaseAdmin.auth.admin.generateLink({
         type: 'invite',
-        email,
+        email: invitation.email,
+        data: { name: invitation.name },
         options: { redirectTo: redirectUrl || undefined },
       })
       if (error) throw error
-      return new Response(JSON.stringify({ link: data.properties.action_link }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
+      actionLink = data.properties.action_link
+      newUserId = data.user.id
+    } else {
+      throw new Error('Invalid type')
     }
 
-    return new Response(JSON.stringify({ error: 'Invalid type' }), {
+    if (newUserId) {
+      const { error: utError } = await supabaseAdmin.from('user_tenants').upsert(
+        {
+          user_id: newUserId,
+          tenant_id: invitation.tenant_id,
+        },
+        { onConflict: 'user_id,tenant_id' },
+      )
+      if (utError) console.error('Error linking user:', utError)
+    }
+
+    await supabaseAdmin.from('invitations').update({ status: 'sent' }).eq('id', invitation_id)
+
+    return new Response(JSON.stringify({ success: true, link: actionLink }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      status: 400,
     })
   } catch (error: any) {
     return new Response(JSON.stringify({ error: error.message }), {
