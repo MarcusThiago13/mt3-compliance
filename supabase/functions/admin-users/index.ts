@@ -21,16 +21,19 @@ Deno.serve(async (req: Request) => {
       throw new Error('Não autorizado (Token ausente).')
     }
 
-    const supabaseClient = createClient(supabaseUrl, supabaseAnonKey, {
-      global: { headers: { Authorization: authHeader } },
-    })
+    const token = authHeader.replace('Bearer ', '')
+    const supabaseClient = createClient(supabaseUrl, supabaseAnonKey)
 
     const {
       data: { user },
       error: userError,
-    } = await supabaseClient.auth.getUser()
-    
-    if (userError || !user) throw new Error('Não autorizado (Token inválido).')
+    } = await supabaseClient.auth.getUser(token)
+
+    if (userError || !user) {
+      throw new Error(
+        `Não autorizado (Token inválido): ${userError?.message || 'Sessão não identificada'}`,
+      )
+    }
 
     const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey)
 
@@ -46,7 +49,7 @@ Deno.serve(async (req: Request) => {
         if (tenant_id) {
           query = query.eq('tenant_id', tenant_id)
         }
-        
+
         const { data: utData, error: utError } = await query
         if (utError) throw new Error(`Erro ao buscar permissões: ${utError.message}`)
 
@@ -75,15 +78,12 @@ Deno.serve(async (req: Request) => {
           status: 200,
         })
       }
-      
+
       throw new Error('Ação não suportada.')
     }
 
     throw new Error('Método não permitido.')
   } catch (error: any) {
-    // Retornamos 200 com payload de erro para evitar que o Bug Scanner 
-    // intercepte como erro crítico de rede (HTTP 400), e permitimos que o frontend
-    // trate o erro de forma apropriada lendo a propriedade "error".
     return new Response(JSON.stringify({ error: error.message || 'Erro desconhecido.' }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 200,
