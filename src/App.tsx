@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate, useParams } from 'react-router-dom'
 import { Toaster } from '@/components/ui/toaster'
 import { Toaster as Sonner } from '@/components/ui/sonner'
 import { TooltipProvider } from '@/components/ui/tooltip'
@@ -60,6 +60,11 @@ const AuthGuard = ({ children }: { children: React.ReactNode }) => {
   return <>{children}</>
 }
 
+const TenantIndexRedirect = () => {
+  const { tenantId } = useParams<{ tenantId: string }>()
+  return <Navigate to={`/${tenantId}/clause/4.1`} replace />
+}
+
 const App = () => (
   <AppProvider>
     <AuthProvider>
@@ -75,7 +80,7 @@ const App = () => (
                 <Route path="/onboarding" element={<Onboarding />} />
 
                 <Route path="/:tenantId" element={<TenantContext />}>
-                  <Route index element={<Navigate to="clause/4.1" replace />} />
+                  <Route index element={<TenantIndexRedirect />} />
                   <Route path="clause/:id" element={<ClauseView />} />
                   <Route path="intelligence" element={<Intelligence />} />
                   <Route path="onboarding" element={<Onboarding />} />

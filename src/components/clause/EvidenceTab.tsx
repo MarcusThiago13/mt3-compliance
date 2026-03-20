@@ -17,6 +17,7 @@ import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import { Card, CardContent } from '@/components/ui/card'
 import { useState, useEffect } from 'react'
+import { useParams } from 'react-router-dom'
 import { IsoClause } from '@/lib/iso-data'
 import { callAnthropicMessage } from '@/lib/anthropic'
 import { complianceService } from '@/services/compliance'
@@ -24,6 +25,7 @@ import { useAuth } from '@/hooks/use-auth'
 import { toast } from '@/hooks/use-toast'
 
 export function EvidenceTab({ clause }: { clause?: IsoClause }) {
+  const { tenantId } = useParams<{ tenantId: string }>()
   const [summary, setSummary] = useState('')
   const [isGenerating, setIsGenerating] = useState(false)
   const [useSonnet, setUseSonnet] = useState(false)
@@ -35,9 +37,9 @@ export function EvidenceTab({ clause }: { clause?: IsoClause }) {
 
   useEffect(() => {
     if (clause?.id) {
-      complianceService.getEvidence(clause.id).then(setEvidence)
+      complianceService.getEvidence(clause.id, tenantId).then(setEvidence)
     }
-  }, [clause?.id])
+  }, [clause?.id, tenantId])
 
   const handleAddEvidence = async () => {
     if (!clause?.id) return
@@ -47,6 +49,7 @@ export function EvidenceTab({ clause }: { clause?: IsoClause }) {
       expiry_date: expiryDate || null,
       is_legally_valid: isLegal,
       uploaded_by: user?.email,
+      tenant_id: tenantId,
     })
     if (newEv) {
       setEvidence([newEv, ...evidence])

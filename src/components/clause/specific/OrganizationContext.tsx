@@ -1,13 +1,36 @@
+import { useEffect, useState } from 'react'
+import { useParams } from 'react-router-dom'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Textarea } from '@/components/ui/textarea'
 import { Button } from '@/components/ui/button'
 import { Slider } from '@/components/ui/slider'
 import { Label } from '@/components/ui/label'
-import { Download } from 'lucide-react'
+import { Download, Loader2, FileText } from 'lucide-react'
 import { toast } from '@/hooks/use-toast'
+import { complianceService } from '@/services/compliance'
 
 export function OrganizationContext() {
+  const { tenantId } = useParams<{ tenantId: string }>()
+  const [profileReport, setProfileReport] = useState<any>(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const fetchReports = async () => {
+      setLoading(true)
+      try {
+        const reports = await complianceService.getProfileReports(tenantId)
+        if (reports && reports.length > 0) {
+          setProfileReport(reports[0])
+        }
+      } catch (err) {
+        console.error(err)
+      }
+      setLoading(false)
+    }
+    fetchReports()
+  }, [tenantId])
+
   const exportReport = () => {
     toast({ title: 'Relatório Gerado', description: 'O Contexto da Organização foi exportado.' })
   }
@@ -25,6 +48,25 @@ export function OrganizationContext() {
           <Download className="mr-2 h-4 w-4" /> Exportar Relatório
         </Button>
       </div>
+
+      {loading ? (
+        <div className="flex justify-center py-8">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      ) : profileReport ? (
+        <Card className="mb-6 border-primary/20 bg-primary/5 shadow-sm">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-md flex items-center gap-2">
+              <FileText className="h-5 w-5 text-primary" /> Relatório de Perfil de Integridade
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="prose prose-sm max-w-none text-foreground whitespace-pre-wrap">
+              {profileReport.content}
+            </div>
+          </CardContent>
+        </Card>
+      ) : null}
 
       <Tabs defaultValue="external">
         <TabsList className="mb-4">

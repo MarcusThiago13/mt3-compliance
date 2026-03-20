@@ -15,6 +15,13 @@ export const complianceService = {
     const { data } = await q
     return data || []
   },
+  async getProfileReports(tenantId?: string) {
+    const tid = tenantId || getCurrentTenantId()
+    let q = supabase.from('profile_reports').select('*').order('created_at', { ascending: false })
+    if (tid) q = q.eq('tenant_id', tid)
+    const { data } = await q
+    return data || []
+  },
   async getGaps() {
     const tid = getCurrentTenantId()
     let q = supabase.from('gaps').select('*').order('created_at', { ascending: false })
@@ -22,8 +29,8 @@ export const complianceService = {
     const { data } = await q
     return data || []
   },
-  async getEvidence(clauseId: string) {
-    const tid = getCurrentTenantId()
+  async getEvidence(clauseId: string, tenantId?: string) {
+    const tid = tenantId || getCurrentTenantId()
     let q = supabase
       .from('evidence_metadata')
       .select('*')
@@ -34,7 +41,7 @@ export const complianceService = {
     return data || []
   },
   async addEvidence(payload: any) {
-    const tid = getCurrentTenantId()
+    const tid = payload.tenant_id || getCurrentTenantId()
     const dataToInsert = tid ? { ...payload, tenant_id: tid } : payload
     const { data } = await supabase
       .from('evidence_metadata')
