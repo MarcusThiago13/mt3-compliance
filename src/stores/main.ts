@@ -8,7 +8,7 @@ export interface Tenant {
 
 interface AppState {
   activeTenant: Tenant | null
-  setActiveTenant: (tenant: Tenant) => void
+  setActiveTenant: (tenant: Tenant | null) => void
   tenants: Tenant[]
   userRole: 'superadmin' | 'tenantadmin'
   auditorMode: boolean

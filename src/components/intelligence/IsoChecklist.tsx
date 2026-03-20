@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom'
+import { Link, useParams } from 'react-router-dom'
 import { Download, ExternalLink, ShieldCheck, AlertCircle } from 'lucide-react'
 import {
   Table,
@@ -13,6 +13,7 @@ import { Button } from '@/components/ui/button'
 import { ISO_CLAUSES } from '@/lib/iso-data'
 
 export function IsoChecklist() {
+  const { tenantId } = useParams<{ tenantId: string }>()
   const clauses = ISO_CLAUSES.filter((c) => c.parent)
 
   const getStatus = (id: string) => {
@@ -77,7 +78,7 @@ export function IsoChecklist() {
                   </TableCell>
                   <TableCell className="text-right">
                     <Button variant="ghost" size="sm" asChild>
-                      <Link to={`/clause/${c.id}`}>
+                      <Link to={`/${tenantId}/clause/${c.id}`}>
                         <ExternalLink className="h-4 w-4 text-muted-foreground" />
                       </Link>
                     </Button>

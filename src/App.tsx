@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { Toaster } from '@/components/ui/toaster'
 import { Toaster as Sonner } from '@/components/ui/sonner'
 import { TooltipProvider } from '@/components/ui/tooltip'
@@ -12,6 +12,7 @@ import { ShieldCheck } from 'lucide-react'
 import Index from './pages/Index'
 import NotFound from './pages/NotFound'
 import Layout from './components/Layout'
+import TenantContext from './components/layout/TenantContext'
 import Tenants from './pages/Tenants'
 import Onboarding from './pages/Onboarding'
 import ClauseView from './pages/ClauseView'
@@ -72,8 +73,13 @@ const App = () => (
                 <Route path="/" element={<Index />} />
                 <Route path="/tenants" element={<Tenants />} />
                 <Route path="/onboarding" element={<Onboarding />} />
-                <Route path="/intelligence" element={<Intelligence />} />
-                <Route path="/clause/:id" element={<ClauseView />} />
+
+                <Route path="/:tenantId" element={<TenantContext />}>
+                  <Route index element={<Navigate to="clause/4.1" replace />} />
+                  <Route path="clause/:id" element={<ClauseView />} />
+                  <Route path="intelligence" element={<Intelligence />} />
+                  <Route path="onboarding" element={<Onboarding />} />
+                </Route>
               </Route>
               <Route path="*" element={<NotFound />} />
             </Routes>

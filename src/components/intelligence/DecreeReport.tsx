@@ -1,5 +1,5 @@
 import { Download, FileText, ExternalLink } from 'lucide-react'
-import { Link } from 'react-router-dom'
+import { Link, useParams } from 'react-router-dom'
 import {
   Table,
   TableBody,
@@ -13,6 +13,7 @@ import { Button } from '@/components/ui/button'
 import { DECREE_ART_57 } from '@/lib/decree-data'
 
 export function DecreeReport() {
+  const { tenantId } = useParams<{ tenantId: string }>()
   return (
     <div className="space-y-4 animate-fade-in-up">
       <div className="flex justify-between items-center">
@@ -64,7 +65,7 @@ export function DecreeReport() {
                 <TableCell className="text-right">
                   <div className="flex items-center justify-end gap-2">
                     <Button variant="link" className="h-auto p-0 text-xs text-blue-600" asChild>
-                      <Link to={`/clause/${inc.isoMap.split(', ')[0]}`}>
+                      <Link to={`/${tenantId}/clause/${inc.isoMap.split(', ')[0]}`}>
                         <ExternalLink className="mr-1 h-3 w-3" /> Ver Módulo
                       </Link>
                     </Button>

@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import { ChevronLeft, ChevronRight, Search } from 'lucide-react'
 
 export default function ClauseView() {
-  const { id } = useParams<{ id: string }>()
+  const { id, tenantId } = useParams<{ id: string; tenantId: string }>()
   const { auditorMode } = useAppStore()
 
   const currentIndex = ISO_CLAUSES.findIndex((c) => c.id === id)
@@ -34,7 +34,7 @@ export default function ClauseView() {
             <div className="flex-1">
               {prevClause ? (
                 <Button variant="ghost" className="rounded-full" asChild>
-                  <Link to={`/clause/${prevClause.id}`}>
+                  <Link to={`/${tenantId}/clause/${prevClause.id}`}>
                     <ChevronLeft className="mr-2 h-4 w-4" />
                     <span className="hidden sm:inline">Anterior: {prevClause.id}</span>
                   </Link>
@@ -56,7 +56,7 @@ export default function ClauseView() {
                   className="rounded-full shadow-md hover:shadow-lg transition-shadow"
                   asChild
                 >
-                  <Link to={`/clause/${nextClause.id}`}>
+                  <Link to={`/${tenantId}/clause/${nextClause.id}`}>
                     <span className="hidden sm:inline">Próximo: {nextClause.id}</span>
                     <span className="sm:hidden">Próximo</span>
                     <ChevronRight className="ml-2 h-4 w-4" />

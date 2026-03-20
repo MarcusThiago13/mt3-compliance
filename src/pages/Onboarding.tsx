@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useNavigate, useSearchParams } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import { Check, ChevronRight, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
@@ -23,11 +23,10 @@ const steps = [
 
 export default function Onboarding() {
   const navigate = useNavigate()
-  const [searchParams] = useSearchParams()
-  const paramId = searchParams.get('id')
+  const { tenantId: paramId } = useParams<{ tenantId?: string }>()
 
   const [currentStep, setCurrentStep] = useState(0)
-  const [tenantId, setTenantId] = useState<string | null>(null)
+  const [tenantId, setTenantId] = useState<string | null>(paramId || null)
   const [isProcessing, setIsProcessing] = useState(false)
 
   const [tenantData, setTenantData] = useState<any>({
@@ -141,7 +140,7 @@ export default function Onboarding() {
             description: 'Dados da organização atualizados com sucesso.',
           })
         }
-        navigate('/tenants')
+        navigate(`/${currentId}/clause/4.1`)
       }
     } catch (err: any) {
       toast({ title: 'Atenção', description: err.message, variant: 'destructive' })
@@ -203,7 +202,7 @@ export default function Onboarding() {
   return (
     <div className="max-w-4xl mx-auto py-8 animate-fade-in">
       <h1 className="text-3xl font-bold mb-8 text-primary text-center">
-        {tenantId ? 'Editar Cliente' : 'Onboarding de Novo Cliente'}
+        {tenantId ? 'Editar Perfil do Cliente' : 'Onboarding de Novo Cliente'}
       </h1>
 
       <div className="flex items-center justify-between mb-8 relative hidden md:flex">

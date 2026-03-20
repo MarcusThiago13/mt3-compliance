@@ -1,69 +1,94 @@
 import { supabase } from '@/lib/supabase/client'
 
+const getCurrentTenantId = () => {
+  const parts = window.location.pathname.split('/')
+  const uuidRegex = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/i
+  if (parts[1] && uuidRegex.test(parts[1])) return parts[1]
+  return null
+}
+
 export const complianceService = {
   async getComplianceHistory() {
-    const { data } = await supabase
-      .from('compliance_history')
-      .select('*')
-      .order('created_at', { ascending: true })
+    const tid = getCurrentTenantId()
+    let q = supabase.from('compliance_history').select('*').order('created_at', { ascending: true })
+    if (tid) q = q.eq('tenant_id', tid)
+    const { data } = await q
     return data || []
   },
   async getGaps() {
-    const { data } = await supabase
-      .from('gaps')
-      .select('*')
-      .order('created_at', { ascending: false })
+    const tid = getCurrentTenantId()
+    let q = supabase.from('gaps').select('*').order('created_at', { ascending: false })
+    if (tid) q = q.eq('tenant_id', tid)
+    const { data } = await q
     return data || []
   },
   async getEvidence(clauseId: string) {
-    const { data } = await supabase
+    const tid = getCurrentTenantId()
+    let q = supabase
       .from('evidence_metadata')
       .select('*')
       .eq('clause_id', clauseId)
       .order('created_at', { ascending: false })
+    if (tid) q = q.eq('tenant_id', tid)
+    const { data } = await q
     return data || []
   },
   async addEvidence(payload: any) {
-    const { data } = await supabase.from('evidence_metadata').insert([payload]).select().single()
+    const tid = getCurrentTenantId()
+    const dataToInsert = tid ? { ...payload, tenant_id: tid } : payload
+    const { data } = await supabase
+      .from('evidence_metadata')
+      .insert([dataToInsert])
+      .select()
+      .single()
     return data
   },
   async getAuditLogs(clauseId: string) {
-    const { data } = await supabase
+    const tid = getCurrentTenantId()
+    let q = supabase
       .from('audit_logs')
       .select('*')
       .eq('clause_id', clauseId)
       .order('created_at', { ascending: false })
+    if (tid) q = q.eq('tenant_id', tid)
+    const { data } = await q
     return data || []
   },
   async addAuditLog(clauseId: string, action: string, userEmail: string) {
-    await supabase
-      .from('audit_logs')
-      .insert([{ clause_id: clauseId, action, user_email: userEmail }])
+    const tid = getCurrentTenantId()
+    const payload: any = { clause_id: clauseId, action, user_email: userEmail }
+    if (tid) payload.tenant_id = tid
+    await supabase.from('audit_logs').insert([payload])
   },
   async getPendingAssessments() {
-    const { data } = await supabase
+    const tid = getCurrentTenantId()
+    let q = supabase
       .from('assessment_schedules')
       .select('*')
       .order('next_review_date', { ascending: true })
+    if (tid) q = q.eq('tenant_id', tid)
+    const { data } = await q
     return data || []
   },
   async addAssessmentSchedule(clauseId: string, nextReviewDate: string) {
-    await supabase
-      .from('assessment_schedules')
-      .insert([{ clause_id: clauseId, next_review_date: nextReviewDate }])
+    const tid = getCurrentTenantId()
+    const payload: any = { clause_id: clauseId, next_review_date: nextReviewDate }
+    if (tid) payload.tenant_id = tid
+    await supabase.from('assessment_schedules').insert([payload])
   },
   async generateDossier(clauseId: string) {
+    const tid = getCurrentTenantId()
     const { data, error } = await supabase.functions.invoke('generate-dossier', {
-      body: { clauseId },
+      body: { clauseId, tenantId: tid },
     })
     if (error) throw new Error(error.message)
     return data
   },
   async getRisks() {
-    const { data } = await supabase
-      .from('risks')
-      .select('*')
-      .order('created_at', { ascending: true })
+    const tid = getCurrentTenantId()
+    let q = supabase.from('risks').select('*').order('created_at', { ascending: true })
+    if (tid) q = q.eq('tenant_id', tid)
+    const { data } = await q
     return data || []
   },
   async updateRisk(id: string, impact: number, probability: number) {

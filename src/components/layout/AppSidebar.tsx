@@ -41,8 +41,10 @@ const phaseIcons: Record<string, any> = {
 
 export function AppSidebar() {
   const location = useLocation()
-  const { userRole, auditorMode, setAuditorMode } = useAppStore()
+  const { activeTenant, userRole, auditorMode, setAuditorMode } = useAppStore()
   const parentClauses = getParentClauses()
+
+  const tid = activeTenant ? `/${activeTenant.id}` : ''
 
   return (
     <Sidebar variant="inset">
@@ -51,24 +53,29 @@ export function AppSidebar() {
           <ShieldCheck className="h-6 w-6 text-accent" />
           <span>mt3 Compliance</span>
         </div>
-        <Button
-          variant={auditorMode ? 'default' : 'outline'}
-          size="sm"
-          className="w-full justify-start text-xs font-semibold"
-          onClick={() => setAuditorMode(!auditorMode)}
-        >
-          <Search className="mr-2 h-3.5 w-3.5" />
-          {auditorMode ? 'Desativar Modo Auditor' : 'Ativar Modo Auditor'}
-        </Button>
+        {activeTenant && (
+          <Button
+            variant={auditorMode ? 'default' : 'outline'}
+            size="sm"
+            className="w-full justify-start text-xs font-semibold"
+            onClick={() => setAuditorMode(!auditorMode)}
+          >
+            <Search className="mr-2 h-3.5 w-3.5" />
+            {auditorMode ? 'Desativar Modo Auditor' : 'Ativar Modo Auditor'}
+          </Button>
+        )}
       </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>Geral</SidebarGroupLabel>
+          <SidebarGroupLabel>Administração Central</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {userRole === 'superadmin' && (
                 <SidebarMenuItem>
-                  <SidebarMenuButton asChild isActive={location.pathname.startsWith('/tenants')}>
+                  <SidebarMenuButton
+                    asChild
+                    isActive={location.pathname === '/tenants' || location.pathname === '/'}
+                  >
                     <Link to="/tenants">
                       <Users />
                       <span>Gestão de Clientes</span>
@@ -76,68 +83,83 @@ export function AppSidebar() {
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               )}
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild isActive={location.pathname.startsWith('/intelligence')}>
-                  <Link to="/intelligence">
-                    <Activity />
-                    <span>Inteligência & Certificação</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild>
-                  <Link to="#">
-                    <FileText />
-                    <span>Relatórios Genéricos</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
 
-        <SidebarGroup>
-          <SidebarGroupLabel>ISO 37301:2021</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {parentClauses.map((parent) => {
-                const Icon = phaseIcons[parent.id] || Activity
-                const children = getClausesByParent(parent.id)
-                return (
-                  <SidebarMenuItem key={parent.id}>
-                    <SidebarMenuButton className="font-medium text-primary" asChild>
-                      <Link to={`/clause/${parent.id}`}>
-                        <Icon className="h-4 w-4" />
-                        <span>
-                          {parent.id}. {parent.title}
-                        </span>
+        {activeTenant && (
+          <>
+            <SidebarGroup>
+              <SidebarGroupLabel>Workspace do Cliente</SidebarGroupLabel>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton
+                      asChild
+                      isActive={location.pathname.includes('/intelligence')}
+                    >
+                      <Link to={`${tid}/intelligence`}>
+                        <Activity />
+                        <span>Inteligência & Certificação</span>
                       </Link>
                     </SidebarMenuButton>
-                    {children.length > 0 && (
-                      <SidebarMenuSub>
-                        {children.map((child) => (
-                          <SidebarMenuSubItem key={child.id}>
-                            <SidebarMenuSubButton
-                              asChild
-                              isActive={location.pathname === `/clause/${child.id}`}
-                            >
-                              <Link to={`/clause/${child.id}`}>
-                                <span className="w-6 shrink-0">{child.id}</span>
-                                <span className="truncate" title={child.title}>
-                                  {child.title}
-                                </span>
-                              </Link>
-                            </SidebarMenuSubButton>
-                          </SidebarMenuSubItem>
-                        ))}
-                      </SidebarMenuSub>
-                    )}
                   </SidebarMenuItem>
-                )
-              })}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton asChild isActive={location.pathname.includes('/onboarding')}>
+                      <Link to={`${tid}/onboarding`}>
+                        <FileText />
+                        <span>Perfil da Organização</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+
+            <SidebarGroup>
+              <SidebarGroupLabel>ISO 37301:2021</SidebarGroupLabel>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  {parentClauses.map((parent) => {
+                    const Icon = phaseIcons[parent.id] || Activity
+                    const children = getClausesByParent(parent.id)
+                    return (
+                      <SidebarMenuItem key={parent.id}>
+                        <SidebarMenuButton className="font-medium text-primary" asChild>
+                          <Link to={`${tid}/clause/${parent.id}`}>
+                            <Icon className="h-4 w-4" />
+                            <span>
+                              {parent.id}. {parent.title}
+                            </span>
+                          </Link>
+                        </SidebarMenuButton>
+                        {children.length > 0 && (
+                          <SidebarMenuSub>
+                            {children.map((child) => (
+                              <SidebarMenuSubItem key={child.id}>
+                                <SidebarMenuSubButton
+                                  asChild
+                                  isActive={location.pathname === `${tid}/clause/${child.id}`}
+                                >
+                                  <Link to={`${tid}/clause/${child.id}`}>
+                                    <span className="w-6 shrink-0">{child.id}</span>
+                                    <span className="truncate" title={child.title}>
+                                      {child.title}
+                                    </span>
+                                  </Link>
+                                </SidebarMenuSubButton>
+                              </SidebarMenuSubItem>
+                            ))}
+                          </SidebarMenuSub>
+                        )}
+                      </SidebarMenuItem>
+                    )
+                  })}
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+          </>
+        )}
       </SidebarContent>
     </Sidebar>
   )

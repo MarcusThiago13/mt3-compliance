@@ -40,9 +40,11 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
 import { toast } from '@/hooks/use-toast'
+import { useAppStore } from '@/stores/main'
 
 export default function Tenants() {
   const navigate = useNavigate()
+  const { setActiveTenant } = useAppStore()
   const [tenants, setTenants] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [tenantToDelete, setTenantToDelete] = useState<any>(null)
@@ -58,6 +60,7 @@ export default function Tenants() {
   }
 
   useEffect(() => {
+    setActiveTenant(null)
     fetchTenants()
   }, [])
 
@@ -150,8 +153,18 @@ export default function Tenants() {
               <TableBody>
                 {tenants.map((t) => (
                   <TableRow key={t.id} className="hover:bg-muted/30">
-                    <TableCell className="font-medium">{t.name}</TableCell>
-                    <TableCell className="text-muted-foreground">{t.cnpj || '-'}</TableCell>
+                    <TableCell
+                      className="font-medium cursor-pointer text-primary hover:underline"
+                      onClick={() => navigate(`/${t.id}/clause/4.1`)}
+                    >
+                      {t.name}
+                    </TableCell>
+                    <TableCell
+                      className="text-muted-foreground font-mono cursor-pointer hover:underline"
+                      onClick={() => navigate(`/${t.id}/clause/4.1`)}
+                    >
+                      {t.cnpj || '-'}
+                    </TableCell>
                     <TableCell>
                       {t.status === 'active' ? (
                         <Badge className="bg-success hover:bg-success text-white">Ativo</Badge>
@@ -171,8 +184,8 @@ export default function Tenants() {
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => navigate(`/onboarding?id=${t.id}`)}>
-                            <Edit className="mr-2 h-4 w-4" /> Editar
+                          <DropdownMenuItem onClick={() => navigate(`/${t.id}/onboarding`)}>
+                            <Edit className="mr-2 h-4 w-4" /> Editar Perfil
                           </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => handleToggleStatus(t)}>
                             <Power className="mr-2 h-4 w-4" />{' '}
@@ -203,7 +216,7 @@ export default function Tenants() {
           <p className="text-xs text-amber-700 mt-1">
             A arquitetura multi-tenant assegura que cada cliente possua banco de dados virtualizado
             e isolado através de Row Level Security (RLS) na camada de dados. Relatórios e
-            evidências do Clause 4.1 são segregados por Tenant ID.
+            evidências são segregados por Tenant ID.
           </p>
         </div>
       </div>
