@@ -15,6 +15,7 @@ import {
 } from '@/components/ui/sidebar'
 import {
   Users,
+  UserCog,
   FileText,
   Activity,
   ShieldCheck,
@@ -71,17 +72,27 @@ export function AppSidebar() {
           <SidebarGroupContent>
             <SidebarMenu>
               {userRole === 'superadmin' && (
-                <SidebarMenuItem>
-                  <SidebarMenuButton
-                    asChild
-                    isActive={location.pathname === '/tenants' || location.pathname === '/'}
-                  >
-                    <Link to="/tenants">
-                      <Users />
-                      <span>Gestão de Clientes</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
+                <>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton
+                      asChild
+                      isActive={location.pathname === '/tenants' || location.pathname === '/'}
+                    >
+                      <Link to="/tenants">
+                        <Users />
+                        <span>Gestão de Clientes</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton asChild isActive={location.pathname === '/admin/users'}>
+                      <Link to="/admin/users">
+                        <UserCog />
+                        <span>Gestão de Usuários</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                </>
               )}
             </SidebarMenu>
           </SidebarGroupContent>
