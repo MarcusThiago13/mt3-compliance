@@ -1,6 +1,16 @@
 import { useEffect, useState } from 'react'
 import { useParams, Navigate } from 'react-router-dom'
-import { Mail, MessageCircle, Loader2, ShieldCheck, UserPlus, Users } from 'lucide-react'
+import {
+  Mail,
+  MessageCircle,
+  Loader2,
+  ShieldCheck,
+  UserPlus,
+  Users,
+  MoreHorizontal,
+  Pencil,
+  Trash2,
+} from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
@@ -13,7 +23,16 @@ import {
 } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
 import { toast } from '@/hooks/use-toast'
-import { getUsers, getInvitations, createInvitation, sendInvitation } from '@/services/admin'
+import {
+  getUsers,
+  getInvitations,
+  createInvitation,
+  sendInvitation,
+  updateUser,
+  removeUser,
+  updateInvitation,
+  removeInvitation,
+} from '@/services/admin'
 import { useAppStore } from '@/stores/main'
 import { useAuth } from '@/hooks/use-auth'
 import {
@@ -27,6 +46,21 @@ import {
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from '@/components/ui/dropdown-menu'
+import { USER_CLASSIFICATIONS, USER_ROLES } from '@/lib/constants'
 
 export default function TenantUsers() {
   const { tenantId } = useParams<{ tenantId: string }>()
@@ -40,12 +74,20 @@ export default function TenantUsers() {
 
   const [records, setRecords] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+
   const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   const [email, setEmail] = useState('')
   const [name, setName] = useState('')
   const [phone, setPhone] = useState('')
+  const [role, setRole] = useState('viewer')
+  const [classification, setClassification] = useState(USER_CLASSIFICATIONS[11])
+
+  const [editingUser, setEditingUser] = useState<any>(null)
+  const [editRole, setEditRole] = useState('')
+  const [editClassification, setEditClassification] = useState('')
 
   const fetchInitialData = async () => {
     if (!tenantId) return
@@ -60,16 +102,20 @@ export default function TenantUsers() {
         ...fetchedUsers.map((u: any) => ({
           ...u,
           type: 'active',
-          status: 'Ativo',
         })),
-        ...fetchedInvites.map((i: any) => ({
-          id: i.id,
-          name: i.name || '-',
-          email: i.email,
-          phone: i.phone,
-          status: i.status === 'pending' ? 'Pendente' : i.status === 'sent' ? 'Enviado' : 'Aceito',
-          type: 'invitation',
-        })),
+        ...fetchedInvites
+          .filter((i: any) => i.status !== 'accepted')
+          .map((i: any) => ({
+            id: i.id,
+            name: i.name || '-',
+            email: i.email,
+            phone: i.phone,
+            role: i.role,
+            classification: i.classification,
+            status:
+              i.status === 'pending' ? 'Pendente' : i.status === 'sent' ? 'Enviado' : 'Aceito',
+            type: 'invitation',
+          })),
       ]
 
       setRecords(combined)
@@ -101,12 +147,14 @@ export default function TenantUsers() {
 
     setIsSubmitting(true)
     try {
-      await createInvitation(email, name, tenantId, phone)
+      await createInvitation(email, name, tenantId, phone, role, classification)
       toast({ title: 'Sucesso', description: 'Convite criado. Você já pode enviá-lo.' })
       setIsDialogOpen(false)
       setEmail('')
       setName('')
       setPhone('')
+      setRole('viewer')
+      setClassification(USER_CLASSIFICATIONS[11])
       fetchInitialData()
     } catch (error: any) {
       toast({ title: 'Erro', description: error.message, variant: 'destructive' })
@@ -115,9 +163,56 @@ export default function TenantUsers() {
     }
   }
 
+  const handleEditUser = async () => {
+    if (!editingUser || !tenantId) return
+    setIsSubmitting(true)
+    try {
+      if (editingUser.type === 'active') {
+        await updateUser(editingUser.id, tenantId, {
+          role: editRole,
+          classification: editClassification,
+        })
+      } else {
+        await updateInvitation(editingUser.id, {
+          role: editRole,
+          classification: editClassification,
+        })
+      }
+      toast({ title: 'Sucesso', description: 'Usuário atualizado.' })
+      setIsEditDialogOpen(false)
+      fetchInitialData()
+    } catch (error: any) {
+      toast({ title: 'Erro', description: error.message, variant: 'destructive' })
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  const handleDeleteUser = async (user: any) => {
+    if (!tenantId) return
+    if (!confirm(`Deseja realmente remover o acesso de ${user.name || user.email}?`)) return
+
+    try {
+      if (user.type === 'active') {
+        await removeUser(user.id, tenantId)
+      } else {
+        await removeInvitation(user.id)
+      }
+      toast({ title: 'Sucesso', description: 'Usuário removido da organização.' })
+      fetchInitialData()
+    } catch (error: any) {
+      toast({ title: 'Erro', description: error.message, variant: 'destructive' })
+    }
+  }
+
   const handleSendEmail = async (invitationId: string) => {
     try {
-      await sendInvitation(invitationId, 'email')
+      const data = await sendInvitation(invitationId, 'email')
+      if (data.message) {
+        toast({ title: 'Vínculo Automático', description: data.message })
+        fetchInitialData()
+        return
+      }
       toast({ title: 'Sucesso', description: 'E-mail de convite enviado.' })
       fetchInitialData()
     } catch (error: any) {
@@ -128,6 +223,11 @@ export default function TenantUsers() {
   const handleSendWhatsApp = async (invitationId: string, phoneStr?: string) => {
     try {
       const data = await sendInvitation(invitationId, 'link')
+      if (data.message) {
+        toast({ title: 'Vínculo Automático', description: data.message })
+        fetchInitialData()
+        return
+      }
       const message = `Olá! Você foi convidado para acessar o sistema mt3 Compliance da organização ${activeTenant?.name}. Defina sua senha através deste link para acessar o seu ambiente seguro: ${data.link}`
       const waPhone = phoneStr ? phoneStr.replace(/\D/g, '') : ''
       window.open(`https://wa.me/${waPhone}?text=${encodeURIComponent(message)}`, '_blank')
@@ -135,6 +235,26 @@ export default function TenantUsers() {
     } catch (error: any) {
       toast({ title: 'Erro', description: error.message, variant: 'destructive' })
     }
+  }
+
+  const getRoleBadge = (roleValue: string) => {
+    const roleObj = USER_ROLES.find((r) => r.value === roleValue)
+    const label = roleObj ? roleObj.label : roleValue
+    if (roleValue === 'admin')
+      return (
+        <Badge className="bg-purple-100 text-purple-800 hover:bg-purple-100 border-none">
+          {label}
+        </Badge>
+      )
+    if (roleValue === 'editor')
+      return (
+        <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-100 border-none">{label}</Badge>
+      )
+    return (
+      <Badge className="bg-gray-100 text-gray-800 hover:bg-gray-100 border-none">
+        {label || 'Apenas Leitura'}
+      </Badge>
+    )
   }
 
   return (
@@ -146,7 +266,7 @@ export default function TenantUsers() {
             Acessos: {activeTenant?.name || 'Carregando...'}
           </h1>
           <p className="text-muted-foreground mt-1">
-            Gestão centralizada de usuários e convites específicos desta organização.
+            Gestão centralizada de usuários e permissões específicos desta organização.
           </p>
         </div>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
@@ -155,38 +275,71 @@ export default function TenantUsers() {
               <UserPlus className="mr-2 h-4 w-4" /> Novo Usuário
             </Button>
           </DialogTrigger>
-          <DialogContent>
+          <DialogContent className="max-w-md">
             <DialogHeader>
               <DialogTitle>Convidar para {activeTenant?.name}</DialogTitle>
               <DialogDescription>
-                Crie um convite para adicionar um usuário exclusivamente a este ambiente isolado.
+                Adicione um usuário e defina seu nível de acesso. Se o e-mail já possuir conta, ele
+                será vinculado automaticamente.
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4 py-4">
-              <div className="space-y-2">
-                <Label>Nome Completo *</Label>
-                <Input
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="Ex: João Silva"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>E-mail *</Label>
-                <Input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="joao@empresa.com"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>WhatsApp (Opcional)</Label>
-                <Input
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  placeholder="5511999999999"
-                />
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2 col-span-2">
+                  <Label>Nome Completo *</Label>
+                  <Input
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder="Ex: João Silva"
+                  />
+                </div>
+                <div className="space-y-2 col-span-2">
+                  <Label>E-mail *</Label>
+                  <Input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="joao@empresa.com"
+                  />
+                </div>
+                <div className="space-y-2 col-span-2">
+                  <Label>WhatsApp (Opcional)</Label>
+                  <Input
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    placeholder="5511999999999"
+                  />
+                </div>
+                <div className="space-y-2 col-span-2 sm:col-span-1">
+                  <Label>Permissão (RBAC) *</Label>
+                  <Select value={role} onValueChange={setRole}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {USER_ROLES.map((r) => (
+                        <SelectItem key={r.value} value={r.value}>
+                          {r.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2 col-span-2 sm:col-span-1">
+                  <Label>Classificação *</Label>
+                  <Select value={classification} onValueChange={setClassification}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {USER_CLASSIFICATIONS.map((c) => (
+                        <SelectItem key={c} value={c}>
+                          {c}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
             </div>
             <DialogFooter>
@@ -200,6 +353,57 @@ export default function TenantUsers() {
           </DialogContent>
         </Dialog>
       </div>
+
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Editar Acesso de {editingUser?.name || 'Usuário'}</DialogTitle>
+            <DialogDescription>
+              Altere a permissão e classificação do usuário nesta organização.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label>Permissão (RBAC) *</Label>
+              <Select value={editRole} onValueChange={setEditRole}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {USER_ROLES.map((r) => (
+                    <SelectItem key={r.value} value={r.value}>
+                      {r.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Classificação *</Label>
+              <Select value={editClassification} onValueChange={setEditClassification}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {USER_CLASSIFICATIONS.map((c) => (
+                    <SelectItem key={c} value={c}>
+                      {c}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+              Cancelar
+            </Button>
+            <Button onClick={handleEditUser} disabled={isSubmitting}>
+              {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />} Salvar Alterações
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Card>
         <CardHeader>
@@ -223,8 +427,8 @@ export default function TenantUsers() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Nome</TableHead>
-                  <TableHead>E-mail</TableHead>
+                  <TableHead>Usuário</TableHead>
+                  <TableHead>Perfil de Acesso</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead className="text-right">Ações</TableHead>
                 </TableRow>
@@ -232,8 +436,18 @@ export default function TenantUsers() {
               <TableBody>
                 {records.map((r, i) => (
                   <TableRow key={r.id || i} className="hover:bg-muted/30">
-                    <TableCell className="font-medium text-primary">{r.name}</TableCell>
-                    <TableCell className="text-muted-foreground">{r.email}</TableCell>
+                    <TableCell>
+                      <div className="font-medium text-primary">{r.name}</div>
+                      <div className="text-sm text-muted-foreground">{r.email}</div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex flex-col items-start gap-1">
+                        {getRoleBadge(r.role)}
+                        <span className="text-xs text-muted-foreground">
+                          {r.classification || '-'}
+                        </span>
+                      </div>
+                    </TableCell>
                     <TableCell>
                       {r.status === 'Ativo' ? (
                         <Badge className="bg-green-100 text-green-800 hover:bg-green-100 border-none">
@@ -253,42 +467,45 @@ export default function TenantUsers() {
                       )}
                     </TableCell>
                     <TableCell className="text-right">
-                      {r.type === 'invitation' && r.status === 'Pendente' && (
-                        <div className="flex justify-end gap-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleSendEmail(r.id)}
-                            title="Enviar por E-mail"
-                          >
-                            <Mail className="h-4 w-4 sm:mr-1" />{' '}
-                            <span className="hidden sm:inline">E-mail</span>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" className="h-8 w-8 p-0">
+                            <span className="sr-only">Abrir menu</span>
+                            <MoreHorizontal className="h-4 w-4" />
                           </Button>
-                          <Button
-                            variant="default"
-                            size="sm"
-                            className="bg-[#25D366] hover:bg-[#20bd5a] text-white border-none"
-                            onClick={() => handleSendWhatsApp(r.id, r.phone)}
-                            title="Enviar por WhatsApp"
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          {r.type === 'invitation' &&
+                            (r.status === 'Pendente' || r.status === 'Enviado') && (
+                              <>
+                                <DropdownMenuItem onClick={() => handleSendEmail(r.id)}>
+                                  <Mail className="mr-2 h-4 w-4" /> Enviar E-mail
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => handleSendWhatsApp(r.id, r.phone)}>
+                                  <MessageCircle className="mr-2 h-4 w-4" /> Enviar WhatsApp
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                              </>
+                            )}
+                          <DropdownMenuItem
+                            onClick={() => {
+                              setEditingUser(r)
+                              setEditRole(r.role || 'viewer')
+                              setEditClassification(r.classification || USER_CLASSIFICATIONS[11])
+                              setIsEditDialogOpen(true)
+                            }}
                           >
-                            <MessageCircle className="h-4 w-4 sm:mr-1" />{' '}
-                            <span className="hidden sm:inline">WhatsApp</span>
-                          </Button>
-                        </div>
-                      )}
-                      {r.type === 'invitation' && r.status === 'Enviado' && (
-                        <div className="flex justify-end gap-2">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleSendEmail(r.id)}
-                            title="Reenviar por E-mail"
+                            <Pencil className="mr-2 h-4 w-4" /> Editar Acesso
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem
+                            onClick={() => handleDeleteUser(r)}
+                            className="text-destructive focus:bg-destructive/10 focus:text-destructive"
                           >
-                            <Mail className="h-4 w-4 sm:mr-1" />{' '}
-                            <span className="hidden sm:inline">Reenviar</span>
-                          </Button>
-                        </div>
-                      )}
+                            <Trash2 className="mr-2 h-4 w-4" /> Remover Usuário
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </TableCell>
                   </TableRow>
                 ))}

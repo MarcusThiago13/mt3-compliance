@@ -30,10 +30,12 @@ export const createInvitation = async (
   name: string,
   tenant_id: string,
   phone?: string,
+  role: string = 'viewer',
+  classification: string = 'Usuário Colaborador',
 ) => {
   const { data, error } = await supabase
     .from('invitations' as any)
-    .insert([{ email, name, tenant_id, phone, status: 'pending' }])
+    .insert([{ email, name, tenant_id, phone, status: 'pending', role, classification }])
     .select()
     .single()
   if (error) throw error
@@ -48,4 +50,47 @@ export const sendInvitation = async (invitation_id: string, type: 'email' | 'lin
   if (error) throw error
   if (data?.error) throw new Error(data.error)
   return data
+}
+
+export const updateUser = async (
+  target_user_id: string,
+  target_tenant_id: string,
+  updates: any,
+) => {
+  const { data, error } = await supabase.functions.invoke('admin-users', {
+    method: 'POST',
+    body: { action: 'update_user', target_user_id, target_tenant_id, updates },
+  })
+  if (error) throw error
+  if (data?.error) throw new Error(data.error)
+  return data
+}
+
+export const removeUser = async (target_user_id: string, target_tenant_id: string) => {
+  const { data, error } = await supabase.functions.invoke('admin-users', {
+    method: 'POST',
+    body: { action: 'remove_user', target_user_id, target_tenant_id },
+  })
+  if (error) throw error
+  if (data?.error) throw new Error(data.error)
+  return data
+}
+
+export const updateInvitation = async (invitation_id: string, updates: any) => {
+  const { data, error } = await supabase
+    .from('invitations' as any)
+    .update(updates)
+    .eq('id', invitation_id)
+    .select()
+    .single()
+  if (error) throw error
+  return data
+}
+
+export const removeInvitation = async (invitation_id: string) => {
+  const { error } = await supabase
+    .from('invitations' as any)
+    .delete()
+    .eq('id', invitation_id)
+  if (error) throw error
 }

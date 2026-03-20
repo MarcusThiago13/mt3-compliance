@@ -28,55 +28,84 @@ Deno.serve(async (req: Request) => {
       data: { user },
       error: userError,
     } = await supabaseClient.auth.getUser(token)
-    
+
     if (userError || !user) {
-      throw new Error(`Não autorizado (Token inválido): ${userError?.message || 'Sessão não identificada'}`)
+      throw new Error(
+        `Não autorizado (Token inválido): ${userError?.message || 'Sessão não identificada'}`,
+      )
     }
 
     const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey)
 
     if (req.method === 'POST') {
       const body = await req.json().catch(() => ({}))
-      const { action, tenant_id } = body
+      const { action, tenant_id, target_user_id, target_tenant_id, updates } = body
 
       if (action === 'get_users') {
-        const { data: usersData, error: usersError } = await supabaseAdmin.auth.admin.listUsers()
-        if (usersError) throw new Error(`Erro ao buscar usuários: ${usersError.message}`)
-
-        let query = supabaseAdmin.from('user_tenants').select('user_id, tenant_id, tenants(name)')
+        let users = []
         if (tenant_id) {
-          query = query.eq('tenant_id', tenant_id)
-        }
-        
-        const { data: utData, error: utError } = await query
-        if (utError) throw new Error(`Erro ao buscar permissões: ${utError.message}`)
-
-        const userTenantsArray = utData || []
-        const relevantUserIds = new Set(userTenantsArray.map((ut: any) => ut.user_id))
-        const rawUsers = usersData?.users || []
-
-        const users = rawUsers
-          .filter((u: any) => !tenant_id || relevantUserIds.has(u.id))
-          .map((u: any) => {
-            const uts = userTenantsArray.filter((ut: any) => ut.user_id === u.id)
-            return {
-              id: u.id,
-              email: u.email,
-              name: u.user_metadata?.name || 'Sem Nome',
-              status: u.email_confirmed_at ? 'Ativo' : 'Pendente',
-              tenants: uts.map((ut: any) => ({
-                id: ut.tenant_id,
-                name: ut.tenants?.name,
-              })),
-            }
+          const { data, error } = await supabaseAdmin.rpc('get_tenant_users', {
+            target_tenant_id: tenant_id,
           })
+          if (error) throw new Error(`Erro ao buscar usuários: ${error.message}`)
+          users = (data || []).map((u: any) => ({
+            id: u.user_id,
+            email: u.email,
+            name: u.name || 'Sem Nome',
+            status: u.status,
+            role: u.role,
+            classification: u.classification,
+          }))
+        } else {
+          const { data, error } = await supabaseAdmin.rpc('get_all_users')
+          if (error) throw new Error(`Erro ao buscar usuários: ${error.message}`)
+          users = (data || []).map((u: any) => ({
+            id: u.user_id,
+            email: u.email,
+            name: u.name || 'Sem Nome',
+            status: u.status,
+            role: u.role,
+            classification: u.classification,
+            tenant: { id: u.tenant_id, name: u.tenant_name },
+          }))
+        }
 
         return new Response(JSON.stringify({ users }), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
           status: 200,
         })
       }
-      
+
+      if (action === 'update_user') {
+        if (!target_user_id || !target_tenant_id) throw new Error('Parâmetros inválidos')
+        const { error } = await supabaseAdmin
+          .from('user_tenants')
+          .update(updates)
+          .match({ user_id: target_user_id, tenant_id: target_tenant_id })
+
+        if (error) throw new Error(`Erro ao atualizar usuário: ${error.message}`)
+
+        return new Response(JSON.stringify({ success: true }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 200,
+        })
+      }
+
+      if (action === 'remove_user') {
+        if (!target_user_id || !target_tenant_id) throw new Error('Parâmetros inválidos')
+        const { error } = await supabaseAdmin
+          .from('user_tenants')
+          .delete()
+          .match({ user_id: target_user_id, tenant_id: target_tenant_id })
+
+        if (error) throw new Error(`Erro ao remover usuário: ${error.message}`)
+
+        return new Response(JSON.stringify({ success: true }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 200,
+        })
+      }
+
       throw new Error('Ação não suportada.')
     }
 
