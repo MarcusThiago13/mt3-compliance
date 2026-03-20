@@ -29,7 +29,7 @@ Deno.serve(async (req: Request) => {
       data: { user },
       error: userError,
     } = await supabaseClient.auth.getUser()
-
+    
     if (userError || !user) throw new Error('Não autorizado (Token inválido).')
 
     const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey)
@@ -46,7 +46,7 @@ Deno.serve(async (req: Request) => {
         if (tenant_id) {
           query = query.eq('tenant_id', tenant_id)
         }
-
+        
         const { data: utData, error: utError } = await query
         if (utError) throw new Error(`Erro ao buscar permissões: ${utError.message}`)
 
@@ -75,13 +75,13 @@ Deno.serve(async (req: Request) => {
           status: 200,
         })
       }
-
+      
       throw new Error('Ação não suportada.')
     }
 
     throw new Error('Método não permitido.')
   } catch (error: any) {
-    // Retornamos 200 com payload de erro para evitar que o Bug Scanner
+    // Retornamos 200 com payload de erro para evitar que o Bug Scanner 
     // intercepte como erro crítico de rede (HTTP 400), e permitimos que o frontend
     // trate o erro de forma apropriada lendo a propriedade "error".
     return new Response(JSON.stringify({ error: error.message || 'Erro desconhecido.' }), {
