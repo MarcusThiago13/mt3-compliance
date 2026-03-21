@@ -3,6 +3,7 @@ import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar'
 import { AppSidebar } from '@/components/layout/AppSidebar'
 import { Header } from '@/components/layout/Header'
 import { useAppStore } from '@/stores/main'
+import { ComplianceChat } from '@/components/chat/ComplianceChat'
 
 export default function Layout() {
   const { auditorMode } = useAppStore()
@@ -15,7 +16,7 @@ export default function Layout() {
         <AppSidebar />
         <SidebarInset>
           <Header />
-          <main className="flex-1 p-6 md:p-8 animate-fade-in max-w-7xl mx-auto w-full">
+          <main className="flex-1 p-6 md:p-8 animate-fade-in max-w-7xl mx-auto w-full relative">
             {auditorMode && (
               <div className="mb-4 flex items-center justify-between rounded-md bg-accent/10 px-4 py-2 text-accent-foreground">
                 <span className="text-sm font-semibold">Modo Auditor Ativado</span>
@@ -26,6 +27,7 @@ export default function Layout() {
             )}
             <Outlet />
           </main>
+          <ComplianceChat />
         </SidebarInset>
       </div>
     </SidebarProvider>

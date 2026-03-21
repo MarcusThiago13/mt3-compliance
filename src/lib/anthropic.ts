@@ -106,6 +106,116 @@ export async function createBatchRequest(
   return mockAiResponse(prompt + '\n\n(Batch Processed - 50% Cost Discount Applied)')
 }
 
+export async function callAnthropicChat(
+  message: string,
+  history: { role: 'user' | 'assistant'; content: string }[],
+  tenantName: string,
+): Promise<{ role: 'assistant'; content: string; references?: string[] }> {
+  const apiKey = import.meta.env.VITE_ANTHROPIC_API_KEY
+
+  if (!apiKey) {
+    await new Promise((resolve) => setTimeout(resolve, 1500))
+    return mockChatResponse(message)
+  }
+
+  try {
+    const systemPrompt = `Você é um Especialista em Compliance da organização ${tenantName}. Responda às dúvidas dos colaboradores com base nas boas práticas de compliance, políticas internas da base de conhecimento (RAG), ISO 37301 e Decreto 11.129/22. Seja direto e didático. Se for relevante, simule referências bibliográficas ao final do texto no formato [Ref: Documento XYZ].`
+
+    // A API da Anthropic exige que as mensagens comecem com 'user'
+    const apiMessages = history
+      .filter((h, idx) => !(idx === 0 && h.role === 'assistant'))
+      .map((h) => ({ role: h.role, content: h.content }))
+
+    apiMessages.push({ role: 'user', content: message })
+
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true',
+      },
+      body: JSON.stringify({
+        model: DEFAULT_MODEL,
+        max_tokens: 1024,
+        system: systemPrompt,
+        messages: apiMessages,
+      }),
+    })
+
+    if (!response.ok) {
+      console.error('Anthropic API Error:', await response.text())
+      return mockChatResponse(message)
+    }
+
+    const data = await response.json()
+    const text = data.content[0].text
+
+    // Extrair referências formatadas [Ref: Documento XYZ]
+    const refMatch = text.match(/\[Ref:(.*?)\]/g)
+    const references = refMatch
+      ? refMatch.map((r: string) => r.replace('[Ref:', '').replace(']', '').trim())
+      : []
+    const cleanText = text.replace(/\[Ref:(.*?)\]/g, '').trim()
+
+    return {
+      role: 'assistant',
+      content: cleanText,
+      references: references.length > 0 ? references : undefined,
+    }
+  } catch (error) {
+    console.error('Falha de rede ao contatar a API da Anthropic:', error)
+    return mockChatResponse(message)
+  }
+}
+
+function mockChatResponse(message: string): {
+  role: 'assistant'
+  content: string
+  references?: string[]
+} {
+  const lower = message.toLowerCase()
+
+  if (
+    lower.includes('conflito de interesses') ||
+    lower.includes('conflito') ||
+    lower.includes('parente')
+  ) {
+    return {
+      role: 'assistant',
+      content:
+        'Nossa política estabelece que qualquer potencial conflito de interesses deve ser declarado imediatamente ao Compliance Officer através do formulário oficial. É estritamente proibido participar de decisões de contratação de fornecedores onde o colaborador tenha parentes de até 3º grau como sócios ou diretores.',
+      references: ['Código de Conduta - Cap. 4', 'Política de Relacionamento com Terceiros (v2.1)'],
+    }
+  }
+
+  if (lower.includes('brinde') || lower.includes('presente') || lower.includes('ingresso')) {
+    return {
+      role: 'assistant',
+      content:
+        'A política atual permite o recebimento e oferecimento de brindes institucionais (com logo da empresa) até o valor limite de R$ 100,00. Valores superiores a este teto devem ser recusados, devolvidos ou encaminhados ao RH para sorteio geral. Dinheiro em espécie ou equivalente (gift cards) são sempre proibidos.',
+      references: ['Política de Brindes e Hospitalidades - Item 2.1'],
+    }
+  }
+
+  if (lower.includes('denúncia') || lower.includes('relatar') || lower.includes('canal')) {
+    return {
+      role: 'assistant',
+      content:
+        'Qualquer suspeita de violação ao nosso Código de Conduta ou legislação vigente deve ser reportada imediatamente através do nosso Canal de Denúncias oficial. O relato pode ser feito de forma 100% anônima e garantimos proteção absoluta contra qualquer tipo de retaliação.',
+      references: ['Política do Canal de Denúncias e Não Retaliação'],
+    }
+  }
+
+  return {
+    role: 'assistant',
+    content:
+      'Com base nos documentos atualmente indexados na base de conhecimento da organização, não encontrei uma diretriz específica para essa situação. Recomendo consultar seu gestor direto ou enviar a dúvida formalmente ao departamento de Compliance.',
+    references: [],
+  }
+}
+
 function mockAiResponse(prompt: string): string {
   if (prompt.includes('Matriz SWOT') || prompt.includes('questões internas')) {
     return `
