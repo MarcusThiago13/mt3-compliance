@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import {
   Table,
   TableBody,
@@ -10,8 +11,17 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Progress } from '@/components/ui/progress'
-import { Download, Plus, Target, Layers, ArrowRightCircle, CheckCircle2 } from 'lucide-react'
+import {
+  Download,
+  Plus,
+  Target,
+  Layers,
+  ArrowRightCircle,
+  CheckCircle2,
+  Sparkles,
+} from 'lucide-react'
 import { toast } from '@/hooks/use-toast'
+import { ActionMotor5W2HModal } from '@/components/shared/ActionMotor5W2HModal'
 
 const improvements = [
   {
@@ -54,10 +64,25 @@ const impacts = [
 ]
 
 export function ContinualImprovement101() {
+  const [is5W2HOpen, setIs5W2HOpen] = useState(false)
+  const [selectedItem, setSelectedItem] = useState<any>(null)
+
   const handleExport = () => {
     toast({
       title: 'Relatório Gerado',
       description: 'Registro de Oportunidades de Melhoria exportado.',
+    })
+  }
+
+  const open5W2H = (imp: any) => {
+    setSelectedItem(imp)
+    setIs5W2HOpen(true)
+  }
+
+  const handleSave5W2H = (plan: any) => {
+    toast({
+      title: 'Projeto de Melhoria',
+      description: 'Plano 5W2H salvo para esta oportunidade de melhoria.',
     })
   }
 
@@ -109,8 +134,18 @@ export function ContinualImprovement101() {
                 {improvements.map((imp) => (
                   <TableRow key={imp.id}>
                     <TableCell className="font-mono text-xs">{imp.id}</TableCell>
-                    <TableCell className="font-medium text-sm flex items-center gap-2">
-                      <Target className="h-4 w-4 text-primary" /> {imp.title}
+                    <TableCell>
+                      <div className="font-medium text-sm flex items-center gap-2">
+                        <Target className="h-4 w-4 text-primary" /> {imp.title}
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => open5W2H(imp)}
+                        className="h-5 text-[10px] px-2 text-purple-700 border-purple-200 hover:bg-purple-50 mt-1"
+                      >
+                        <Sparkles className="mr-1 h-2.5 w-2.5" /> 5W2H Projeto
+                      </Button>
                     </TableCell>
                     <TableCell className="text-sm text-muted-foreground">{imp.origin}</TableCell>
                     <TableCell>
@@ -214,6 +249,14 @@ export function ContinualImprovement101() {
           </div>
         </TabsContent>
       </Tabs>
+
+      <ActionMotor5W2HModal
+        isOpen={is5W2HOpen}
+        onOpenChange={setIs5W2HOpen}
+        title={`Melhoria Contínua: ${selectedItem?.id}`}
+        promptContext={`Oportunidade de Melhoria: ${selectedItem?.title}\nOrigem: ${selectedItem?.origin}\nCrie um plano de projeto 5W2H para viabilizar e implementar esta melhoria no SGC.`}
+        onSave={handleSave5W2H}
+      />
     </div>
   )
 }

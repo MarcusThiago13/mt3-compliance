@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
 import {
   Table,
@@ -20,8 +21,10 @@ import {
   BarChart,
   FileText,
   Activity,
+  Sparkles,
 } from 'lucide-react'
 import { toast } from '@/hooks/use-toast'
+import { ActionMotor5W2HModal } from '@/components/shared/ActionMotor5W2HModal'
 
 const objectives = [
   {
@@ -83,8 +86,23 @@ const metrics = [
 ]
 
 export function ComplianceObjectives62() {
+  const [is5W2HOpen, setIs5W2HOpen] = useState(false)
+  const [selectedItem, setSelectedItem] = useState<any>(null)
+
   const handleExport = (doc: string) => {
     toast({ title: 'Documento Gerado', description: `${doc} exportado com sucesso.` })
+  }
+
+  const open5W2H = (obj: any) => {
+    setSelectedItem(obj)
+    setIs5W2HOpen(true)
+  }
+
+  const handleSave5W2H = (plan: any) => {
+    toast({
+      title: 'Planejamento Criado',
+      description: 'O desdobramento 5W2H do objetivo foi adicionado com sucesso.',
+    })
   }
 
   return (
@@ -187,9 +205,19 @@ export function ComplianceObjectives62() {
                     <TableCell className="font-mono text-xs font-semibold">{obj.id}</TableCell>
                     <TableCell>
                       <div className="font-medium text-sm">{obj.title}</div>
-                      <Badge variant="secondary" className="mt-1 text-[10px]">
-                        Cat: {obj.category}
-                      </Badge>
+                      <div className="flex items-center gap-2 mt-1">
+                        <Badge variant="secondary" className="text-[10px]">
+                          Cat: {obj.category}
+                        </Badge>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => open5W2H(obj)}
+                          className="h-5 text-[10px] px-2 text-purple-700 border-purple-200 hover:bg-purple-50"
+                        >
+                          <Sparkles className="mr-1 h-2.5 w-2.5" /> 5W2H
+                        </Button>
+                      </div>
                     </TableCell>
                     <TableCell className="text-xs text-muted-foreground">
                       <div className="flex items-center gap-1">
@@ -288,6 +316,14 @@ export function ComplianceObjectives62() {
           </div>
         </TabsContent>
       </Tabs>
+
+      <ActionMotor5W2HModal
+        isOpen={is5W2HOpen}
+        onOpenChange={setIs5W2HOpen}
+        title={`Desdobrar Objetivo: ${selectedItem?.id}`}
+        promptContext={`Objetivo de Compliance: ${selectedItem?.title}\nCategoria: ${selectedItem?.category}\nFundamentação: ${selectedItem?.foundation}\nCrie um plano estruturado 5W2H para garantir o atingimento deste objetivo.`}
+        onSave={handleSave5W2H}
+      />
     </div>
   )
 }

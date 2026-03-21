@@ -38,10 +38,12 @@ import {
   Activity,
   Workflow,
   ShieldAlert,
+  Sparkles,
 } from 'lucide-react'
 import { toast } from '@/hooks/use-toast'
 import { useAuth } from '@/hooks/use-auth'
 import { complianceService } from '@/services/compliance'
+import { ActionMotor5W2HModal } from '@/components/shared/ActionMotor5W2HModal'
 
 const initialNonconformities = [
   {
@@ -73,6 +75,9 @@ export function Nonconformity102() {
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [formData, setFormData] = useState({ description: '', rule: '', severity: 'Média' })
 
+  const [is5W2HOpen, setIs5W2HOpen] = useState(false)
+  const [selectedItem, setSelectedItem] = useState<any>(null)
+
   useEffect(() => {
     if (prefillGap && events.length === initialNonconformities.length) {
       setFormData({
@@ -82,7 +87,6 @@ export function Nonconformity102() {
       })
       setActiveTab('events')
       setIsFormOpen(true)
-      // Clear location state to prevent re-opening on mount
       window.history.replaceState({}, document.title)
     }
   }, [prefillGap, events.length])
@@ -101,13 +105,13 @@ export function Nonconformity102() {
 
     await complianceService.addAuditLog(
       '10.2',
-      `Plano de Ação criado a partir de gap: ${formData.rule}`,
+      `Não Conformidade criada a partir de gap: ${formData.rule}`,
       user?.email || 'Sistema',
     )
 
     toast({
-      title: 'Plano de Ação Salvo',
-      description: 'O plano de ação foi registrado com sucesso.',
+      title: 'Não Conformidade Registrada',
+      description: 'O evento foi registrado com sucesso.',
     })
   }
 
@@ -115,6 +119,18 @@ export function Nonconformity102() {
     toast({
       title: 'Módulo Atualizado',
       description: 'Ação corretiva sincronizada com o Módulo 6.',
+    })
+  }
+
+  const open5W2H = (nc: any) => {
+    setSelectedItem(nc)
+    setIs5W2HOpen(true)
+  }
+
+  const handleSave5W2H = (plan: any) => {
+    toast({
+      title: 'Ação Corretiva Gerada',
+      description: 'O plano de ação foi integrado para tratar a causa-raiz.',
     })
   }
 
@@ -172,8 +188,18 @@ export function Nonconformity102() {
                     <TableCell className="font-mono text-xs text-muted-foreground">
                       {nc.id}
                     </TableCell>
-                    <TableCell className="font-medium text-sm flex items-center gap-2">
-                      <AlertTriangle className="h-4 w-4 text-amber-500" /> {nc.event}
+                    <TableCell>
+                      <div className="font-medium text-sm flex items-center gap-2">
+                        <AlertTriangle className="h-4 w-4 text-amber-500" /> {nc.event}
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => open5W2H(nc)}
+                        className="h-5 text-[10px] px-2 text-purple-700 border-purple-200 hover:bg-purple-50 mt-1"
+                      >
+                        <Sparkles className="mr-1 h-2.5 w-2.5" /> IA Corretiva
+                      </Button>
                     </TableCell>
                     <TableCell className="text-sm">{nc.origin}</TableCell>
                     <TableCell className="text-sm">{nc.date}</TableCell>
@@ -251,10 +277,9 @@ export function Nonconformity102() {
       <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
-            <DialogTitle>Criar Plano de Ação</DialogTitle>
+            <DialogTitle>Registrar Não Conformidade</DialogTitle>
             <DialogDescription>
-              Verifique os dados importados do Gap e ajuste se necessário antes de salvar a ação
-              corretiva.
+              Verifique os dados e preencha a descrição do desvio identificado.
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
@@ -297,10 +322,18 @@ export function Nonconformity102() {
             <Button variant="outline" onClick={() => setIsFormOpen(false)}>
               Cancelar
             </Button>
-            <Button onClick={handleSavePlan}>Salvar Plano de Ação</Button>
+            <Button onClick={handleSavePlan}>Salvar Registro</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <ActionMotor5W2HModal
+        isOpen={is5W2HOpen}
+        onOpenChange={setIs5W2HOpen}
+        title={`Ação Corretiva: ${selectedItem?.id}`}
+        promptContext={`Evento/Desvio: ${selectedItem?.event}\nOrigem: ${selectedItem?.origin}\nCrie um plano de ação corretiva 5W2H focando na eliminação da causa-raiz e prevenção de reincidência.`}
+        onSave={handleSave5W2H}
+      />
     </div>
   )
 }

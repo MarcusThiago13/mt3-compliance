@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import {
   Table,
   TableBody,
@@ -9,7 +10,9 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Download, Plus, ShieldCheck, AlertTriangle, ShieldAlert } from 'lucide-react'
+import { Download, Plus, ShieldCheck, AlertTriangle, ShieldAlert, Sparkles } from 'lucide-react'
+import { toast } from '@/hooks/use-toast'
+import { ActionMotor5W2HModal } from '@/components/shared/ActionMotor5W2HModal'
 
 const controls = [
   {
@@ -73,6 +76,21 @@ const failures = [
 ]
 
 export function OpPlanningControl81() {
+  const [is5W2HOpen, setIs5W2HOpen] = useState(false)
+  const [selectedItem, setSelectedItem] = useState<any>(null)
+
+  const open5W2H = (t: any) => {
+    setSelectedItem(t)
+    setIs5W2HOpen(true)
+  }
+
+  const handleSave5W2H = (plan: any) => {
+    toast({
+      title: 'Due Diligence Planejada',
+      description: 'Plano 5W2H de checagem do fornecedor gerado.',
+    })
+  }
+
   return (
     <div className="space-y-6 animate-fade-in">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center border-b pb-4 gap-4">
@@ -168,7 +186,17 @@ export function OpPlanningControl81() {
               <TableBody>
                 {thirdParties.map((t) => (
                   <TableRow key={t.id}>
-                    <TableCell className="font-medium text-sm">{t.name}</TableCell>
+                    <TableCell>
+                      <div className="font-medium text-sm">{t.name}</div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => open5W2H(t)}
+                        className="h-5 text-[10px] px-2 text-purple-700 border-purple-200 hover:bg-purple-50 mt-1"
+                      >
+                        <Sparkles className="mr-1 h-2.5 w-2.5" /> Plano DD
+                      </Button>
+                    </TableCell>
                     <TableCell className="text-sm">{t.type}</TableCell>
                     <TableCell>
                       <Badge
@@ -237,6 +265,14 @@ export function OpPlanningControl81() {
           </div>
         </TabsContent>
       </Tabs>
+
+      <ActionMotor5W2HModal
+        isOpen={is5W2HOpen}
+        onOpenChange={setIs5W2HOpen}
+        title={`Due Diligence: ${selectedItem?.name}`}
+        promptContext={`Due Diligence de Terceiro\nFornecedor: ${selectedItem?.name}\nCategoria: ${selectedItem?.type}\nCrie um plano 5W2H detalhado de diligência aprofundada (background check, certidões, entrevistas) adequado ao perfil deste fornecedor.`}
+        onSave={handleSave5W2H}
+      />
     </div>
   )
 }

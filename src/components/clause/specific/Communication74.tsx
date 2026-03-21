@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import {
   Table,
   TableBody,
@@ -9,8 +10,9 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Download, Plus, Send, Landmark, Mail } from 'lucide-react'
+import { Download, Plus, Send, Landmark, Sparkles } from 'lucide-react'
 import { toast } from '@/hooks/use-toast'
+import { ActionMotor5W2HModal } from '@/components/shared/ActionMotor5W2HModal'
 
 const communications = [
   {
@@ -55,10 +57,25 @@ const regulatoryLogs = [
 ]
 
 export function Communication74() {
+  const [is5W2HOpen, setIs5W2HOpen] = useState(false)
+  const [selectedItem, setSelectedItem] = useState<any>(null)
+
   const handleExport = () => {
     toast({
       title: 'Exportação Concluída',
       description: 'Registro de Interações Regulatórias exportado.',
+    })
+  }
+
+  const open5W2H = (c: any) => {
+    setSelectedItem(c)
+    setIs5W2HOpen(true)
+  }
+
+  const handleSave5W2H = (plan: any) => {
+    toast({
+      title: 'Comunicação Planejada',
+      description: 'O framework 5W2H de comunicação foi gerado com sucesso.',
     })
   }
 
@@ -107,7 +124,17 @@ export function Communication74() {
                     <TableCell className="font-medium text-sm flex items-center gap-2">
                       <Send className="h-4 w-4 text-primary" /> {c.audience}
                     </TableCell>
-                    <TableCell className="text-sm">{c.topic}</TableCell>
+                    <TableCell>
+                      <div className="text-sm">{c.topic}</div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => open5W2H(c)}
+                        className="h-5 text-[10px] px-2 text-purple-700 border-purple-200 hover:bg-purple-50 mt-1"
+                      >
+                        <Sparkles className="mr-1 h-2.5 w-2.5" /> 5W2H IA
+                      </Button>
+                    </TableCell>
                     <TableCell className="text-sm text-muted-foreground">{c.channel}</TableCell>
                     <TableCell className="text-sm font-semibold">{c.date}</TableCell>
                     <TableCell className="text-sm text-muted-foreground">{c.owner}</TableCell>
@@ -173,6 +200,14 @@ export function Communication74() {
           </div>
         </TabsContent>
       </Tabs>
+
+      <ActionMotor5W2HModal
+        isOpen={is5W2HOpen}
+        onOpenChange={setIs5W2HOpen}
+        title={`Planejar Comunicação`}
+        promptContext={`Plano de Comunicação de Compliance\nTópico: ${selectedItem?.topic}\nPúblico-alvo: ${selectedItem?.audience}\nCanal: ${selectedItem?.channel}\nEstruture um plano 5W2H para criação, aprovação e disparo eficiente deste comunicado.`}
+        onSave={handleSave5W2H}
+      />
     </div>
   )
 }

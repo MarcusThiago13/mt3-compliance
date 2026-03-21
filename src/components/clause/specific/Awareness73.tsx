@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
 import {
   Table,
@@ -10,8 +11,9 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
-import { Download, Plus, Megaphone, Lightbulb, MessageCircle } from 'lucide-react'
+import { Download, Plus, Megaphone, Lightbulb, MessageCircle, Sparkles } from 'lucide-react'
 import { toast } from '@/hooks/use-toast'
+import { ActionMotor5W2HModal } from '@/components/shared/ActionMotor5W2HModal'
 
 const campaigns = [
   {
@@ -46,10 +48,25 @@ const materials = [
 ]
 
 export function Awareness73() {
+  const [is5W2HOpen, setIs5W2HOpen] = useState(false)
+  const [selectedItem, setSelectedItem] = useState<any>(null)
+
   const handleExport = () => {
     toast({
       title: 'Relatório Gerado',
       description: 'Métricas de engajamento em conscientização exportadas.',
+    })
+  }
+
+  const open5W2H = (camp: any) => {
+    setSelectedItem(camp)
+    setIs5W2HOpen(true)
+  }
+
+  const handleSave5W2H = (plan: any) => {
+    toast({
+      title: 'Campanha Estruturada',
+      description: 'Plano 5W2H da campanha adicionado com sucesso.',
     })
   }
 
@@ -84,7 +101,17 @@ export function Awareness73() {
                   <div className="flex justify-between items-start mb-2">
                     <div>
                       <h5 className="font-medium text-sm">{camp.name}</h5>
-                      <p className="text-xs text-muted-foreground mt-0.5">Público: {camp.target}</p>
+                      <div className="flex items-center gap-2 mt-0.5">
+                        <p className="text-xs text-muted-foreground">Público: {camp.target}</p>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => open5W2H(camp)}
+                          className="h-5 text-[10px] px-2 text-purple-700 border-purple-200 hover:bg-purple-50"
+                        >
+                          <Sparkles className="mr-1 h-2.5 w-2.5" /> IA
+                        </Button>
+                      </div>
                     </div>
                     <Badge
                       variant={camp.status === 'Ativa' ? 'default' : 'secondary'}
@@ -150,6 +177,14 @@ export function Awareness73() {
           </div>
         </div>
       </div>
+
+      <ActionMotor5W2HModal
+        isOpen={is5W2HOpen}
+        onOpenChange={setIs5W2HOpen}
+        title={`Planejar Campanha: ${selectedItem?.name}`}
+        promptContext={`Campanha de Conscientização de Compliance\nNome: ${selectedItem?.name}\nPúblico-alvo: ${selectedItem?.target}\nCrie um plano 5W2H detalhado (com mensagens, palestrantes/formatos e métricas) para executar esta campanha com sucesso.`}
+        onSave={handleSave5W2H}
+      />
     </div>
   )
 }

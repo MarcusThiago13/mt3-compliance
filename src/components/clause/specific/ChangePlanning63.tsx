@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
 import {
   Table,
@@ -9,8 +10,9 @@ import {
 } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Plus, Download, GitPullRequest } from 'lucide-react'
+import { Plus, Download, GitPullRequest, Sparkles } from 'lucide-react'
 import { toast } from '@/hooks/use-toast'
+import { ActionMotor5W2HModal } from '@/components/shared/ActionMotor5W2HModal'
 
 const changes = [
   {
@@ -32,10 +34,25 @@ const changes = [
 ]
 
 export function ChangePlanning63() {
+  const [is5W2HOpen, setIs5W2HOpen] = useState(false)
+  const [selectedItem, setSelectedItem] = useState<any>(null)
+
   const handleExport = () => {
     toast({
       title: 'Registro de Mudanças Exportado',
       description: 'O log de planejamento de mudanças foi gerado.',
+    })
+  }
+
+  const open5W2H = (chg: any) => {
+    setSelectedItem(chg)
+    setIs5W2HOpen(true)
+  }
+
+  const handleSave5W2H = (plan: any) => {
+    toast({
+      title: 'Plano de Mudança Criado',
+      description: 'O cronograma de mudança foi estruturado.',
     })
   }
 
@@ -81,7 +98,17 @@ export function ChangePlanning63() {
                         {chg.id}
                       </div>
                     </TableCell>
-                    <TableCell className="font-medium text-sm">{chg.description}</TableCell>
+                    <TableCell>
+                      <div className="font-medium text-sm">{chg.description}</div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => open5W2H(chg)}
+                        className="h-5 text-[10px] px-2 text-purple-700 border-purple-200 hover:bg-purple-50 mt-1"
+                      >
+                        <Sparkles className="mr-1 h-2.5 w-2.5" /> 5W2H
+                      </Button>
+                    </TableCell>
                     <TableCell className="text-sm text-muted-foreground">{chg.purpose}</TableCell>
                     <TableCell className="text-sm">{chg.impact}</TableCell>
                     <TableCell className="text-sm">{chg.date}</TableCell>
@@ -104,6 +131,14 @@ export function ChangePlanning63() {
           </div>
         </CardContent>
       </Card>
+
+      <ActionMotor5W2HModal
+        isOpen={is5W2HOpen}
+        onOpenChange={setIs5W2HOpen}
+        title={`Estruturar Mudança: ${selectedItem?.id}`}
+        promptContext={`Mudança Proposta: ${selectedItem?.description}\nPropósito: ${selectedItem?.purpose}\nImpacto Previsto: ${selectedItem?.impact}\nCrie o plano de execução e controle para esta mudança organizacional.`}
+        onSave={handleSave5W2H}
+      />
     </div>
   )
 }

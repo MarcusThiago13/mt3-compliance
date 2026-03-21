@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
 import {
   Table,
@@ -10,7 +11,9 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Download, Plus, Calendar, ShieldCheck, Search, ActivitySquare } from 'lucide-react'
+import { Download, Plus, Calendar, ShieldCheck, Search, ActivitySquare, Sparkles } from 'lucide-react'
+import { toast } from '@/hooks/use-toast'
+import { ActionMotor5W2HModal } from '@/components/shared/ActionMotor5W2HModal'
 
 const audits = [
   {
@@ -62,6 +65,18 @@ const findings = [
 ]
 
 export function InternalAudit92() {
+  const [is5W2HOpen, setIs5W2HOpen] = useState(false)
+  const [selectedItem, setSelectedItem] = useState<any>(null)
+
+  const open5W2H = (audit: any) => {
+    setSelectedItem(audit)
+    setIs5W2HOpen(true)
+  }
+
+  const handleSave5W2H = (plan: any) => {
+    toast({ title: 'Plano de Auditoria', description: 'O ciclo de auditoria foi estruturado com a metodologia 5W2H.' })
+  }
+
   return (
     <div className="space-y-6 animate-fade-in">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center border-b pb-4 gap-4">
@@ -113,7 +128,17 @@ export function InternalAudit92() {
                 {audits.map((a) => (
                   <TableRow key={a.id}>
                     <TableCell className="font-mono text-xs">{a.id}</TableCell>
-                    <TableCell className="font-medium text-sm">{a.scope}</TableCell>
+                    <TableCell>
+                      <div className="font-medium text-sm">{a.scope}</div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => open5W2H(a)}
+                        className="h-5 text-[10px] px-2 text-purple-700 border-purple-200 hover:bg-purple-50 mt-1"
+                      >
+                        <Sparkles className="mr-1 h-2.5 w-2.5" /> IA Plano
+                      </Button>
+                    </TableCell>
                     <TableCell className="text-sm text-muted-foreground">{a.criteria}</TableCell>
                     <TableCell className="text-sm">{a.date}</TableCell>
                     <TableCell>
@@ -166,7 +191,7 @@ export function InternalAudit92() {
                       {aud.conflict}
                     </TableCell>
                   </TableRow>
-                ))}
+                </))}
               </TableBody>
             </Table>
           </div>
@@ -231,6 +256,15 @@ export function InternalAudit92() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      <ActionMotor5W2HModal
+        isOpen={is5W2HOpen}
+        onOpenChange={setIs5W2HOpen}
+        title={`Plano de Auditoria: ${selectedItem?.id}`}
+        promptContext={`Ciclo de Auditoria Interna\nEscopo: ${selectedItem?.scope}\nCritérios: ${selectedItem?.criteria}\nData: ${selectedItem?.date}\nCrie um plano 5W2H para executar esta auditoria (o que auditar, quem auditará garantindo independência, metodologia de amostragem).`}
+        onSave={handleSave5W2H}
+      />
     </div>
   )
 }
+

@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import {
   Table,
   TableBody,
@@ -10,7 +11,9 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Card, CardContent } from '@/components/ui/card'
-import { AlertTriangle, Clock, Target, Gavel, FileSignature } from 'lucide-react'
+import { AlertTriangle, Clock, Target, Gavel, FileSignature, Sparkles } from 'lucide-react'
+import { toast } from '@/hooks/use-toast'
+import { ActionMotor5W2HModal } from '@/components/shared/ActionMotor5W2HModal'
 
 const investigations = [
   {
@@ -43,6 +46,21 @@ const investigations = [
 ]
 
 export function InvestigationWorkflow() {
+  const [is5W2HOpen, setIs5W2HOpen] = useState(false)
+  const [selectedItem, setSelectedItem] = useState<any>(null)
+
+  const open5W2H = (inv: any) => {
+    setSelectedItem(inv)
+    setIs5W2HOpen(true)
+  }
+
+  const handleSave5W2H = (plan: any) => {
+    toast({
+      title: 'Plano de Investigação',
+      description: 'Metodologia e passos investigativos estruturados via 5W2H.',
+    })
+  }
+
   return (
     <div className="space-y-6 animate-fade-in">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center border-b pb-4 gap-4">
@@ -112,9 +130,17 @@ export function InvestigationWorkflow() {
                         </span>
                       </div>
                     </TableCell>
-                    <TableCell className="text-right">
-                      <Button variant="secondary" size="sm">
+                    <TableCell className="text-right flex flex-col gap-1 items-end">
+                      <Button variant="secondary" size="sm" className="w-full">
                         Abrir Autos
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => open5W2H(inv)}
+                        className="w-full h-7 text-[10px] px-2 text-purple-700 border-purple-200 hover:bg-purple-50"
+                      >
+                        <Sparkles className="mr-1 h-2.5 w-2.5" /> Plano IA
                       </Button>
                     </TableCell>
                   </TableRow>
@@ -160,6 +186,14 @@ export function InvestigationWorkflow() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      <ActionMotor5W2HModal
+        isOpen={is5W2HOpen}
+        onOpenChange={setIs5W2HOpen}
+        title={`Plano de Investigação: ${selectedItem?.id}`}
+        promptContext={`Investigação de Denúncia\nFundamentação: ${selectedItem?.foundation}\nOrigem: ${selectedItem?.origin}\nCrie um plano metodológico de investigação 5W2H estrito, incluindo coleta de evidências, entrevistas e preservação de cadeia de custódia.`}
+        onSave={handleSave5W2H}
+      />
     </div>
   )
 }

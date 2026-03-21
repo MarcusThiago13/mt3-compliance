@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
 import {
   Table,
@@ -10,8 +11,9 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Download, UserCheck, AlertTriangle, BookOpen, RefreshCw } from 'lucide-react'
+import { Download, UserCheck, AlertTriangle, BookOpen, RefreshCw, Sparkles } from 'lucide-react'
 import { toast } from '@/hooks/use-toast'
+import { ActionMotor5W2HModal } from '@/components/shared/ActionMotor5W2HModal'
 
 const gaps = [
   {
@@ -67,8 +69,23 @@ const retraining = [
 ]
 
 export function Competence72() {
+  const [is5W2HOpen, setIs5W2HOpen] = useState(false)
+  const [selectedItem, setSelectedItem] = useState<any>(null)
+
   const handleExport = (doc: string) => {
     toast({ title: 'Relatório Gerado', description: `${doc} exportado com sucesso.` })
+  }
+
+  const open5W2H = (r: any) => {
+    setSelectedItem(r)
+    setIs5W2HOpen(true)
+  }
+
+  const handleSave5W2H = (plan: any) => {
+    toast({
+      title: 'Treinamento Planejado',
+      description: 'Plano 5W2H do treinamento gerado com sucesso.',
+    })
   }
 
   return (
@@ -212,8 +229,18 @@ export function Competence72() {
               <TableBody>
                 {retraining.map((r, i) => (
                   <TableRow key={i}>
-                    <TableCell className="font-medium text-sm flex items-center gap-2">
-                      <RefreshCw className="h-4 w-4 text-amber-500" /> {r.trigger}
+                    <TableCell>
+                      <div className="font-medium text-sm flex items-center gap-2">
+                        <RefreshCw className="h-4 w-4 text-amber-500" /> {r.trigger}
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => open5W2H(r)}
+                        className="h-5 text-[10px] px-2 text-purple-700 border-purple-200 hover:bg-purple-50 mt-1"
+                      >
+                        <Sparkles className="mr-1 h-2.5 w-2.5" /> Planejar Treinamento
+                      </Button>
                     </TableCell>
                     <TableCell className="text-sm">{r.audience}</TableCell>
                     <TableCell className="text-sm font-semibold">{r.deadline}</TableCell>
@@ -227,6 +254,14 @@ export function Competence72() {
           </div>
         </TabsContent>
       </Tabs>
+
+      <ActionMotor5W2HModal
+        isOpen={is5W2HOpen}
+        onOpenChange={setIs5W2HOpen}
+        title={`Plano de Treinamento`}
+        promptContext={`Treinamento de Compliance\nGatilho: ${selectedItem?.trigger}\nPúblico: ${selectedItem?.audience}\nCrie um plano 5W2H estruturado para este treinamento (logística, instrutores, custos e medição de eficácia).`}
+        onSave={handleSave5W2H}
+      />
     </div>
   )
 }

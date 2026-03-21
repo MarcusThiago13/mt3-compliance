@@ -19,10 +19,10 @@ import {
   Target,
   CheckCircle2,
   ArrowRightLeft,
-  ShieldCheck,
-  Link as LinkIcon,
+  Sparkles,
 } from 'lucide-react'
 import { toast } from '@/hooks/use-toast'
+import { ActionMotor5W2HModal } from '@/components/shared/ActionMotor5W2HModal'
 
 const actions = [
   {
@@ -88,6 +88,9 @@ const efficacy = [
 ]
 
 export function ActionsRiskOpp61() {
+  const [is5W2HOpen, setIs5W2HOpen] = useState(false)
+  const [selectedItem, setSelectedItem] = useState<any>(null)
+
   const handleImport = () => {
     toast({
       title: 'Integração Automática',
@@ -97,6 +100,18 @@ export function ActionsRiskOpp61() {
 
   const handleExport = (doc: string) => {
     toast({ title: 'Documento Gerado', description: `${doc} exportado com sucesso.` })
+  }
+
+  const open5W2H = (act: any) => {
+    setSelectedItem(act)
+    setIs5W2HOpen(true)
+  }
+
+  const handleSave5W2H = (plan: any) => {
+    toast({
+      title: 'Ação Desdobrada',
+      description: 'O plano 5W2H foi integrado à ação com sucesso.',
+    })
   }
 
   return (
@@ -218,6 +233,14 @@ export function ActionsRiskOpp61() {
                         >
                           Prio: {act.priority}
                         </span>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => open5W2H(act)}
+                          className="h-5 text-[10px] px-2 text-purple-700 border-purple-200 hover:bg-purple-50 ml-2"
+                        >
+                          <Sparkles className="mr-1 h-2.5 w-2.5" /> IA
+                        </Button>
                       </div>
                     </TableCell>
                     <TableCell className="text-sm">
@@ -323,6 +346,14 @@ export function ActionsRiskOpp61() {
           </div>
         </TabsContent>
       </Tabs>
+
+      <ActionMotor5W2HModal
+        isOpen={is5W2HOpen}
+        onOpenChange={setIs5W2HOpen}
+        title={`5W2H: Ação ${selectedItem?.id}`}
+        promptContext={`Ação a ser executada: ${selectedItem?.title}\nOrigem: ${selectedItem?.origin}\nObjetivo: Detalhar a execução desta ação de forma tática para integração ao negócio.`}
+        onSave={handleSave5W2H}
+      />
     </div>
   )
 }
