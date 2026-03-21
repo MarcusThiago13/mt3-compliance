@@ -11,7 +11,15 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Download, Plus, Calendar, ShieldCheck, Search, ActivitySquare, Sparkles } from 'lucide-react'
+import {
+  Download,
+  Plus,
+  Calendar,
+  ShieldCheck,
+  Search,
+  ActivitySquare,
+  Sparkles,
+} from 'lucide-react'
 import { toast } from '@/hooks/use-toast'
 import { ActionMotor5W2HModal } from '@/components/shared/ActionMotor5W2HModal'
 
@@ -74,7 +82,10 @@ export function InternalAudit92() {
   }
 
   const handleSave5W2H = (plan: any) => {
-    toast({ title: 'Plano de Auditoria', description: 'O ciclo de auditoria foi estruturado com a metodologia 5W2H.' })
+    toast({
+      title: 'Plano de Auditoria',
+      description: 'O ciclo de auditoria foi estruturado com a metodologia 5W2H.',
+    })
   }
 
   return (
@@ -191,7 +202,7 @@ export function InternalAudit92() {
                       {aud.conflict}
                     </TableCell>
                   </TableRow>
-                </))}
+                ))}
               </TableBody>
             </Table>
           </div>
@@ -267,4 +278,3 @@ export function InternalAudit92() {
     </div>
   )
 }
-
