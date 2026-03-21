@@ -34,13 +34,13 @@ Deno.serve(async (req: Request) => {
     if (!tenant) throw new Error('Tenant not found')
 
     // Fetch some additional data based on options
-    let gaps = []
+    let gaps: any[] = []
     if (options?.gaps) {
       const { data } = await supabaseAdmin.from('gaps').select('*').eq('tenant_id', tenantId)
       gaps = data || []
     }
 
-    let risks = []
+    let risks: any[] = []
     if (options?.risks) {
       const { data } = await supabaseAdmin.from('risks').select('*').eq('tenant_id', tenantId)
       risks = data || []
