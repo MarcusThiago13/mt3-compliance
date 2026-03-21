@@ -22,6 +22,8 @@ import Intelligence from './pages/Intelligence'
 import Dossier from './pages/Dossier'
 import EvidenceInbox from './pages/EvidenceInbox'
 import SubmitEvidence from './pages/SubmitEvidence'
+import PublicReport from './pages/PublicReport'
+import PublicReportStatus from './pages/PublicReportStatus'
 
 const AuthGuard = ({ children }: { children: React.ReactNode }) => {
   const { user, loading, signIn } = useAuth()
@@ -73,34 +75,43 @@ const TenantIndexRedirect = () => {
 const App = () => (
   <AppProvider>
     <AuthProvider>
-      <AuthGuard>
-        <BrowserRouter future={{ v7_startTransition: false, v7_relativeSplatPath: false }}>
-          <TooltipProvider>
-            <Toaster />
-            <Sonner />
-            <Routes>
-              <Route element={<Layout />}>
-                <Route path="/" element={<Index />} />
-                <Route path="/tenants" element={<Tenants />} />
-                <Route path="/admin/users" element={<AdminUsers />} />
-                <Route path="/onboarding" element={<Onboarding />} />
-                <Route path="/submit/:requestId" element={<SubmitEvidence />} />
+      <BrowserRouter future={{ v7_startTransition: false, v7_relativeSplatPath: false }}>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <Routes>
+            {/* Public Routes */}
+            <Route path="/r/:tenantId/report" element={<PublicReport />} />
+            <Route path="/r/:tenantId/status" element={<PublicReportStatus />} />
 
-                <Route path="/:tenantId" element={<TenantContext />}>
-                  <Route index element={<TenantIndexRedirect />} />
-                  <Route path="users" element={<TenantUsers />} />
-                  <Route path="clause/:id" element={<ClauseView />} />
-                  <Route path="intelligence" element={<Intelligence />} />
-                  <Route path="onboarding" element={<Onboarding />} />
-                  <Route path="dossier" element={<Dossier />} />
-                  <Route path="inbox" element={<EvidenceInbox />} />
-                </Route>
+            {/* Protected Routes */}
+            <Route
+              element={
+                <AuthGuard>
+                  <Layout />
+                </AuthGuard>
+              }
+            >
+              <Route path="/" element={<Index />} />
+              <Route path="/tenants" element={<Tenants />} />
+              <Route path="/admin/users" element={<AdminUsers />} />
+              <Route path="/onboarding" element={<Onboarding />} />
+              <Route path="/submit/:requestId" element={<SubmitEvidence />} />
+
+              <Route path="/:tenantId" element={<TenantContext />}>
+                <Route index element={<TenantIndexRedirect />} />
+                <Route path="users" element={<TenantUsers />} />
+                <Route path="clause/:id" element={<ClauseView />} />
+                <Route path="intelligence" element={<Intelligence />} />
+                <Route path="onboarding" element={<Onboarding />} />
+                <Route path="dossier" element={<Dossier />} />
+                <Route path="inbox" element={<EvidenceInbox />} />
               </Route>
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </TooltipProvider>
-        </BrowserRouter>
-      </AuthGuard>
+            </Route>
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </TooltipProvider>
+      </BrowserRouter>
     </AuthProvider>
   </AppProvider>
 )

@@ -1,195 +1,219 @@
 import { useEffect, useState } from 'react'
-import { complianceService } from '@/services/compliance'
+import { useParams } from 'react-router-dom'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Progress } from '@/components/ui/progress'
 import {
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
-  ChartLegend,
-  ChartLegendContent,
-} from '@/components/ui/chart'
-import { ComposedChart, Bar, Line, CartesianGrid, XAxis, YAxis } from 'recharts'
-import {
-  Target,
   ShieldCheck,
   AlertTriangle,
-  FileCheck2,
-  Scale,
-  BarChart as BarChartIcon,
   TrendingUp,
-  Calendar,
+  Users,
+  Activity,
+  CheckCircle2,
+  AlertCircle,
+  Clock,
+  ShieldAlert,
 } from 'lucide-react'
+import { complianceService } from '@/services/compliance'
+import { whistleblowingService } from '@/services/whistleblowing'
+import { useAppStore } from '@/stores/main'
 
 export function CockpitOverview() {
-  const [history, setHistory] = useState<any[]>([])
-  const [assessments, setAssessments] = useState<any[]>([])
+  const { tenantId } = useParams<{ tenantId: string }>()
+  const { activeTenant } = useAppStore()
+
+  const [stats, setStats] = useState({
+    conformity: 85,
+    openGaps: 3,
+    criticalRisks: 2,
+    trainedUsers: 92,
+  })
+
+  const [wbStats, setWbStats] = useState({
+    total: 0,
+    active: 0,
+    resolved: 0,
+  })
 
   useEffect(() => {
-    complianceService.getComplianceHistory().then(setHistory)
-    complianceService.getPendingAssessments().then(setAssessments)
-  }, [])
+    if (tenantId) {
+      // Fetch compliance basic stats
+      complianceService
+        .getGaps(tenantId)
+        .then((gaps) => {
+          setStats((prev) => ({
+            ...prev,
+            openGaps: gaps.filter((g: any) => g.status === 'Open').length,
+          }))
+        })
+        .catch(console.error)
+
+      complianceService
+        .getRisks(tenantId)
+        .then((risks) => {
+          setStats((prev) => ({
+            ...prev,
+            criticalRisks: risks.filter((r: any) => r.impact >= 4 && r.probability >= 4).length,
+          }))
+        })
+        .catch(console.error)
+
+      // Fetch Whistleblowing stats
+      whistleblowingService
+        .getTenantReports(tenantId)
+        .then((reports) => {
+          const active = reports.filter(
+            (r: any) =>
+              !['encerrada_procedente', 'encerrada_improcedente', 'arquivada'].includes(r.status),
+          ).length
+          const resolved = reports.filter((r: any) =>
+            ['encerrada_procedente', 'encerrada_improcedente'].includes(r.status),
+          ).length
+          setWbStats({
+            total: reports.length,
+            active,
+            resolved,
+          })
+        })
+        .catch(console.error)
+    }
+  }, [tenantId])
 
   return (
-    <div className="space-y-6 animate-fade-in-up">
-      <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
-        <Card className="bg-slate-50 border-slate-200">
-          <CardContent className="p-4 flex items-center gap-4">
-            <div className="p-3 bg-blue-100 rounded-full shrink-0">
-              <ShieldCheck className="h-5 w-5 text-blue-700" />
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground leading-tight">ISO 37301:2021</p>
-              <p className="text-2xl font-bold text-blue-900">85%</p>
-            </div>
+    <div className="space-y-6">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <Card className="border-l-4 border-l-success shadow-sm">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium">Índice de Conformidade</CardTitle>
+            <ShieldCheck className="h-4 w-4 text-success" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-success">{stats.conformity}%</div>
+            <p className="text-xs text-muted-foreground mt-1 flex items-center">
+              <TrendingUp className="h-3 w-3 mr-1 text-success" /> +2.5% em relação ao mês anterior
+            </p>
           </CardContent>
         </Card>
-        <Card className="bg-slate-50 border-slate-200">
-          <CardContent className="p-4 flex items-center gap-4">
-            <div className="p-3 bg-emerald-100 rounded-full shrink-0">
-              <Scale className="h-5 w-5 text-emerald-700" />
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground leading-tight">Decreto 11.129</p>
-              <p className="text-2xl font-bold text-emerald-900">92%</p>
-            </div>
+
+        <Card className="border-l-4 border-l-destructive shadow-sm">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium">Não Conformidades</CardTitle>
+            <AlertCircle className="h-4 w-4 text-destructive" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-destructive">{stats.openGaps}</div>
+            <p className="text-xs text-muted-foreground mt-1 flex items-center">
+              Gaps identificados em auditorias (ISO 10.2)
+            </p>
           </CardContent>
         </Card>
-        <Card className="bg-amber-50 border-amber-200">
-          <CardContent className="p-4 flex items-center gap-4">
-            <div className="p-3 bg-amber-100 rounded-full shrink-0">
-              <AlertTriangle className="h-5 w-5 text-amber-700" />
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground leading-tight">Gaps Abertos</p>
-              <p className="text-2xl font-bold text-amber-900">3</p>
-            </div>
+
+        <Card className="border-l-4 border-l-amber-500 shadow-sm">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium">Riscos Críticos</CardTitle>
+            <AlertTriangle className="h-4 w-4 text-amber-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-amber-600">{stats.criticalRisks}</div>
+            <p className="text-xs text-muted-foreground mt-1 flex items-center">
+              Matriz de Riscos (ISO 4.6 / 6.1)
+            </p>
           </CardContent>
         </Card>
-        <Card className="bg-slate-50 border-slate-200">
-          <CardContent className="p-4 flex items-center gap-4">
-            <div className="p-3 bg-purple-100 rounded-full shrink-0">
-              <FileCheck2 className="h-5 w-5 text-purple-700" />
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground leading-tight">Prontidão (Audit)</p>
-              <p className="text-2xl font-bold text-purple-900">Alta</p>
-            </div>
+
+        <Card className="border-l-4 border-l-blue-500 shadow-sm">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium">Treinamento e Cultura</CardTitle>
+            <Users className="h-4 w-4 text-blue-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-blue-600">{stats.trainedUsers}%</div>
+            <p className="text-xs text-muted-foreground mt-1 flex items-center">
+              Cobertura do quadro de efetivo (ISO 7.2 / 7.3)
+            </p>
           </CardContent>
         </Card>
       </div>
 
-      <div className="grid md:grid-cols-2 gap-6">
-        <Card className="col-span-full md:col-span-1">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-md flex items-center gap-2">
-              <TrendingUp className="h-5 w-5 text-muted-foreground" /> Evolução Histórica (AI Score)
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <Card className="col-span-1 lg:col-span-2 shadow-sm">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Activity className="h-5 w-5 text-primary" />
+              Atividade Recente do SGC
             </CardTitle>
           </CardHeader>
           <CardContent>
-            {history.length > 0 ? (
-              <ChartContainer
-                config={{
-                  conformity_score: { label: 'Conformidade (%)', color: 'hsl(var(--primary))' },
-                  deviations: { label: 'Desvios', color: 'hsl(var(--destructive))' },
-                }}
-                className="h-[250px] w-full"
-              >
-                <ComposedChart data={history} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                  <XAxis dataKey="month" fontSize={12} tickLine={false} axisLine={false} />
-                  <YAxis
-                    yAxisId="left"
-                    fontSize={12}
-                    tickLine={false}
-                    axisLine={false}
-                    domain={[0, 100]}
-                  />
-                  <YAxis
-                    yAxisId="right"
-                    orientation="right"
-                    fontSize={12}
-                    tickLine={false}
-                    axisLine={false}
-                  />
-                  <ChartTooltip content={<ChartTooltipContent />} />
-                  <ChartLegend content={<ChartLegendContent />} />
-                  <Bar
-                    yAxisId="right"
-                    dataKey="deviations"
-                    fill="var(--color-deviations)"
-                    radius={[4, 4, 0, 0]}
-                    barSize={20}
-                    opacity={0.6}
-                  />
-                  <Line
-                    yAxisId="left"
-                    type="monotone"
-                    dataKey="conformity_score"
-                    stroke="var(--color-conformity_score)"
-                    strokeWidth={3}
-                    dot={{ r: 4 }}
-                    activeDot={{ r: 6 }}
-                  />
-                </ComposedChart>
-              </ChartContainer>
-            ) : (
-              <div className="h-[250px] flex items-center justify-center text-muted-foreground">
-                Carregando dados...
-              </div>
-            )}
+            <div className="space-y-4">
+              {[
+                { title: 'Revisão da Política de Brindes', time: 'Há 2 horas', type: 'doc' },
+                { title: 'Novo Risco Mapeado: Terceiros', time: 'Há 5 horas', type: 'risk' },
+                { title: 'Evidência Aprovada: Treinamento LGPD', time: 'Ontem', type: 'evidence' },
+                { title: 'Relatório de Admissibilidade Concluído', time: 'Ontem', type: 'wb' },
+              ].map((act, i) => (
+                <div key={i} className="flex items-center gap-4">
+                  <div
+                    className={`p-2 rounded-full ${
+                      act.type === 'doc'
+                        ? 'bg-blue-100 text-blue-600'
+                        : act.type === 'risk'
+                          ? 'bg-amber-100 text-amber-600'
+                          : act.type === 'evidence'
+                            ? 'bg-emerald-100 text-emerald-600'
+                            : 'bg-purple-100 text-purple-600'
+                    }`}
+                  >
+                    {act.type === 'evidence' ? (
+                      <CheckCircle2 className="h-4 w-4" />
+                    ) : act.type === 'risk' ? (
+                      <AlertTriangle className="h-4 w-4" />
+                    ) : act.type === 'wb' ? (
+                      <ShieldAlert className="h-4 w-4" />
+                    ) : (
+                      <Activity className="h-4 w-4" />
+                    )}
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm font-medium">{act.title}</p>
+                    <p className="text-xs text-muted-foreground flex items-center">
+                      <Clock className="h-3 w-3 mr-1" /> {act.time}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-md flex items-center gap-2">
-              <Calendar className="h-5 w-5 text-muted-foreground" /> Auto-Avaliações Pendentes
+        <Card className="col-span-1 shadow-sm border-t-4 border-t-purple-500">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-purple-800">
+              <ShieldAlert className="h-5 w-5" />
+              Canal de Denúncias
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
-            {assessments.map((a) => {
-              const isPast = new Date(a.next_review_date) < new Date()
-              return (
-                <div
-                  key={a.id}
-                  className="flex justify-between items-center text-sm border-b pb-2 last:border-0"
-                >
-                  <span className="font-medium">Item {a.clause_id}</span>
-                  <span
-                    className={isPast ? 'text-destructive font-semibold' : 'text-muted-foreground'}
-                  >
-                    {new Date(a.next_review_date).toLocaleDateString()}
-                  </span>
-                </div>
-              )
-            })}
-            {assessments.length === 0 && (
-              <div className="text-center p-4 text-muted-foreground">Nenhuma revisão agendada.</div>
-            )}
-
-            <div className="mt-6 pt-4 border-t">
-              <h4 className="font-semibold text-sm mb-3 flex items-center gap-2">
-                <BarChartIcon className="h-4 w-4 text-muted-foreground" /> Eixos do Decreto
-                11.129/22
-              </h4>
-              <div className="space-y-3">
-                {[
-                  { label: 'Gestão de Riscos (V, XIV)', val: 95 },
-                  { label: 'Terceiros (Due Diligence) (XIII)', val: 70 },
-                ].map((item) => (
-                  <div key={item.label} className="space-y-1">
-                    <div className="flex justify-between text-xs">
-                      <span className="font-medium">{item.label}</span>
-                      <span className="text-muted-foreground">{item.val}%</span>
-                    </div>
-                    <Progress
-                      value={item.val}
-                      className="h-2 [&>div]:bg-emerald-500 bg-emerald-100/50"
-                    />
-                  </div>
-                ))}
+          <CardContent className="space-y-6">
+            <div className="flex justify-between items-end border-b pb-4">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Casos Ativos</p>
+                <h3 className="text-3xl font-bold text-purple-600">{wbStats.active}</h3>
               </div>
+              <Badge variant="outline" className="bg-purple-50 text-purple-700 hover:bg-purple-50">
+                Em Apuração
+              </Badge>
+            </div>
+            <div className="space-y-2">
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Total Recebido (Ano):</span>
+                <span className="font-medium">{wbStats.total}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Casos Encerrados:</span>
+                <span className="font-medium text-emerald-600">{wbStats.resolved}</span>
+              </div>
+            </div>
+            <div className="pt-2">
+              <p className="text-xs text-muted-foreground text-center">
+                Métrica de efetividade ISO 8.3 / Art. 57 (Decreto 11.129/22)
+              </p>
             </div>
           </CardContent>
         </Card>
