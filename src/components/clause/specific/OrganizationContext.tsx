@@ -1,19 +1,42 @@
 import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Textarea } from '@/components/ui/textarea'
 import { Button } from '@/components/ui/button'
 import { Slider } from '@/components/ui/slider'
 import { Label } from '@/components/ui/label'
-import { Download, Loader2, FileText } from 'lucide-react'
+import { Download, Loader2, FileText, Sparkles } from 'lucide-react'
 import { toast } from '@/hooks/use-toast'
 import { complianceService } from '@/services/compliance'
+import { callAnthropicMessage } from '@/lib/anthropic'
 
 export function OrganizationContext() {
   const { tenantId } = useParams<{ tenantId: string }>()
   const [profileReport, setProfileReport] = useState<any>(null)
   const [loading, setLoading] = useState(true)
+
+  const [orgContext, setOrgContext] = useState('')
+  const [isGenerating, setIsGenerating] = useState(false)
+
+  const [externalIssues, setExternalIssues] = useState<Record<string, string>>({
+    Regulatório: '',
+    Legal: '',
+    Econômico: '',
+    Político: '',
+    Social: '',
+    Cultural: '',
+    Ambiental: '',
+  })
+
+  const [internalIssues, setInternalIssues] = useState<Record<string, string>>({
+    'Estrutura Organizacional': '',
+    Governança: '',
+    'Políticas e Objetivos': '',
+    'Processos Operacionais': '',
+    'Recursos (Humanos, Fin, Tech)': '',
+    'Maturidade de TI': '',
+  })
 
   useEffect(() => {
     const fetchReports = async () => {
@@ -33,6 +56,57 @@ export function OrganizationContext() {
 
   const exportReport = () => {
     toast({ title: 'Relatório Gerado', description: 'O Contexto da Organização foi exportado.' })
+  }
+
+  const handleGenerateAI = async () => {
+    setIsGenerating(true)
+    try {
+      const prompt = `Contexto da Organização: "${orgContext}". 
+Gere uma análise de questões internas e externas (Matriz SWOT) aplicáveis a um sistema de gestão de compliance ISO 37301 considerando este contexto.
+Retorne APENAS um objeto JSON estrito (sem formatação markdown em volta) com a seguinte estrutura exata:
+{
+  "external": {
+    "Regulatório": "texto curto",
+    "Legal": "texto curto",
+    "Econômico": "texto curto",
+    "Político": "texto curto",
+    "Social": "texto curto",
+    "Cultural": "texto curto",
+    "Ambiental": "texto curto"
+  },
+  "internal": {
+    "Estrutura Organizacional": "texto curto",
+    "Governança": "texto curto",
+    "Políticas e Objetivos": "texto curto",
+    "Processos Operacionais": "texto curto",
+    "Recursos (Humanos, Fin, Tech)": "texto curto",
+    "Maturidade de TI": "texto curto"
+  }
+}
+NÃO retorne nenhum texto além do JSON.`
+
+      const response = await callAnthropicMessage(prompt)
+      const jsonMatch = response.match(/\{[\s\S]*\}/)
+      const jsonStr = jsonMatch ? jsonMatch[0] : response
+
+      const data = JSON.parse(jsonStr)
+      if (data) {
+        if (data.external) setExternalIssues((prev) => ({ ...prev, ...data.external }))
+        if (data.internal) setInternalIssues((prev) => ({ ...prev, ...data.internal }))
+        toast({
+          title: 'Análise Gerada',
+          description: 'Matriz SWOT preenchida com sugestões da IA baseadas no seu contexto.',
+        })
+      }
+    } catch (e) {
+      console.error(e)
+      toast({
+        title: 'Erro de IA',
+        description: 'Não foi possível gerar a análise. Tente novamente.',
+        variant: 'destructive',
+      })
+    }
+    setIsGenerating(false)
   }
 
   return (
@@ -68,8 +142,42 @@ export function OrganizationContext() {
         </Card>
       ) : null}
 
+      <Card className="border-purple-200 bg-purple-50/50 shadow-sm mb-6">
+        <CardHeader className="pb-3 flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+          <div className="space-y-1">
+            <CardTitle className="text-md flex items-center gap-2 text-purple-800">
+              <Sparkles className="h-5 w-5" /> Motor de IA: Matriz SWOT
+            </CardTitle>
+            <CardDescription className="text-purple-700/70 max-w-2xl text-xs sm:text-sm">
+              Descreva o cenário atual da organização (setor, porte, desafios) para que o Claude
+              preencha automaticamente as questões internas e externas.
+            </CardDescription>
+          </div>
+          <Button
+            onClick={handleGenerateAI}
+            disabled={isGenerating || !orgContext.trim()}
+            className="bg-purple-600 hover:bg-purple-700 text-white whitespace-nowrap w-full sm:w-auto"
+          >
+            {isGenerating ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <Sparkles className="mr-2 h-4 w-4" />
+            )}
+            {isGenerating ? 'Analisando...' : 'Preencher SWOT com IA'}
+          </Button>
+        </CardHeader>
+        <CardContent>
+          <Textarea
+            value={orgContext}
+            onChange={(e) => setOrgContext(e.target.value)}
+            placeholder="Ex: Atuamos no setor financeiro, nossa cultura é focada em inovação, porém temos dificuldades com sistemas legados e alta regulação governamental..."
+            className="bg-white/80 border-purple-100 min-h-[80px]"
+          />
+        </CardContent>
+      </Card>
+
       <Tabs defaultValue="external">
-        <TabsList className="mb-4">
+        <TabsList className="mb-4 w-full flex overflow-x-auto justify-start sm:justify-center">
           <TabsTrigger value="external">Questões Externas</TabsTrigger>
           <TabsTrigger value="internal">Questões Internas</TabsTrigger>
           <TabsTrigger value="culture">Cultura de Compliance</TabsTrigger>
@@ -77,21 +185,17 @@ export function OrganizationContext() {
 
         <TabsContent value="external" className="space-y-4">
           <div className="grid gap-4 md:grid-cols-2">
-            {[
-              'Regulatório',
-              'Legal',
-              'Econômico',
-              'Político',
-              'Social',
-              'Cultural',
-              'Ambiental',
-            ].map((topic) => (
+            {Object.keys(externalIssues).map((topic) => (
               <Card key={topic}>
                 <CardHeader className="py-3">
                   <CardTitle className="text-sm">{topic}</CardTitle>
                 </CardHeader>
                 <CardContent className="pb-4">
                   <Textarea
+                    value={externalIssues[topic]}
+                    onChange={(e) =>
+                      setExternalIssues((prev) => ({ ...prev, [topic]: e.target.value }))
+                    }
                     placeholder={`Descreva ameaças e oportunidades do ambiente ${topic.toLowerCase()}...`}
                     className="min-h-[80px] text-sm"
                   />
@@ -103,20 +207,17 @@ export function OrganizationContext() {
 
         <TabsContent value="internal" className="space-y-4">
           <div className="grid gap-4 md:grid-cols-2">
-            {[
-              'Estrutura Organizacional',
-              'Governança',
-              'Políticas e Objetivos',
-              'Processos Operacionais',
-              'Recursos (Humanos, Fin, Tech)',
-              'Maturidade de TI',
-            ].map((topic) => (
+            {Object.keys(internalIssues).map((topic) => (
               <Card key={topic}>
                 <CardHeader className="py-3">
                   <CardTitle className="text-sm">{topic}</CardTitle>
                 </CardHeader>
                 <CardContent className="pb-4">
                   <Textarea
+                    value={internalIssues[topic]}
+                    onChange={(e) =>
+                      setInternalIssues((prev) => ({ ...prev, [topic]: e.target.value }))
+                    }
                     placeholder={`Descreva forças e fraquezas relacionadas a ${topic.toLowerCase()}...`}
                     className="min-h-[80px] text-sm"
                   />
