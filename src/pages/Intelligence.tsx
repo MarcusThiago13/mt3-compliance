@@ -4,19 +4,34 @@ import { IsoChecklist } from '@/components/intelligence/IsoChecklist'
 import { DecreeReport } from '@/components/intelligence/DecreeReport'
 import { OrgProfiling } from '@/components/intelligence/OrgProfiling'
 import { GapAnalysis } from '@/components/intelligence/GapAnalysis'
-import { Activity } from 'lucide-react'
+import { Activity, FileText } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { useNavigate, useParams } from 'react-router-dom'
 
 export default function Intelligence() {
+  const { tenantId } = useParams<{ tenantId: string }>()
+  const navigate = useNavigate()
+
   return (
     <div className="space-y-6 animate-fade-in pb-12">
-      <div className="flex flex-col gap-2 border-b pb-4">
-        <h1 className="text-3xl font-bold text-primary flex items-center gap-3">
-          <Activity className="h-8 w-8" /> Inteligência e Certificação
-        </h1>
-        <p className="text-muted-foreground">
-          Cockpit central de monitoramento avançado cruzando dados da ISO 37301:2021 e do Decreto
-          11.129/2022.
-        </p>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b pb-4">
+        <div className="flex flex-col gap-2">
+          <h1 className="text-3xl font-bold text-primary flex items-center gap-3">
+            <Activity className="h-8 w-8" /> Inteligência e Certificação
+          </h1>
+          <p className="text-muted-foreground">
+            Cockpit central de monitoramento avançado cruzando dados da ISO 37301:2021 e do Decreto
+            11.129/2022.
+          </p>
+        </div>
+        <Button
+          onClick={() => navigate(`/${tenantId}/dossier`)}
+          size="lg"
+          className="bg-primary hover:bg-primary/90 shadow-md whitespace-nowrap shrink-0"
+        >
+          <FileText className="mr-2 h-5 w-5" />
+          Gerar Dossiê Oficial
+        </Button>
       </div>
 
       <Tabs defaultValue="cockpit" className="w-full">

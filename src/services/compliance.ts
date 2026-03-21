@@ -83,10 +83,9 @@ export const complianceService = {
     if (tid) payload.tenant_id = tid
     await supabase.from('assessment_schedules').insert([payload])
   },
-  async generateDossier(clauseId: string) {
-    const tid = getCurrentTenantId()
+  async generateDossier(tenantId: string, options?: any) {
     const { data, error } = await supabase.functions.invoke('generate-dossier', {
-      body: { clauseId, tenantId: tid },
+      body: { tenantId, options },
     })
     if (error) throw new Error(error.message)
     return data

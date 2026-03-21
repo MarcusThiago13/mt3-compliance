@@ -19,6 +19,7 @@ import AdminUsers from './pages/AdminUsers'
 import Onboarding from './pages/Onboarding'
 import ClauseView from './pages/ClauseView'
 import Intelligence from './pages/Intelligence'
+import Dossier from './pages/Dossier'
 
 const AuthGuard = ({ children }: { children: React.ReactNode }) => {
   const { user, loading, signIn } = useAuth()
@@ -88,6 +89,7 @@ const App = () => (
                   <Route path="clause/:id" element={<ClauseView />} />
                   <Route path="intelligence" element={<Intelligence />} />
                   <Route path="onboarding" element={<Onboarding />} />
+                  <Route path="dossier" element={<Dossier />} />
                 </Route>
               </Route>
               <Route path="*" element={<NotFound />} />
