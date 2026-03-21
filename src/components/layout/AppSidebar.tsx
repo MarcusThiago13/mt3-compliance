@@ -25,6 +25,7 @@ import {
   BarChart,
   RefreshCcw,
   Search,
+  FileSearch,
 } from 'lucide-react'
 import { getParentClauses, getClausesByParent } from '@/lib/iso-data'
 import { useAppStore } from '@/stores/main'
@@ -112,6 +113,17 @@ export function AppSidebar() {
                       <Link to={`${tid}/intelligence`}>
                         <Activity />
                         <span>Inteligência & Certificação</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton
+                      asChild
+                      isActive={location.pathname.includes('/due-diligence')}
+                    >
+                      <Link to={`${tid}/due-diligence`}>
+                        <FileSearch />
+                        <span>Due Diligence (KYS)</span>
                       </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>

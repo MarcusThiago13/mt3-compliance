@@ -24,6 +24,7 @@ import EvidenceInbox from './pages/EvidenceInbox'
 import SubmitEvidence from './pages/SubmitEvidence'
 import PublicReport from './pages/PublicReport'
 import PublicReportStatus from './pages/PublicReportStatus'
+import DueDiligence from './pages/DueDiligence'
 
 const AuthGuard = ({ children }: { children: React.ReactNode }) => {
   const { user, loading, signIn } = useAuth()
@@ -106,6 +107,7 @@ const App = () => (
                 <Route path="onboarding" element={<Onboarding />} />
                 <Route path="dossier" element={<Dossier />} />
                 <Route path="inbox" element={<EvidenceInbox />} />
+                <Route path="due-diligence" element={<DueDiligence />} />
               </Route>
             </Route>
             <Route path="*" element={<NotFound />} />
