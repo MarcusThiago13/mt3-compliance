@@ -62,6 +62,7 @@ import {
   DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu'
 import { USER_CLASSIFICATIONS, USER_ROLES } from '@/lib/constants'
+import { InviteCommunicationModal } from '@/components/shared/InviteCommunicationModal'
 
 export default function AdminUsers() {
   const { user: currentUser } = useAuth()
@@ -90,6 +91,9 @@ export default function AdminUsers() {
   const [editRole, setEditRole] = useState('')
   const [editClassification, setEditClassification] = useState('')
   const [editPhone, setEditPhone] = useState('')
+
+  const [inviteModalOpen, setInviteModalOpen] = useState(false)
+  const [inviteData, setInviteData] = useState<any>(null)
 
   useEffect(() => {
     if (isAdmin) fetchTenants()
@@ -252,65 +256,38 @@ export default function AdminUsers() {
 
   const selectedTenant = tenants.find((t) => t.id === selectedTenantId)
 
-  const handleSendEmail = async (invitationId: string, userEmail: string, userName: string) => {
+  const handlePrepareInvite = async (
+    invitationId: string,
+    userEmail: string,
+    userName: string,
+    userPhone: string,
+    channel: 'email' | 'whatsapp',
+  ) => {
     try {
-      const data = await sendInvitation(invitationId, 'link')
-
-      if (data.message) {
-        toast({ title: 'Vínculo Automático', description: data.message })
-      }
-
-      const tenantName = selectedTenant?.name || ''
-      const subject = `Convite de Acesso - mt3 Compliance`
-      const body = `Olá ${userName || 'Usuário'},
-
-Você foi convidado(a) para acessar o sistema mt3 Compliance da organização ${tenantName}.
-
-${data.message ? 'Como você já possui cadastro, basta acessar o sistema com suas credenciais:' : 'Por favor, acesse o link abaixo para criar sua senha e entrar no seu ambiente seguro:'}
-${data.link}
-
-Atenciosamente,
-Equipe mt3 Compliance`
-
-      window.location.href = `mailto:${userEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`
-
-      if (!data.message) {
-        toast({
-          title: 'Sucesso',
-          description: 'Abrindo o cliente de e-mail para envio do convite.',
-        })
-      }
-
-      fetchTenantUsers(selectedTenantId)
-    } catch (error: any) {
-      toast({ title: 'Erro', description: error.message, variant: 'destructive' })
-    }
-  }
-
-  const handleSendWhatsApp = async (invitationId: string, phoneStr: string, userName: string) => {
-    try {
-      const waPhone = phoneStr ? phoneStr.replace(/\D/g, '') : ''
-
-      if (!waPhone) {
-        toast({
-          title: 'Atenção',
-          description: 'O usuário não possui um número de WhatsApp cadastrado.',
-          variant: 'destructive',
-        })
-        return
+      if (channel === 'whatsapp') {
+        const waPhone = userPhone ? userPhone.replace(/\D/g, '') : ''
+        if (!waPhone) {
+          toast({
+            title: 'Atenção',
+            description: 'O usuário não possui um número de WhatsApp cadastrado.',
+            variant: 'destructive',
+          })
+          return
+        }
       }
 
       const data = await sendInvitation(invitationId, 'link')
 
-      if (data.message) {
-        toast({ title: 'Vínculo Automático', description: data.message })
-      }
-
-      const tenantName = selectedTenant?.name || ''
-      const message = `Olá ${userName || ''}! Você foi convidado(a) para acessar o sistema mt3 Compliance da organização ${tenantName}. ${data.message ? 'Como você já possui cadastro, basta acessar o sistema:' : 'Defina sua senha através deste link para acessar o seu ambiente seguro:'} ${data.link}`
-
-      window.open(`https://wa.me/55${waPhone}?text=${encodeURIComponent(message)}`, '_blank')
-
+      setInviteData({
+        userEmail,
+        userName,
+        userPhone,
+        tenantName: selectedTenant?.name || '',
+        inviteLink: data.link || window.location.origin,
+        isExistingUser: !!data.message,
+        defaultTab: channel,
+      })
+      setInviteModalOpen(true)
       fetchTenantUsers(selectedTenantId)
     } catch (error: any) {
       toast({ title: 'Erro', description: error.message, variant: 'destructive' })
@@ -601,12 +578,28 @@ Equipe mt3 Compliance`
                               (r.status === 'Pendente' || r.status === 'Enviado') && (
                                 <>
                                   <DropdownMenuItem
-                                    onClick={() => handleSendEmail(r.id, r.email, r.name)}
+                                    onClick={() =>
+                                      handlePrepareInvite(
+                                        r.id,
+                                        r.email,
+                                        r.name,
+                                        r.phone || '',
+                                        'email',
+                                      )
+                                    }
                                   >
                                     <Mail className="mr-2 h-4 w-4" /> Enviar E-mail
                                   </DropdownMenuItem>
                                   <DropdownMenuItem
-                                    onClick={() => handleSendWhatsApp(r.id, r.phone || '', r.name)}
+                                    onClick={() =>
+                                      handlePrepareInvite(
+                                        r.id,
+                                        r.email,
+                                        r.name,
+                                        r.phone || '',
+                                        'whatsapp',
+                                      )
+                                    }
                                   >
                                     <MessageCircle className="mr-2 h-4 w-4" /> Enviar WhatsApp
                                   </DropdownMenuItem>
@@ -641,6 +634,20 @@ Equipe mt3 Compliance`
             )}
           </CardContent>
         </Card>
+      )}
+
+      {inviteData && (
+        <InviteCommunicationModal
+          isOpen={inviteModalOpen}
+          onOpenChange={setInviteModalOpen}
+          userEmail={inviteData.userEmail}
+          userName={inviteData.userName}
+          userPhone={inviteData.userPhone}
+          tenantName={inviteData.tenantName}
+          inviteLink={inviteData.inviteLink}
+          isExistingUser={inviteData.isExistingUser}
+          defaultTab={inviteData.defaultTab}
+        />
       )}
     </div>
   )

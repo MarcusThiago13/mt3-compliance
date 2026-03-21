@@ -17,6 +17,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { Textarea } from '@/components/ui/textarea'
+import { Input } from '@/components/ui/input'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Bell, Mail, MessageCircle, Loader2 } from 'lucide-react'
 import { getUsers } from '@/services/admin'
 import { toast } from '@/hooks/use-toast'
@@ -40,12 +43,35 @@ export function SendAlertModal({
   const [users, setUsers] = useState<any[]>([])
   const [loading, setLoading] = useState(false)
   const [selectedUserId, setSelectedUserId] = useState<string>('')
+  const [activeTab, setActiveTab] = useState('email')
+
+  const [subject, setSubject] = useState('')
+  const [body, setBody] = useState('')
+  const [waMessage, setWaMessage] = useState('')
 
   useEffect(() => {
     if (isOpen && tenantId) {
       fetchUsers()
     }
   }, [isOpen, tenantId])
+
+  const selectedUser = users.find((u) => u.id === selectedUserId)
+
+  useEffect(() => {
+    if (selectedUser) {
+      setSubject(`[ALERTA DE PRAZO] Ação 5W2H: ${actionId || 'Compliance'}`)
+      setBody(
+        `Olá ${selectedUser.name},\n\nEste é um lembrete do Sistema de Gestão de Compliance sobre a seguinte ação sob sua responsabilidade:\n\nAção: ${actionTitle}\nPrazo Previsto: ${actionDeadline || 'Não definido'}\n\nPor favor, acesse o sistema para atualizar o status e anexar as evidências necessárias.\n\nAtenciosamente,\nEquipe de Compliance`,
+      )
+      setWaMessage(
+        `*ALERTA DE COMPLIANCE*\n\nOlá ${selectedUser.name}, lembrete da ação sob sua responsabilidade:\n\n*Ação:* ${actionTitle}\n*Prazo:* ${actionDeadline || 'Não definido'}\n\nPor favor, atualize o sistema com as evidências.`,
+      )
+    } else {
+      setSubject('')
+      setBody('')
+      setWaMessage('')
+    }
+  }, [selectedUser, actionId, actionTitle, actionDeadline])
 
   const fetchUsers = async () => {
     setLoading(true)
@@ -58,13 +84,8 @@ export function SendAlertModal({
     setLoading(false)
   }
 
-  const selectedUser = users.find((u) => u.id === selectedUserId)
-
   const handleSendEmail = () => {
     if (!selectedUser?.email) return
-    const subject = `[ALERTA DE PRAZO] Ação 5W2H: ${actionId || 'Compliance'}`
-    const body = `Olá ${selectedUser.name},\n\nEste é um lembrete do Sistema de Gestão de Compliance sobre a seguinte ação sob sua responsabilidade:\n\nAção: ${actionTitle}\nPrazo Previsto: ${actionDeadline || 'Não definido'}\n\nPor favor, acesse o sistema para atualizar o status e anexar as evidências necessárias.\n\nAtenciosamente,\nEquipe de Compliance`
-
     window.location.href = `mailto:${selectedUser.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`
     toast({ title: 'Alerta Preparado', description: 'Cliente de e-mail aberto para envio.' })
     onOpenChange(false)
@@ -88,22 +109,20 @@ export function SendAlertModal({
       })
       return
     }
-    const message = `*ALERTA DE COMPLIANCE*\n\nOlá ${selectedUser.name}, lembrete da ação sob sua responsabilidade:\n\n*Ação:* ${actionTitle}\n*Prazo:* ${actionDeadline || 'Não definido'}\n\nPor favor, atualize o sistema com as evidências.`
-
-    window.open(`https://wa.me/55${phoneNum}?text=${encodeURIComponent(message)}`, '_blank')
+    window.open(`https://wa.me/55${phoneNum}?text=${encodeURIComponent(waMessage)}`, '_blank')
     toast({ title: 'Alerta Preparado', description: 'WhatsApp aberto para envio.' })
     onOpenChange(false)
   }
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-amber-600">
             <Bell className="h-5 w-5" /> Disparar Alerta de Ação 5W2H
           </DialogTitle>
           <DialogDescription>
-            Selecione o responsável para notificar sobre o prazo desta ação.
+            Selecione o responsável e revise a mensagem pré-cadastrada antes de disparar o alerta.
           </DialogDescription>
         </DialogHeader>
 
@@ -131,7 +150,7 @@ export function SendAlertModal({
                 <SelectContent>
                   {users.map((u) => (
                     <SelectItem key={u.id} value={u.id}>
-                      {u.name} ({u.email})
+                      {u.name} ({u.email}) {u.phone ? '- (WhatsApp OK)' : ''}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -140,18 +159,46 @@ export function SendAlertModal({
           </div>
 
           {selectedUser && (
-            <div className="p-3 bg-blue-50/50 border border-blue-100 rounded-md space-y-2 mt-4">
-              <p className="text-sm font-medium text-blue-900">
-                Canais Disponíveis para {selectedUser.name}:
-              </p>
-              <div className="flex items-center gap-2 text-sm text-blue-800">
-                <Mail className="h-4 w-4" /> {selectedUser.email}
-              </div>
-              <div className="flex items-center gap-2 text-sm text-blue-800">
-                <MessageCircle className="h-4 w-4" />{' '}
-                {selectedUser.phone || 'Nenhum WhatsApp cadastrado'}
-              </div>
-            </div>
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="mt-4">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="email">
+                  <Mail className="w-4 h-4 mr-2" /> E-mail
+                </TabsTrigger>
+                <TabsTrigger value="whatsapp">
+                  <MessageCircle className="w-4 h-4 mr-2" /> WhatsApp
+                </TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="email" className="space-y-4 py-4">
+                <div className="space-y-2">
+                  <Label>Destinatário</Label>
+                  <Input value={selectedUser.email || ''} disabled />
+                </div>
+                <div className="space-y-2">
+                  <Label>Assunto</Label>
+                  <Input value={subject} onChange={(e) => setSubject(e.target.value)} />
+                </div>
+                <div className="space-y-2">
+                  <Label>Mensagem</Label>
+                  <Textarea rows={6} value={body} onChange={(e) => setBody(e.target.value)} />
+                </div>
+              </TabsContent>
+
+              <TabsContent value="whatsapp" className="space-y-4 py-4">
+                <div className="space-y-2">
+                  <Label>Número de Destino</Label>
+                  <Input value={selectedUser.phone || 'Não cadastrado'} disabled />
+                </div>
+                <div className="space-y-2">
+                  <Label>Mensagem</Label>
+                  <Textarea
+                    rows={6}
+                    value={waMessage}
+                    onChange={(e) => setWaMessage(e.target.value)}
+                  />
+                </div>
+              </TabsContent>
+            </Tabs>
           )}
         </div>
 
@@ -159,20 +206,24 @@ export function SendAlertModal({
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Cancelar
           </Button>
-          <Button
-            disabled={!selectedUserId || !selectedUser?.email}
-            onClick={handleSendEmail}
-            className="bg-slate-800 hover:bg-slate-700 text-white"
-          >
-            <Mail className="mr-2 h-4 w-4" /> E-mail
-          </Button>
-          <Button
-            disabled={!selectedUserId || !selectedUser?.phone}
-            onClick={handleSendWhatsApp}
-            className="bg-green-600 hover:bg-green-700 text-white"
-          >
-            <MessageCircle className="mr-2 h-4 w-4" /> WhatsApp
-          </Button>
+          {selectedUser && activeTab === 'email' && (
+            <Button
+              disabled={!selectedUser.email}
+              onClick={handleSendEmail}
+              className="bg-slate-800 hover:bg-slate-700 text-white"
+            >
+              <Mail className="mr-2 h-4 w-4" /> Abrir E-mail
+            </Button>
+          )}
+          {selectedUser && activeTab === 'whatsapp' && (
+            <Button
+              disabled={!selectedUser.phone}
+              onClick={handleSendWhatsApp}
+              className="bg-green-600 hover:bg-green-700 text-white"
+            >
+              <MessageCircle className="mr-2 h-4 w-4" /> Abrir WhatsApp
+            </Button>
+          )}
         </DialogFooter>
       </DialogContent>
     </Dialog>

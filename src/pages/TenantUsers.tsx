@@ -61,6 +61,7 @@ import {
   DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu'
 import { USER_CLASSIFICATIONS, USER_ROLES } from '@/lib/constants'
+import { InviteCommunicationModal } from '@/components/shared/InviteCommunicationModal'
 
 export default function TenantUsers() {
   const { tenantId } = useParams<{ tenantId: string }>()
@@ -89,6 +90,9 @@ export default function TenantUsers() {
   const [editRole, setEditRole] = useState('')
   const [editClassification, setEditClassification] = useState('')
   const [editPhone, setEditPhone] = useState('')
+
+  const [inviteModalOpen, setInviteModalOpen] = useState(false)
+  const [inviteData, setInviteData] = useState<any>(null)
 
   const fetchInitialData = async () => {
     if (!tenantId) return
@@ -208,32 +212,38 @@ export default function TenantUsers() {
     }
   }
 
-  const handleSendEmail = async (invitationId: string) => {
+  const handlePrepareInvite = async (
+    invitationId: string,
+    userEmail: string,
+    userName: string,
+    userPhone: string,
+    channel: 'email' | 'whatsapp',
+  ) => {
     try {
-      const data = await sendInvitation(invitationId, 'email')
-      if (data.message) {
-        toast({ title: 'Vínculo Automático', description: data.message })
-        fetchInitialData()
-        return
+      if (channel === 'whatsapp') {
+        const waPhone = userPhone ? userPhone.replace(/\D/g, '') : ''
+        if (!waPhone) {
+          toast({
+            title: 'Atenção',
+            description: 'O usuário não possui um número de WhatsApp cadastrado.',
+            variant: 'destructive',
+          })
+          return
+        }
       }
-      toast({ title: 'Sucesso', description: 'E-mail de convite enviado.' })
-      fetchInitialData()
-    } catch (error: any) {
-      toast({ title: 'Erro', description: error.message, variant: 'destructive' })
-    }
-  }
 
-  const handleSendWhatsApp = async (invitationId: string, phoneStr?: string) => {
-    try {
       const data = await sendInvitation(invitationId, 'link')
-      if (data.message) {
-        toast({ title: 'Vínculo Automático', description: data.message })
-        fetchInitialData()
-        return
-      }
-      const message = `Olá! Você foi convidado para acessar o sistema mt3 Compliance da organização ${activeTenant?.name}. Defina sua senha através deste link para acessar o seu ambiente seguro: ${data.link}`
-      const waPhone = phoneStr ? phoneStr.replace(/\D/g, '') : ''
-      window.open(`https://wa.me/55${waPhone}?text=${encodeURIComponent(message)}`, '_blank')
+
+      setInviteData({
+        userEmail,
+        userName,
+        userPhone,
+        tenantName: activeTenant?.name || '',
+        inviteLink: data.link || window.location.origin,
+        isExistingUser: !!data.message,
+        defaultTab: channel,
+      })
+      setInviteModalOpen(true)
       fetchInitialData()
     } catch (error: any) {
       toast({ title: 'Erro', description: error.message, variant: 'destructive' })
@@ -494,10 +504,30 @@ export default function TenantUsers() {
                           {r.type === 'invitation' &&
                             (r.status === 'Pendente' || r.status === 'Enviado') && (
                               <>
-                                <DropdownMenuItem onClick={() => handleSendEmail(r.id)}>
+                                <DropdownMenuItem
+                                  onClick={() =>
+                                    handlePrepareInvite(
+                                      r.id,
+                                      r.email,
+                                      r.name,
+                                      r.phone || '',
+                                      'email',
+                                    )
+                                  }
+                                >
                                   <Mail className="mr-2 h-4 w-4" /> Enviar E-mail
                                 </DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => handleSendWhatsApp(r.id, r.phone)}>
+                                <DropdownMenuItem
+                                  onClick={() =>
+                                    handlePrepareInvite(
+                                      r.id,
+                                      r.email,
+                                      r.name,
+                                      r.phone || '',
+                                      'whatsapp',
+                                    )
+                                  }
+                                >
                                   <MessageCircle className="mr-2 h-4 w-4" /> Enviar WhatsApp
                                 </DropdownMenuItem>
                                 <DropdownMenuSeparator />
@@ -531,6 +561,20 @@ export default function TenantUsers() {
           )}
         </CardContent>
       </Card>
+
+      {inviteData && (
+        <InviteCommunicationModal
+          isOpen={inviteModalOpen}
+          onOpenChange={setInviteModalOpen}
+          userEmail={inviteData.userEmail}
+          userName={inviteData.userName}
+          userPhone={inviteData.userPhone}
+          tenantName={inviteData.tenantName}
+          inviteLink={inviteData.inviteLink}
+          isExistingUser={inviteData.isExistingUser}
+          defaultTab={inviteData.defaultTab}
+        />
+      )}
     </div>
   )
 }
