@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { FileText, Download, Lock, CheckCircle2, Archive, GitCommit } from 'lucide-react'
 import { toast } from '@/hooks/use-toast'
+import { exportToCsv } from '@/lib/export'
 
 const documents = [
   {
@@ -44,9 +45,10 @@ const documents = [
 
 export function DocumentedInfo75() {
   const handleExport = () => {
+    exportToCsv(`indice_documental_sgc_${Date.now()}`, documents)
     toast({
       title: 'Biblioteca Exportada',
-      description: 'O índice completo de informações documentadas foi gerado.',
+      description: 'O índice completo de informações documentadas foi gerado e baixado (CSV).',
     })
   }
 

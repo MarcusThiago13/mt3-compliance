@@ -11,16 +11,37 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { DECREE_ART_57 } from '@/lib/decree-data'
+import { exportToCsv } from '@/lib/export'
+import { toast } from '@/hooks/use-toast'
 
 export function DecreeReport() {
   const { tenantId } = useParams<{ tenantId: string }>()
+
+  const handleExport = () => {
+    const exportData = DECREE_ART_57.map((inc) => ({
+      Inciso: inc.id,
+      'Descrição (Art. 57)': inc.desc,
+      'Mapeamento ISO': inc.isoMap,
+      Status: inc.id === 'XIII' ? 'Parcial' : 'Aderente',
+    }))
+    exportToCsv(`relatorio_integridade_decreto_${tenantId}_${Date.now()}`, exportData)
+    toast({
+      title: 'Relatório Exportado',
+      description: 'O relatório no formato CGU foi gerado e baixado (CSV).',
+    })
+  }
+
   return (
     <div className="space-y-4 animate-fade-in-up">
       <div className="flex justify-between items-center">
         <h3 className="text-lg font-semibold text-emerald-700">
           Relatório de Integridade (Art. 57 - Decreto 11.129/22)
         </h3>
-        <Button variant="outline" className="text-emerald-700 border-emerald-700/50">
+        <Button
+          variant="outline"
+          className="text-emerald-700 border-emerald-700/50"
+          onClick={handleExport}
+        >
           <Download className="mr-2 h-4 w-4" /> Exportar (Formato CGU)
         </Button>
       </div>

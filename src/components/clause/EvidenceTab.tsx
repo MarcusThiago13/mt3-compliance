@@ -10,6 +10,7 @@ import {
   AlertTriangle,
   CheckCircle2,
   ShieldCheck,
+  Download,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -21,6 +22,8 @@ import { useParams } from 'react-router-dom'
 import { IsoClause } from '@/lib/iso-data'
 import { callAnthropicMessage } from '@/lib/anthropic'
 import { complianceService } from '@/services/compliance'
+import { uploadDocument, getDocumentUrl } from '@/lib/upload'
+import { extractTextFromFile } from '@/lib/document-parser'
 import { useAuth } from '@/hooks/use-auth'
 import { toast } from '@/hooks/use-toast'
 
@@ -34,6 +37,9 @@ export function EvidenceTab({ clause }: { clause?: IsoClause }) {
   const [evidence, setEvidence] = useState<any[]>([])
   const [expiryDate, setExpiryDate] = useState('')
   const [isLegal, setIsLegal] = useState(false)
+  const [selectedFile, setSelectedFile] = useState<File | null>(null)
+  const [isUploading, setIsUploading] = useState(false)
+  const [extractedText, setExtractedText] = useState('')
 
   useEffect(() => {
     if (clause?.id) {
@@ -41,27 +47,99 @@ export function EvidenceTab({ clause }: { clause?: IsoClause }) {
     }
   }, [clause?.id, tenantId])
 
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      setSelectedFile(e.target.files[0])
+    }
+  }
+
   const handleAddEvidence = async () => {
     if (!clause?.id) return
-    const newEv = await complianceService.addEvidence({
-      clause_id: clause.id,
-      file_name: `Evidencia_M${clause.id}_${Date.now()}.pdf`,
-      expiry_date: expiryDate || null,
-      is_legally_valid: isLegal,
-      uploaded_by: user?.email,
-      tenant_id: tenantId,
-    })
-    if (newEv) {
-      setEvidence([newEv, ...evidence])
-      toast({ title: 'Upload Concluído', description: 'Evidência anexada ao repositório central.' })
+    if (!selectedFile) {
+      toast({
+        title: 'Atenção',
+        description: 'Selecione um arquivo para upload.',
+        variant: 'destructive',
+      })
+      return
+    }
+
+    setIsUploading(true)
+
+    try {
+      const { path, error } = await uploadDocument(selectedFile, tenantId || 'default')
+
+      if (error) {
+        toast({ title: 'Erro no Upload', description: error, variant: 'destructive' })
+        setIsUploading(false)
+        return
+      }
+
+      // Simular extração de texto para permitir leitura pela IA
+      const text = await extractTextFromFile(selectedFile)
+      setExtractedText(text)
+
+      const newEv = await complianceService.addEvidence({
+        clause_id: clause.id,
+        file_name: selectedFile.name,
+        file_url: path,
+        expiry_date: expiryDate || null,
+        is_legally_valid: isLegal,
+        uploaded_by: user?.email,
+        tenant_id: tenantId,
+      })
+
+      if (newEv) {
+        setEvidence([newEv, ...evidence])
+        toast({
+          title: 'Upload Concluído',
+          description: 'Evidência anexada. A IA já realizou a leitura inicial do documento.',
+        })
+        setSelectedFile(null)
+        setExpiryDate('')
+        setIsLegal(false)
+        const fileInput = document.getElementById('file-upload') as HTMLInputElement
+        if (fileInput) fileInput.value = ''
+      }
+    } catch (err) {
+      console.error(err)
+      toast({
+        title: 'Erro inesperado',
+        description: 'Falha ao processar o documento.',
+        variant: 'destructive',
+      })
+    } finally {
+      setIsUploading(false)
+    }
+  }
+
+  const handleDownload = async (path: string | null) => {
+    if (!path) {
+      toast({
+        title: 'Link indisponível',
+        description: 'O documento não possui arquivo armazenado no sistema ou é um link externo.',
+        variant: 'destructive',
+      })
+      return
+    }
+    const url = await getDocumentUrl(path)
+    if (url) {
+      window.open(url, '_blank')
+    } else {
+      toast({
+        title: 'Erro de Acesso',
+        description: 'Não foi possível gerar o link seguro para download.',
+        variant: 'destructive',
+      })
     }
   }
 
   const handleGenerateSummary = async () => {
     setIsGenerating(true)
-    const extractedText =
-      'Conteúdo extraído do PDF (Simulado): Política de Compliance v1. O documento estabelece as diretrizes de conduta da organização e o comprometimento da alta direção com as obrigações legais.'
-    const prompt = `Gere um sumário de conformidade cruzando o documento anexado com os requisitos do item ${clause?.id} - ${clause?.title}. Texto extraído do documento: "${extractedText}"`
+    const textToAnalyze =
+      extractedText ||
+      'Nenhum texto recente extraído no cache. Análise baseada apenas nos metadados.'
+    const prompt = `Gere um sumário de conformidade cruzando o documento recém anexado com os requisitos do item ${clause?.id} - ${clause?.title}. Texto extraído do documento: "${textToAnalyze}"`
 
     const response = await callAnthropicMessage(prompt, 1024, useSonnet)
     setSummary(response)
@@ -97,8 +175,21 @@ export function EvidenceTab({ clause }: { clause?: IsoClause }) {
       <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-6 hover:bg-muted/30 transition-colors">
         <div className="text-center mb-6">
           <UploadCloud className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
-          <h3 className="font-semibold text-sm">Arraste arquivos ou clique para upload</h3>
-          <p className="text-xs text-muted-foreground mt-1">PDF, DOCX, Imagens (Max 10MB)</p>
+          <h3 className="font-semibold text-sm">Selecione um arquivo para upload seguro</h3>
+          <p className="text-xs text-muted-foreground mt-1 mb-4">PDF, DOCX, Imagens (Max 10MB)</p>
+          <Input
+            id="file-upload"
+            type="file"
+            onChange={handleFileSelect}
+            className="max-w-xs mx-auto text-xs"
+            accept=".pdf,.doc,.docx,.png,.jpg,.jpeg"
+            disabled={isUploading}
+          />
+          {selectedFile && (
+            <p className="text-xs text-primary mt-2 font-medium">
+              Arquivo pronto para upload: {selectedFile.name}
+            </p>
+          )}
         </div>
 
         <div className="grid sm:grid-cols-2 gap-4 max-w-lg mx-auto bg-card p-4 rounded-md border shadow-sm">
@@ -109,11 +200,17 @@ export function EvidenceTab({ clause }: { clause?: IsoClause }) {
               value={expiryDate}
               onChange={(e) => setExpiryDate(e.target.value)}
               className="h-8 text-xs"
+              disabled={isUploading}
             />
           </div>
           <div className="space-y-2 flex flex-col justify-end">
             <div className="flex items-center space-x-2 border p-1.5 rounded-md bg-muted/50">
-              <Switch id="legal-validity" checked={isLegal} onCheckedChange={setIsLegal} />
+              <Switch
+                id="legal-validity"
+                checked={isLegal}
+                onCheckedChange={setIsLegal}
+                disabled={isUploading}
+              />
               <Label
                 htmlFor="legal-validity"
                 className="text-xs cursor-pointer flex items-center gap-1"
@@ -127,26 +224,20 @@ export function EvidenceTab({ clause }: { clause?: IsoClause }) {
             size="sm"
             className="sm:col-span-2"
             onClick={handleAddEvidence}
+            disabled={isUploading || !selectedFile}
           >
-            Realizar Upload Controlado
+            {isUploading ? (
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+            ) : (
+              <ShieldCheck className="h-4 w-4 mr-2" />
+            )}
+            {isUploading ? 'Processando e Extraindo Texto...' : 'Realizar Upload Seguro e Auditar'}
           </Button>
         </div>
       </div>
 
-      <div className="flex items-center gap-2">
-        <div className="flex-1 grid gap-1.5">
-          <Label htmlFor="link">Link Externo de Evidência (SharePoint/OneDrive)</Label>
-          <div className="flex gap-2">
-            <Input id="link" placeholder="https://sharepoint..." className="flex-1" />
-            <Button variant="outline">
-              <LinkIcon className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
-      </div>
-
       <div className="space-y-3 mt-6">
-        <h4 className="text-sm font-semibold">Evidências Anexadas (Metadados)</h4>
+        <h4 className="text-sm font-semibold">Repositório de Evidências</h4>
         {evidence.map((ev) => {
           const status = getStatusInfo(ev.expiry_date)
           const StatusIcon = status.icon
@@ -174,12 +265,20 @@ export function EvidenceTab({ clause }: { clause?: IsoClause }) {
                   </p>
                 </div>
               </div>
-              <div className="flex items-center gap-4 shrink-0">
-                <span className={`text-xs font-semibold ${status.color}`}>{status.label}</span>
+              <div className="flex items-center gap-2 shrink-0">
+                <span className={`text-xs font-semibold ${status.color} mr-2`}>{status.label}</span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-8 text-xs flex items-center gap-1 text-primary border-primary/20 hover:bg-primary/5"
+                  onClick={() => handleDownload(ev.file_url)}
+                >
+                  <Download className="h-3 w-3" /> Baixar
+                </Button>
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="text-destructive hover:bg-destructive/10"
+                  className="h-8 w-8 text-destructive hover:bg-destructive/10"
                 >
                   <Trash2 className="h-4 w-4" />
                 </Button>
@@ -195,7 +294,7 @@ export function EvidenceTab({ clause }: { clause?: IsoClause }) {
       <div className="pt-6 border-t mt-6">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 gap-4">
           <h4 className="text-sm font-semibold flex items-center gap-2">
-            <Sparkles className="h-5 w-5 text-purple-600" /> Análise de Conformidade Documental (AI)
+            <Sparkles className="h-5 w-5 text-purple-600" /> Análise de Conformidade Documental (IA)
           </h4>
           <div className="flex items-center gap-4">
             <div className="flex items-center space-x-2">

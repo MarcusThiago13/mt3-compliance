@@ -10,6 +10,7 @@ import { Download, Loader2, FileText, Sparkles } from 'lucide-react'
 import { toast } from '@/hooks/use-toast'
 import { complianceService } from '@/services/compliance'
 import { callAnthropicMessage } from '@/lib/anthropic'
+import { exportToText } from '@/lib/export'
 
 export function OrganizationContext() {
   const { tenantId } = useParams<{ tenantId: string }>()
@@ -55,7 +56,29 @@ export function OrganizationContext() {
   }, [tenantId])
 
   const exportReport = () => {
-    toast({ title: 'Relatório Gerado', description: 'O Contexto da Organização foi exportado.' })
+    let content = `RELATÓRIO DE CONTEXTO DA ORGANIZAÇÃO\n`
+    content += `Gerado em: ${new Date().toLocaleString()}\n\n`
+
+    if (profileReport) {
+      content += `--- PERFIL DE INTEGRIDADE ---\n${profileReport.content}\n\n`
+    }
+
+    content += `--- QUESTÕES EXTERNAS ---\n`
+    Object.entries(externalIssues).forEach(
+      ([k, v]) => (content += `${k}: ${v || 'Não preenchido'}\n`),
+    )
+
+    content += `\n--- QUESTÕES INTERNAS ---\n`
+    Object.entries(internalIssues).forEach(
+      ([k, v]) => (content += `${k}: ${v || 'Não preenchido'}\n`),
+    )
+
+    exportToText(`contexto_organizacao_${tenantId}_${Date.now()}`, content)
+
+    toast({
+      title: 'Relatório Exportado',
+      description: 'O Contexto da Organização foi baixado (formato texto).',
+    })
   }
 
   const handleGenerateAI = async () => {
