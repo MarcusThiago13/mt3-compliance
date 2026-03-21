@@ -1,11 +1,17 @@
 // AVOID UPDATING THIS FILE DIRECTLY. It is automatically generated.
-export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[]
+export type Json =
+  | string
+  | number
+  | boolean
+  | null
+  | { [key: string]: Json | undefined }
+  | Json[]
 
 export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: '14.4'
+    PostgrestVersion: "14.4"
   }
   public: {
     Tables: {
@@ -90,6 +96,53 @@ export type Database = {
         }
         Relationships: []
       }
+      controls_library: {
+        Row: {
+          code: string
+          control_type: string | null
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          nature: string | null
+          owner_id: string | null
+          status: string
+          tenant_id: string
+        }
+        Insert: {
+          code: string
+          control_type?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          nature?: string | null
+          owner_id?: string | null
+          status?: string
+          tenant_id: string
+        }
+        Update: {
+          code?: string
+          control_type?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          nature?: string | null
+          owner_id?: string | null
+          status?: string
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "controls_library_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       dd_conflict_declarations: {
         Row: {
           created_at: string
@@ -129,11 +182,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'dd_conflict_declarations_tenant_id_fkey'
-            columns: ['tenant_id']
+            foreignKeyName: "dd_conflict_declarations_tenant_id_fkey"
+            columns: ["tenant_id"]
             isOneToOne: false
-            referencedRelation: 'tenants'
-            referencedColumns: ['id']
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -167,11 +220,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'dd_red_flags_process_id_fkey'
-            columns: ['process_id']
+            foreignKeyName: "dd_red_flags_process_id_fkey"
+            columns: ["process_id"]
             isOneToOne: false
-            referencedRelation: 'due_diligence_processes'
-            referencedColumns: ['id']
+            referencedRelation: "due_diligence_processes"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -229,11 +282,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'due_diligence_processes_tenant_id_fkey'
-            columns: ['tenant_id']
+            foreignKeyName: "due_diligence_processes_tenant_id_fkey"
+            columns: ["tenant_id"]
             isOneToOne: false
-            referencedRelation: 'tenants'
-            referencedColumns: ['id']
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -330,11 +383,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'evidence_requests_tenant_id_fkey'
-            columns: ['tenant_id']
+            foreignKeyName: "evidence_requests_tenant_id_fkey"
+            columns: ["tenant_id"]
             isOneToOne: false
-            referencedRelation: 'tenants'
-            referencedColumns: ['id']
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -404,11 +457,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'invitations_tenant_id_fkey'
-            columns: ['tenant_id']
+            foreignKeyName: "invitations_tenant_id_fkey"
+            columns: ["tenant_id"]
             isOneToOne: false
-            referencedRelation: 'tenants'
-            referencedColumns: ['id']
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -433,11 +486,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'profile_reports_tenant_id_fkey'
-            columns: ['tenant_id']
+            foreignKeyName: "profile_reports_tenant_id_fkey"
+            columns: ["tenant_id"]
             isOneToOne: false
-            referencedRelation: 'tenants'
-            referencedColumns: ['id']
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -465,11 +518,289 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'report_messages_report_id_fkey'
-            columns: ['report_id']
+            foreignKeyName: "report_messages_report_id_fkey"
+            columns: ["report_id"]
             isOneToOne: false
-            referencedRelation: 'whistleblower_reports'
-            referencedColumns: ['id']
+            referencedRelation: "whistleblower_reports"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      risk_assessments: {
+        Row: {
+          created_at: string
+          evaluated_by: string | null
+          id: string
+          inherent_impact: number | null
+          inherent_prob: number | null
+          inherent_score: number | null
+          justification: string | null
+          residual_impact: number | null
+          residual_prob: number | null
+          residual_score: number | null
+          risk_id: string
+          status: string
+          version_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          evaluated_by?: string | null
+          id?: string
+          inherent_impact?: number | null
+          inherent_prob?: number | null
+          inherent_score?: number | null
+          justification?: string | null
+          residual_impact?: number | null
+          residual_prob?: number | null
+          residual_score?: number | null
+          risk_id: string
+          status?: string
+          version_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          evaluated_by?: string | null
+          id?: string
+          inherent_impact?: number | null
+          inherent_prob?: number | null
+          inherent_score?: number | null
+          justification?: string | null
+          residual_impact?: number | null
+          residual_prob?: number | null
+          residual_score?: number | null
+          risk_id?: string
+          status?: string
+          version_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "risk_assessments_risk_id_fkey"
+            columns: ["risk_id"]
+            isOneToOne: false
+            referencedRelation: "risk_register"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "risk_assessments_version_id_fkey"
+            columns: ["version_id"]
+            isOneToOne: false
+            referencedRelation: "risk_methodology_versions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      risk_controls: {
+        Row: {
+          control_id: string
+          created_at: string
+          design_effectiveness: string | null
+          id: string
+          operational_effectiveness: string | null
+          risk_id: string
+        }
+        Insert: {
+          control_id: string
+          created_at?: string
+          design_effectiveness?: string | null
+          id?: string
+          operational_effectiveness?: string | null
+          risk_id: string
+        }
+        Update: {
+          control_id?: string
+          created_at?: string
+          design_effectiveness?: string | null
+          id?: string
+          operational_effectiveness?: string | null
+          risk_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "risk_controls_control_id_fkey"
+            columns: ["control_id"]
+            isOneToOne: false
+            referencedRelation: "controls_library"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "risk_controls_risk_id_fkey"
+            columns: ["risk_id"]
+            isOneToOne: false
+            referencedRelation: "risk_register"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      risk_methodologies: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          tenant_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          tenant_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "risk_methodologies_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      risk_methodology_versions: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          methodology_id: string
+          model_type: string
+          parameters: Json
+          status: string
+          version_number: number
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          methodology_id: string
+          model_type?: string
+          parameters?: Json
+          status?: string
+          version_number: number
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          methodology_id?: string
+          model_type?: string
+          parameters?: Json
+          status?: string
+          version_number?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "risk_methodology_versions_methodology_id_fkey"
+            columns: ["methodology_id"]
+            isOneToOne: false
+            referencedRelation: "risk_methodologies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      risk_register: {
+        Row: {
+          category: string
+          code: string
+          created_at: string
+          description: string | null
+          id: string
+          owner_id: string | null
+          process: string | null
+          source: string | null
+          status: string
+          subcategory: string | null
+          tenant_id: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          category: string
+          code: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          owner_id?: string | null
+          process?: string | null
+          source?: string | null
+          status?: string
+          subcategory?: string | null
+          tenant_id: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          code?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          owner_id?: string | null
+          process?: string | null
+          source?: string | null
+          status?: string
+          subcategory?: string | null
+          tenant_id?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "risk_register_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      risk_treatments: {
+        Row: {
+          created_at: string
+          deadline: string | null
+          description: string
+          effectiveness_indicator: string | null
+          id: string
+          owner_id: string | null
+          response_type: string
+          risk_id: string
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          deadline?: string | null
+          description: string
+          effectiveness_indicator?: string | null
+          id?: string
+          owner_id?: string | null
+          response_type: string
+          risk_id: string
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          deadline?: string | null
+          description?: string
+          effectiveness_indicator?: string | null
+          id?: string
+          owner_id?: string | null
+          response_type?: string
+          risk_id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "risk_treatments_risk_id_fkey"
+            columns: ["risk_id"]
+            isOneToOne: false
+            referencedRelation: "risk_register"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -572,11 +903,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'user_tenants_tenant_id_fkey'
-            columns: ['tenant_id']
+            foreignKeyName: "user_tenants_tenant_id_fkey"
+            columns: ["tenant_id"]
             isOneToOne: false
-            referencedRelation: 'tenants'
-            referencedColumns: ['id']
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -664,11 +995,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'whistleblower_reports_tenant_id_fkey'
-            columns: ['tenant_id']
+            foreignKeyName: "whistleblower_reports_tenant_id_fkey"
+            columns: ["tenant_id"]
             isOneToOne: false
-            referencedRelation: 'tenants'
-            referencedColumns: ['id']
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -715,8 +1046,8 @@ export type Database = {
       }
     }
     Enums: {
-      dd_level_enum: 'SDD' | 'CDD' | 'EDD'
-      dd_risk_level: 'Baixo' | 'Médio' | 'Alto'
+      dd_level_enum: "SDD" | "CDD" | "EDD"
+      dd_risk_level: "Baixo" | "Médio" | "Alto"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -724,31 +1055,33 @@ export type Database = {
   }
 }
 
-type DatabaseWithoutInternals = Omit<Database, '__InternalSupabase'>
+type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
 
-type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, 'public'>]
+type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
 
 export type Tables<
   DefaultSchemaTableNameOrOptions extends
-    | keyof (DefaultSchema['Tables'] & DefaultSchema['Views'])
+    | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
     | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'] &
-        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Views'])
+    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
     : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
-  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'] &
-      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Views'])[TableName] extends {
+  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
       Row: infer R
     }
     ? R
     : never
-  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema['Tables'] & DefaultSchema['Views'])
-    ? (DefaultSchema['Tables'] & DefaultSchema['Views'])[DefaultSchemaTableNameOrOptions] extends {
+  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])
+    ? (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
         Row: infer R
       }
       ? R
@@ -757,23 +1090,23 @@ export type Tables<
 
 export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
-    | keyof DefaultSchema['Tables']
+    | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables']
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
     : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
-  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'][TableName] extends {
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
       Insert: infer I
     }
     ? I
     : never
-  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema['Tables']
-    ? DefaultSchema['Tables'][DefaultSchemaTableNameOrOptions] extends {
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
         Insert: infer I
       }
       ? I
@@ -782,23 +1115,23 @@ export type TablesInsert<
 
 export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
-    | keyof DefaultSchema['Tables']
+    | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables']
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
     : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
-  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'][TableName] extends {
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
       Update: infer U
     }
     ? U
     : never
-  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema['Tables']
-    ? DefaultSchema['Tables'][DefaultSchemaTableNameOrOptions] extends {
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
         Update: infer U
       }
       ? U
@@ -807,46 +1140,47 @@ export type TablesUpdate<
 
 export type Enums<
   DefaultSchemaEnumNameOrOptions extends
-    | keyof DefaultSchema['Enums']
+    | keyof DefaultSchema["Enums"]
     | { schema: keyof DatabaseWithoutInternals },
   EnumName extends DefaultSchemaEnumNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions['schema']]['Enums']
+    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
     : never = never,
 > = DefaultSchemaEnumNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
-  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions['schema']]['Enums'][EnumName]
-  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema['Enums']
-    ? DefaultSchema['Enums'][DefaultSchemaEnumNameOrOptions]
+  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
+  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
+    ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
     : never
 
 export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
-    | keyof DefaultSchema['CompositeTypes']
+    | keyof DefaultSchema["CompositeTypes"]
     | { schema: keyof DatabaseWithoutInternals },
   CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions['schema']]['CompositeTypes']
+    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
     : never = never,
 > = PublicCompositeTypeNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
-  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions['schema']]['CompositeTypes'][CompositeTypeName]
-  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema['CompositeTypes']
-    ? DefaultSchema['CompositeTypes'][PublicCompositeTypeNameOrOptions]
+  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
+  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
+    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
     : never
 
 export const Constants = {
   public: {
     Enums: {
-      dd_level_enum: ['SDD', 'CDD', 'EDD'],
-      dd_risk_level: ['Baixo', 'Médio', 'Alto'],
+      dd_level_enum: ["SDD", "CDD", "EDD"],
+      dd_risk_level: ["Baixo", "Médio", "Alto"],
     },
   },
 } as const
+
 
 // ====== DATABASE EXTENDED CONTEXT (auto-generated) ======
 // This section contains actual PostgreSQL column types, constraints, RLS policies,
@@ -878,6 +1212,17 @@ export const Constants = {
 //   month: text (not null)
 //   conformity_score: integer (not null)
 //   deviations: integer (not null)
+//   created_at: timestamp with time zone (not null, default: now())
+// Table: controls_library
+//   id: uuid (not null, default: gen_random_uuid())
+//   tenant_id: uuid (not null)
+//   code: text (not null)
+//   name: text (not null)
+//   description: text (nullable)
+//   control_type: text (nullable)
+//   nature: text (nullable)
+//   owner_id: uuid (nullable)
+//   status: text (not null, default: 'Ativo'::text)
 //   created_at: timestamp with time zone (not null, default: now())
 // Table: dd_conflict_declarations
 //   id: uuid (not null, default: gen_random_uuid())
@@ -970,6 +1315,66 @@ export const Constants = {
 //   sender_type: text (not null)
 //   message: text (not null)
 //   created_at: timestamp with time zone (not null, default: now())
+// Table: risk_assessments
+//   id: uuid (not null, default: gen_random_uuid())
+//   risk_id: uuid (not null)
+//   version_id: uuid (nullable)
+//   inherent_prob: integer (nullable)
+//   inherent_impact: integer (nullable)
+//   inherent_score: integer (nullable)
+//   residual_prob: integer (nullable)
+//   residual_impact: integer (nullable)
+//   residual_score: integer (nullable)
+//   justification: text (nullable)
+//   status: text (not null, default: 'Em Avaliação'::text)
+//   evaluated_by: uuid (nullable)
+//   created_at: timestamp with time zone (not null, default: now())
+// Table: risk_controls
+//   id: uuid (not null, default: gen_random_uuid())
+//   risk_id: uuid (not null)
+//   control_id: uuid (not null)
+//   design_effectiveness: text (nullable)
+//   operational_effectiveness: text (nullable)
+//   created_at: timestamp with time zone (not null, default: now())
+// Table: risk_methodologies
+//   id: uuid (not null, default: gen_random_uuid())
+//   tenant_id: uuid (not null)
+//   name: text (not null)
+//   description: text (nullable)
+//   created_at: timestamp with time zone (not null, default: now())
+// Table: risk_methodology_versions
+//   id: uuid (not null, default: gen_random_uuid())
+//   methodology_id: uuid (not null)
+//   version_number: integer (not null)
+//   model_type: text (not null, default: 'basic'::text)
+//   parameters: jsonb (not null, default: '{}'::jsonb)
+//   status: text (not null, default: 'draft'::text)
+//   created_by: uuid (nullable)
+//   created_at: timestamp with time zone (not null, default: now())
+// Table: risk_register
+//   id: uuid (not null, default: gen_random_uuid())
+//   tenant_id: uuid (not null)
+//   code: text (not null)
+//   title: text (not null)
+//   description: text (nullable)
+//   category: text (not null)
+//   subcategory: text (nullable)
+//   process: text (nullable)
+//   owner_id: uuid (nullable)
+//   source: text (nullable)
+//   status: text (not null, default: 'Identificado'::text)
+//   created_at: timestamp with time zone (not null, default: now())
+//   updated_at: timestamp with time zone (not null, default: now())
+// Table: risk_treatments
+//   id: uuid (not null, default: gen_random_uuid())
+//   risk_id: uuid (not null)
+//   response_type: text (not null)
+//   description: text (not null)
+//   owner_id: uuid (nullable)
+//   deadline: date (nullable)
+//   status: text (not null, default: 'Planejado'::text)
+//   effectiveness_indicator: text (nullable)
+//   created_at: timestamp with time zone (not null, default: now())
 // Table: risks
 //   id: uuid (not null, default: gen_random_uuid())
 //   tenant_id: text (not null, default: 'default'::text)
@@ -1031,6 +1436,10 @@ export const Constants = {
 //   PRIMARY KEY audit_logs_pkey: PRIMARY KEY (id)
 // Table: compliance_history
 //   PRIMARY KEY compliance_history_pkey: PRIMARY KEY (id)
+// Table: controls_library
+//   FOREIGN KEY controls_library_owner_id_fkey: FOREIGN KEY (owner_id) REFERENCES auth.users(id)
+//   PRIMARY KEY controls_library_pkey: PRIMARY KEY (id)
+//   FOREIGN KEY controls_library_tenant_id_fkey: FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE
 // Table: dd_conflict_declarations
 //   FOREIGN KEY dd_conflict_declarations_employee_id_fkey: FOREIGN KEY (employee_id) REFERENCES auth.users(id)
 //   PRIMARY KEY dd_conflict_declarations_pkey: PRIMARY KEY (id)
@@ -1060,6 +1469,30 @@ export const Constants = {
 // Table: report_messages
 //   PRIMARY KEY report_messages_pkey: PRIMARY KEY (id)
 //   FOREIGN KEY report_messages_report_id_fkey: FOREIGN KEY (report_id) REFERENCES whistleblower_reports(id) ON DELETE CASCADE
+// Table: risk_assessments
+//   FOREIGN KEY risk_assessments_evaluated_by_fkey: FOREIGN KEY (evaluated_by) REFERENCES auth.users(id)
+//   PRIMARY KEY risk_assessments_pkey: PRIMARY KEY (id)
+//   FOREIGN KEY risk_assessments_risk_id_fkey: FOREIGN KEY (risk_id) REFERENCES risk_register(id) ON DELETE CASCADE
+//   FOREIGN KEY risk_assessments_version_id_fkey: FOREIGN KEY (version_id) REFERENCES risk_methodology_versions(id)
+// Table: risk_controls
+//   FOREIGN KEY risk_controls_control_id_fkey: FOREIGN KEY (control_id) REFERENCES controls_library(id) ON DELETE CASCADE
+//   PRIMARY KEY risk_controls_pkey: PRIMARY KEY (id)
+//   FOREIGN KEY risk_controls_risk_id_fkey: FOREIGN KEY (risk_id) REFERENCES risk_register(id) ON DELETE CASCADE
+// Table: risk_methodologies
+//   PRIMARY KEY risk_methodologies_pkey: PRIMARY KEY (id)
+//   FOREIGN KEY risk_methodologies_tenant_id_fkey: FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE
+// Table: risk_methodology_versions
+//   FOREIGN KEY risk_methodology_versions_created_by_fkey: FOREIGN KEY (created_by) REFERENCES auth.users(id)
+//   FOREIGN KEY risk_methodology_versions_methodology_id_fkey: FOREIGN KEY (methodology_id) REFERENCES risk_methodologies(id) ON DELETE CASCADE
+//   PRIMARY KEY risk_methodology_versions_pkey: PRIMARY KEY (id)
+// Table: risk_register
+//   FOREIGN KEY risk_register_owner_id_fkey: FOREIGN KEY (owner_id) REFERENCES auth.users(id)
+//   PRIMARY KEY risk_register_pkey: PRIMARY KEY (id)
+//   FOREIGN KEY risk_register_tenant_id_fkey: FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE
+// Table: risk_treatments
+//   FOREIGN KEY risk_treatments_owner_id_fkey: FOREIGN KEY (owner_id) REFERENCES auth.users(id)
+//   PRIMARY KEY risk_treatments_pkey: PRIMARY KEY (id)
+//   FOREIGN KEY risk_treatments_risk_id_fkey: FOREIGN KEY (risk_id) REFERENCES risk_register(id) ON DELETE CASCADE
 // Table: risks
 //   PRIMARY KEY risks_pkey: PRIMARY KEY (id)
 // Table: tenants
@@ -1088,6 +1521,9 @@ export const Constants = {
 //   Policy "tenant_isolation_history" (ALL, PERMISSIVE) roles={authenticated}
 //     USING: is_tenant_member(tenant_id)
 //     WITH CHECK: is_tenant_member(tenant_id)
+// Table: controls_library
+//   Policy "auth_all_ctrl_lib" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: is_tenant_member_uuid(tenant_id)
 // Table: dd_conflict_declarations
 //   Policy "auth_insert_ddcd" (INSERT, PERMISSIVE) roles={authenticated}
 //     WITH CHECK: is_tenant_member_uuid(tenant_id)
@@ -1143,6 +1579,24 @@ export const Constants = {
 //     WITH CHECK: (EXISTS ( SELECT 1    FROM whistleblower_reports wr   WHERE ((wr.id = report_messages.report_id) AND is_tenant_member_uuid(wr.tenant_id))))
 //   Policy "auth_select_messages" (SELECT, PERMISSIVE) roles={authenticated}
 //     USING: (EXISTS ( SELECT 1    FROM whistleblower_reports wr   WHERE ((wr.id = report_messages.report_id) AND is_tenant_member_uuid(wr.tenant_id))))
+// Table: risk_assessments
+//   Policy "auth_all_risk_ass" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: (EXISTS ( SELECT 1    FROM risk_register r   WHERE ((r.id = risk_assessments.risk_id) AND is_tenant_member_uuid(r.tenant_id))))
+// Table: risk_controls
+//   Policy "auth_all_risk_ctrl" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: (EXISTS ( SELECT 1    FROM risk_register r   WHERE ((r.id = risk_controls.risk_id) AND is_tenant_member_uuid(r.tenant_id))))
+// Table: risk_methodologies
+//   Policy "auth_all_risk_meth" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: is_tenant_member_uuid(tenant_id)
+// Table: risk_methodology_versions
+//   Policy "auth_all_risk_meth_ver" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: (EXISTS ( SELECT 1    FROM risk_methodologies m   WHERE ((m.id = risk_methodology_versions.methodology_id) AND is_tenant_member_uuid(m.tenant_id))))
+// Table: risk_register
+//   Policy "auth_all_risk_reg" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: is_tenant_member_uuid(tenant_id)
+// Table: risk_treatments
+//   Policy "auth_all_risk_treat" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: (EXISTS ( SELECT 1    FROM risk_register r   WHERE ((r.id = risk_treatments.risk_id) AND is_tenant_member_uuid(r.tenant_id))))
 // Table: risks
 //   Policy "tenant_isolation_risks" (ALL, PERMISSIVE) roles={authenticated}
 //     USING: is_tenant_member(tenant_id)
@@ -1183,15 +1637,15 @@ export const Constants = {
 //   BEGIN
 //       SELECT id INTO v_report_id
 //       FROM public.whistleblower_reports
-//       WHERE tenant_id = p_tenant_id
-//         AND protocol_number = p_protocol
+//       WHERE tenant_id = p_tenant_id 
+//         AND protocol_number = p_protocol 
 //         AND access_password_hash = crypt(p_password, access_password_hash)
 //       LIMIT 1;
-//
+//       
 //       RETURN v_report_id;
 //   END;
 //   $function$
-//
+//   
 // FUNCTION cleanup_tenant_mock_data()
 //   CREATE OR REPLACE FUNCTION public.cleanup_tenant_mock_data()
 //    RETURNS trigger
@@ -1208,7 +1662,7 @@ export const Constants = {
 //       RETURN OLD;
 //   END;
 //   $function$
-//
+//   
 // FUNCTION fn_add_tenant_creator()
 //   CREATE OR REPLACE FUNCTION public.fn_add_tenant_creator()
 //    RETURNS trigger
@@ -1216,13 +1670,13 @@ export const Constants = {
 //    SECURITY DEFINER
 //   AS $function$
 //   BEGIN
-//       INSERT INTO public.user_tenants (user_id, tenant_id)
-//       VALUES (auth.uid(), NEW.id)
+//       INSERT INTO public.user_tenants (user_id, tenant_id) 
+//       VALUES (auth.uid(), NEW.id) 
 //       ON CONFLICT DO NOTHING;
 //       RETURN NEW;
 //   END;
 //   $function$
-//
+//   
 // FUNCTION get_all_users()
 //   CREATE OR REPLACE FUNCTION public.get_all_users()
 //    RETURNS TABLE(user_id uuid, email text, name text, role text, classification text, status text, tenant_id uuid, tenant_name text, contact_phone text)
@@ -1231,7 +1685,7 @@ export const Constants = {
 //   AS $function$
 //   BEGIN
 //       RETURN QUERY
-//       SELECT
+//       SELECT 
 //           u.id as user_id,
 //           u.email::text,
 //           (u.raw_user_meta_data->>'name')::text as name,
@@ -1246,7 +1700,7 @@ export const Constants = {
 //       JOIN public.tenants t ON t.id = ut.tenant_id;
 //   END;
 //   $function$
-//
+//   
 // FUNCTION get_tenant_users(uuid)
 //   CREATE OR REPLACE FUNCTION public.get_tenant_users(target_tenant_id uuid)
 //    RETURNS TABLE(user_id uuid, email text, name text, role text, classification text, status text, contact_phone text)
@@ -1255,7 +1709,7 @@ export const Constants = {
 //   AS $function$
 //   BEGIN
 //       RETURN QUERY
-//       SELECT
+//       SELECT 
 //           u.id as user_id,
 //           u.email::text,
 //           (u.raw_user_meta_data->>'name')::text as name,
@@ -1268,7 +1722,7 @@ export const Constants = {
 //       WHERE ut.tenant_id = target_tenant_id;
 //   END;
 //   $function$
-//
+//   
 // FUNCTION get_user_id_by_email(text)
 //   CREATE OR REPLACE FUNCTION public.get_user_id_by_email(user_email text)
 //    RETURNS uuid
@@ -1282,7 +1736,7 @@ export const Constants = {
 //       RETURN found_user_id;
 //   END;
 //   $function$
-//
+//   
 // FUNCTION hash_report_password()
 //   CREATE OR REPLACE FUNCTION public.hash_report_password()
 //    RETURNS trigger
@@ -1299,7 +1753,7 @@ export const Constants = {
 //     RETURN NEW;
 //   END;
 //   $function$
-//
+//   
 // FUNCTION is_tenant_member(text)
 //   CREATE OR REPLACE FUNCTION public.is_tenant_member(check_tenant_id text)
 //    RETURNS boolean
@@ -1313,7 +1767,7 @@ export const Constants = {
 //       );
 //   END;
 //   $function$
-//
+//   
 // FUNCTION is_tenant_member_uuid(uuid)
 //   CREATE OR REPLACE FUNCTION public.is_tenant_member_uuid(check_tenant_id uuid)
 //    RETURNS boolean
@@ -1327,7 +1781,7 @@ export const Constants = {
 //       );
 //   END;
 //   $function$
-//
+//   
 
 // --- TRIGGERS ---
 // Table: tenants
@@ -1341,3 +1795,4 @@ export const Constants = {
 //   CREATE UNIQUE INDEX invitations_email_tenant_idx ON public.invitations USING btree (email, tenant_id)
 // Table: whistleblower_reports
 //   CREATE UNIQUE INDEX whistleblower_reports_protocol_number_key ON public.whistleblower_reports USING btree (protocol_number)
+
