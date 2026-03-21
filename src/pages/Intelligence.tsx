@@ -4,7 +4,7 @@ import { IsoChecklist } from '@/components/intelligence/IsoChecklist'
 import { DecreeReport } from '@/components/intelligence/DecreeReport'
 import { OrgProfiling } from '@/components/intelligence/OrgProfiling'
 import { GapAnalysis } from '@/components/intelligence/GapAnalysis'
-import { Activity, FileText } from 'lucide-react'
+import { Activity, FileText, Inbox } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useNavigate, useParams } from 'react-router-dom'
 
@@ -24,14 +24,23 @@ export default function Intelligence() {
             11.129/2022.
           </p>
         </div>
-        <Button
-          onClick={() => navigate(`/${tenantId}/dossier`)}
-          size="lg"
-          className="bg-primary hover:bg-primary/90 shadow-md whitespace-nowrap shrink-0"
-        >
-          <FileText className="mr-2 h-5 w-5" />
-          Gerar Dossiê Oficial
-        </Button>
+        <div className="flex items-center gap-2 w-full sm:w-auto overflow-x-auto pb-2 sm:pb-0">
+          <Button
+            onClick={() => navigate(`/${tenantId}/inbox`)}
+            variant="outline"
+            className="border-primary/30 text-primary shadow-sm whitespace-nowrap shrink-0 hover:bg-primary/5"
+          >
+            <Inbox className="mr-2 h-4 w-4" />
+            Inbox de Validação
+          </Button>
+          <Button
+            onClick={() => navigate(`/${tenantId}/dossier`)}
+            className="bg-primary hover:bg-primary/90 shadow-md whitespace-nowrap shrink-0"
+          >
+            <FileText className="mr-2 h-4 w-4" />
+            Gerar Dossiê Oficial
+          </Button>
+        </div>
       </div>
 
       <Tabs defaultValue="cockpit" className="w-full">

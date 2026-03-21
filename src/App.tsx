@@ -20,6 +20,8 @@ import Onboarding from './pages/Onboarding'
 import ClauseView from './pages/ClauseView'
 import Intelligence from './pages/Intelligence'
 import Dossier from './pages/Dossier'
+import EvidenceInbox from './pages/EvidenceInbox'
+import SubmitEvidence from './pages/SubmitEvidence'
 
 const AuthGuard = ({ children }: { children: React.ReactNode }) => {
   const { user, loading, signIn } = useAuth()
@@ -82,6 +84,7 @@ const App = () => (
                 <Route path="/tenants" element={<Tenants />} />
                 <Route path="/admin/users" element={<AdminUsers />} />
                 <Route path="/onboarding" element={<Onboarding />} />
+                <Route path="/submit/:requestId" element={<SubmitEvidence />} />
 
                 <Route path="/:tenantId" element={<TenantContext />}>
                   <Route index element={<TenantIndexRedirect />} />
@@ -90,6 +93,7 @@ const App = () => (
                   <Route path="intelligence" element={<Intelligence />} />
                   <Route path="onboarding" element={<Onboarding />} />
                   <Route path="dossier" element={<Dossier />} />
+                  <Route path="inbox" element={<EvidenceInbox />} />
                 </Route>
               </Route>
               <Route path="*" element={<NotFound />} />

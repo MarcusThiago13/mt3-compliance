@@ -20,8 +20,9 @@ import {
 import { Textarea } from '@/components/ui/textarea'
 import { Input } from '@/components/ui/input'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Bell, Mail, MessageCircle, Loader2 } from 'lucide-react'
+import { Bell, Mail, MessageCircle, Loader2, Link as LinkIcon } from 'lucide-react'
 import { getUsers } from '@/services/admin'
+import { workflowService } from '@/services/workflow'
 import { toast } from '@/hooks/use-toast'
 
 export interface SendAlertModalProps {
@@ -30,6 +31,7 @@ export interface SendAlertModalProps {
   actionId?: string
   actionTitle?: string
   actionDeadline?: string
+  clauseId?: string
 }
 
 export function SendAlertModal({
@@ -38,6 +40,7 @@ export function SendAlertModal({
   actionId,
   actionTitle,
   actionDeadline,
+  clauseId,
 }: SendAlertModalProps) {
   const { tenantId } = useParams<{ tenantId: string }>()
   const [users, setUsers] = useState<any[]>([])
@@ -49,9 +52,13 @@ export function SendAlertModal({
   const [body, setBody] = useState('')
   const [waMessage, setWaMessage] = useState('')
 
+  const [requestId, setRequestId] = useState<string | null>(null)
+  const [isGeneratingLink, setIsGeneratingLink] = useState(false)
+
   useEffect(() => {
     if (isOpen && tenantId) {
       fetchUsers()
+      setRequestId(null)
     }
   }, [isOpen, tenantId])
 
@@ -66,10 +73,12 @@ export function SendAlertModal({
       setWaMessage(
         `*ALERTA DE COMPLIANCE*\n\nOlá ${selectedUser.name}, lembrete da ação sob sua responsabilidade:\n\n*Ação:* ${actionTitle}\n*Prazo:* ${actionDeadline || 'Não definido'}\n\nPor favor, atualize o sistema com as evidências.`,
       )
+      setRequestId(null)
     } else {
       setSubject('')
       setBody('')
       setWaMessage('')
+      setRequestId(null)
     }
   }, [selectedUser, actionId, actionTitle, actionDeadline])
 
@@ -82,6 +91,45 @@ export function SendAlertModal({
       console.error(e)
     }
     setLoading(false)
+  }
+
+  const handleGenerateLink = async () => {
+    if (!selectedUser || !tenantId) return
+    setIsGeneratingLink(true)
+    try {
+      const payload = {
+        tenant_id: tenantId,
+        clause_id: clauseId || null,
+        action_id: actionId || null,
+        task_title: actionTitle || 'Solicitação de Evidência',
+        deadline: actionDeadline ? new Date(actionDeadline).toISOString() : null,
+        assignee_id: selectedUser.id,
+        assignee_email: selectedUser.email,
+        status: 'pending',
+      }
+
+      const req = await workflowService.createEvidenceRequest(payload)
+      setRequestId(req.id)
+
+      const link = `${window.location.origin}/submit/${req.id}`
+
+      setBody(
+        (prev) =>
+          `${prev}\n\nLink seguro para envio da evidência (Workflow de Aprovação):\n${link}`,
+      )
+      setWaMessage(
+        (prev) =>
+          `${prev}\n\n*Link seguro para envio da evidência (Workflow de Aprovação):*\n${link}`,
+      )
+
+      toast({
+        title: 'Workflow Iniciado',
+        description: 'Solicitação criada. O link foi gerado e incluído na mensagem.',
+      })
+    } catch (e: any) {
+      toast({ title: 'Erro', description: e.message, variant: 'destructive' })
+    }
+    setIsGeneratingLink(false)
   }
 
   const handleSendEmail = () => {
@@ -122,7 +170,7 @@ export function SendAlertModal({
             <Bell className="h-5 w-5" /> Disparar Alerta de Ação 5W2H
           </DialogTitle>
           <DialogDescription>
-            Selecione o responsável e revise a mensagem pré-cadastrada antes de disparar o alerta.
+            Selecione o responsável e gere um link único de submissão antes de disparar o alerta.
           </DialogDescription>
         </DialogHeader>
 
@@ -134,6 +182,11 @@ export function SendAlertModal({
             <p>
               <strong>Prazo:</strong> {actionDeadline || 'Não definido'}
             </p>
+            {clauseId && (
+              <p>
+                <strong>ISO Requisito:</strong> {clauseId}
+              </p>
+            )}
           </div>
 
           <div className="space-y-2">
@@ -159,6 +212,29 @@ export function SendAlertModal({
           </div>
 
           {selectedUser && (
+            <div className="bg-primary/5 border border-primary/20 p-4 rounded-md space-y-3">
+              <div className="flex items-start gap-3">
+                <LinkIcon className="h-5 w-5 text-primary mt-0.5 shrink-0" />
+                <div>
+                  <h4 className="font-semibold text-sm">Workflow de Evidência</h4>
+                  <p className="text-xs text-muted-foreground mt-1 mb-3">
+                    Gere uma solicitação formal no sistema. O link permitirá que o colaborador envie
+                    a evidência diretamente para sua fila de aprovação.
+                  </p>
+                  <Button
+                    size="sm"
+                    onClick={handleGenerateLink}
+                    disabled={isGeneratingLink || !!requestId}
+                  >
+                    {isGeneratingLink && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    {requestId ? 'Link Gerado e Anexado!' : 'Gerar Link Seguro e Iniciar Workflow'}
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {selectedUser && (
             <Tabs value={activeTab} onValueChange={setActiveTab} className="mt-4">
               <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="email">
@@ -168,7 +244,6 @@ export function SendAlertModal({
                   <MessageCircle className="w-4 h-4 mr-2" /> WhatsApp
                 </TabsTrigger>
               </TabsList>
-
               <TabsContent value="email" className="space-y-4 py-4">
                 <div className="space-y-2">
                   <Label>Destinatário</Label>
@@ -183,7 +258,6 @@ export function SendAlertModal({
                   <Textarea rows={6} value={body} onChange={(e) => setBody(e.target.value)} />
                 </div>
               </TabsContent>
-
               <TabsContent value="whatsapp" className="space-y-4 py-4">
                 <div className="space-y-2">
                   <Label>Número de Destino</Label>
@@ -208,7 +282,7 @@ export function SendAlertModal({
           </Button>
           {selectedUser && activeTab === 'email' && (
             <Button
-              disabled={!selectedUser.email}
+              disabled={!selectedUser.email || !requestId}
               onClick={handleSendEmail}
               className="bg-slate-800 hover:bg-slate-700 text-white"
             >
@@ -217,7 +291,7 @@ export function SendAlertModal({
           )}
           {selectedUser && activeTab === 'whatsapp' && (
             <Button
-              disabled={!selectedUser.phone}
+              disabled={!selectedUser.phone || !requestId}
               onClick={handleSendWhatsApp}
               className="bg-green-600 hover:bg-green-700 text-white"
             >
