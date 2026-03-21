@@ -1,11 +1,17 @@
 // AVOID UPDATING THIS FILE DIRECTLY. It is automatically generated.
-export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[]
+export type Json =
+  | string
+  | number
+  | boolean
+  | null
+  | { [key: string]: Json | undefined }
+  | Json[]
 
 export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: '14.4'
+    PostgrestVersion: "14.4"
   }
   public: {
     Tables: {
@@ -89,6 +95,153 @@ export type Database = {
           tenant_id?: string
         }
         Relationships: []
+      }
+      dd_conflict_declarations: {
+        Row: {
+          created_at: string
+          details_json: Json | null
+          employee_id: string | null
+          employee_name: string | null
+          has_conflict: boolean | null
+          id: string
+          reviewer_id: string | null
+          status: string | null
+          tenant_id: string
+          year: number
+        }
+        Insert: {
+          created_at?: string
+          details_json?: Json | null
+          employee_id?: string | null
+          employee_name?: string | null
+          has_conflict?: boolean | null
+          id?: string
+          reviewer_id?: string | null
+          status?: string | null
+          tenant_id: string
+          year: number
+        }
+        Update: {
+          created_at?: string
+          details_json?: Json | null
+          employee_id?: string | null
+          employee_name?: string | null
+          has_conflict?: boolean | null
+          id?: string
+          reviewer_id?: string | null
+          status?: string | null
+          tenant_id?: string
+          year?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dd_conflict_declarations_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      dd_red_flags: {
+        Row: {
+          category: string
+          created_at: string
+          description: string
+          id: string
+          is_resolved: boolean | null
+          mitigation_plan: string | null
+          process_id: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          description: string
+          id?: string
+          is_resolved?: boolean | null
+          mitigation_plan?: string | null
+          process_id: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          description?: string
+          id?: string
+          is_resolved?: boolean | null
+          mitigation_plan?: string | null
+          process_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dd_red_flags_process_id_fkey"
+            columns: ["process_id"]
+            isOneToOne: false
+            referencedRelation: "due_diligence_processes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      due_diligence_processes: {
+        Row: {
+          analyst_id: string | null
+          created_at: string
+          dd_level: string | null
+          decision_date: string | null
+          decision_justification: string | null
+          expiration_date: string | null
+          id: string
+          risk_level: string | null
+          risk_score: number | null
+          status: string
+          target_document: string | null
+          target_name: string
+          target_type: string
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          analyst_id?: string | null
+          created_at?: string
+          dd_level?: string | null
+          decision_date?: string | null
+          decision_justification?: string | null
+          expiration_date?: string | null
+          id?: string
+          risk_level?: string | null
+          risk_score?: number | null
+          status?: string
+          target_document?: string | null
+          target_name: string
+          target_type: string
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          analyst_id?: string | null
+          created_at?: string
+          dd_level?: string | null
+          decision_date?: string | null
+          decision_justification?: string | null
+          expiration_date?: string | null
+          id?: string
+          risk_level?: string | null
+          risk_score?: number | null
+          status?: string
+          target_document?: string | null
+          target_name?: string
+          target_type?: string
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "due_diligence_processes_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       evidence_metadata: {
         Row: {
@@ -183,11 +336,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'evidence_requests_tenant_id_fkey'
-            columns: ['tenant_id']
+            foreignKeyName: "evidence_requests_tenant_id_fkey"
+            columns: ["tenant_id"]
             isOneToOne: false
-            referencedRelation: 'tenants'
-            referencedColumns: ['id']
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -257,11 +410,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'invitations_tenant_id_fkey'
-            columns: ['tenant_id']
+            foreignKeyName: "invitations_tenant_id_fkey"
+            columns: ["tenant_id"]
             isOneToOne: false
-            referencedRelation: 'tenants'
-            referencedColumns: ['id']
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -286,11 +439,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'profile_reports_tenant_id_fkey'
-            columns: ['tenant_id']
+            foreignKeyName: "profile_reports_tenant_id_fkey"
+            columns: ["tenant_id"]
             isOneToOne: false
-            referencedRelation: 'tenants'
-            referencedColumns: ['id']
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -318,11 +471,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'report_messages_report_id_fkey'
-            columns: ['report_id']
+            foreignKeyName: "report_messages_report_id_fkey"
+            columns: ["report_id"]
             isOneToOne: false
-            referencedRelation: 'whistleblower_reports'
-            referencedColumns: ['id']
+            referencedRelation: "whistleblower_reports"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -425,11 +578,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'user_tenants_tenant_id_fkey'
-            columns: ['tenant_id']
+            foreignKeyName: "user_tenants_tenant_id_fkey"
+            columns: ["tenant_id"]
             isOneToOne: false
-            referencedRelation: 'tenants'
-            referencedColumns: ['id']
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -517,11 +670,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'whistleblower_reports_tenant_id_fkey'
-            columns: ['tenant_id']
+            foreignKeyName: "whistleblower_reports_tenant_id_fkey"
+            columns: ["tenant_id"]
             isOneToOne: false
-            referencedRelation: 'tenants'
-            referencedColumns: ['id']
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -568,7 +721,8 @@ export type Database = {
       }
     }
     Enums: {
-      [_ in never]: never
+      dd_level_enum: "SDD" | "CDD" | "EDD"
+      dd_risk_level: "Baixo" | "Médio" | "Alto"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -576,31 +730,33 @@ export type Database = {
   }
 }
 
-type DatabaseWithoutInternals = Omit<Database, '__InternalSupabase'>
+type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
 
-type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, 'public'>]
+type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
 
 export type Tables<
   DefaultSchemaTableNameOrOptions extends
-    | keyof (DefaultSchema['Tables'] & DefaultSchema['Views'])
+    | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
     | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'] &
-        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Views'])
+    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
     : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
-  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'] &
-      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Views'])[TableName] extends {
+  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
       Row: infer R
     }
     ? R
     : never
-  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema['Tables'] & DefaultSchema['Views'])
-    ? (DefaultSchema['Tables'] & DefaultSchema['Views'])[DefaultSchemaTableNameOrOptions] extends {
+  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])
+    ? (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
         Row: infer R
       }
       ? R
@@ -609,23 +765,23 @@ export type Tables<
 
 export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
-    | keyof DefaultSchema['Tables']
+    | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables']
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
     : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
-  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'][TableName] extends {
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
       Insert: infer I
     }
     ? I
     : never
-  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema['Tables']
-    ? DefaultSchema['Tables'][DefaultSchemaTableNameOrOptions] extends {
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
         Insert: infer I
       }
       ? I
@@ -634,23 +790,23 @@ export type TablesInsert<
 
 export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
-    | keyof DefaultSchema['Tables']
+    | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables']
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
     : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
-  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'][TableName] extends {
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
       Update: infer U
     }
     ? U
     : never
-  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema['Tables']
-    ? DefaultSchema['Tables'][DefaultSchemaTableNameOrOptions] extends {
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
         Update: infer U
       }
       ? U
@@ -659,43 +815,47 @@ export type TablesUpdate<
 
 export type Enums<
   DefaultSchemaEnumNameOrOptions extends
-    | keyof DefaultSchema['Enums']
+    | keyof DefaultSchema["Enums"]
     | { schema: keyof DatabaseWithoutInternals },
   EnumName extends DefaultSchemaEnumNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions['schema']]['Enums']
+    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
     : never = never,
 > = DefaultSchemaEnumNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
-  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions['schema']]['Enums'][EnumName]
-  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema['Enums']
-    ? DefaultSchema['Enums'][DefaultSchemaEnumNameOrOptions]
+  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
+  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
+    ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
     : never
 
 export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
-    | keyof DefaultSchema['CompositeTypes']
+    | keyof DefaultSchema["CompositeTypes"]
     | { schema: keyof DatabaseWithoutInternals },
   CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions['schema']]['CompositeTypes']
+    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
     : never = never,
 > = PublicCompositeTypeNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
-  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions['schema']]['CompositeTypes'][CompositeTypeName]
-  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema['CompositeTypes']
-    ? DefaultSchema['CompositeTypes'][PublicCompositeTypeNameOrOptions]
+  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
+  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
+    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
     : never
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      dd_level_enum: ["SDD", "CDD", "EDD"],
+      dd_risk_level: ["Baixo", "Médio", "Alto"],
+    },
   },
 } as const
+
 
 // ====== DATABASE EXTENDED CONTEXT (auto-generated) ======
 // This section contains actual PostgreSQL column types, constraints, RLS policies,
@@ -728,6 +888,41 @@ export const Constants = {
 //   conformity_score: integer (not null)
 //   deviations: integer (not null)
 //   created_at: timestamp with time zone (not null, default: now())
+// Table: dd_conflict_declarations
+//   id: uuid (not null, default: gen_random_uuid())
+//   tenant_id: uuid (not null)
+//   employee_id: uuid (nullable)
+//   employee_name: text (nullable)
+//   year: integer (not null)
+//   has_conflict: boolean (nullable, default: false)
+//   details_json: jsonb (nullable, default: '{}'::jsonb)
+//   reviewer_id: uuid (nullable)
+//   status: text (nullable, default: 'Pendente'::text)
+//   created_at: timestamp with time zone (not null, default: now())
+// Table: dd_red_flags
+//   id: uuid (not null, default: gen_random_uuid())
+//   process_id: uuid (not null)
+//   category: text (not null)
+//   description: text (not null)
+//   mitigation_plan: text (nullable)
+//   is_resolved: boolean (nullable, default: false)
+//   created_at: timestamp with time zone (not null, default: now())
+// Table: due_diligence_processes
+//   id: uuid (not null, default: gen_random_uuid())
+//   tenant_id: uuid (not null)
+//   target_type: text (not null)
+//   target_name: text (not null)
+//   target_document: text (nullable)
+//   risk_score: integer (nullable, default: 0)
+//   risk_level: text (nullable)
+//   dd_level: text (nullable)
+//   status: text (not null, default: 'Em Análise'::text)
+//   analyst_id: uuid (nullable)
+//   decision_date: timestamp with time zone (nullable)
+//   decision_justification: text (nullable)
+//   expiration_date: date (nullable)
+//   created_at: timestamp with time zone (not null, default: now())
+//   updated_at: timestamp with time zone (not null, default: now())
 // Table: evidence_metadata
 //   id: uuid (not null, default: gen_random_uuid())
 //   tenant_id: text (not null, default: 'default'::text)
@@ -845,6 +1040,18 @@ export const Constants = {
 //   PRIMARY KEY audit_logs_pkey: PRIMARY KEY (id)
 // Table: compliance_history
 //   PRIMARY KEY compliance_history_pkey: PRIMARY KEY (id)
+// Table: dd_conflict_declarations
+//   FOREIGN KEY dd_conflict_declarations_employee_id_fkey: FOREIGN KEY (employee_id) REFERENCES auth.users(id)
+//   PRIMARY KEY dd_conflict_declarations_pkey: PRIMARY KEY (id)
+//   FOREIGN KEY dd_conflict_declarations_reviewer_id_fkey: FOREIGN KEY (reviewer_id) REFERENCES auth.users(id)
+//   FOREIGN KEY dd_conflict_declarations_tenant_id_fkey: FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE
+// Table: dd_red_flags
+//   PRIMARY KEY dd_red_flags_pkey: PRIMARY KEY (id)
+//   FOREIGN KEY dd_red_flags_process_id_fkey: FOREIGN KEY (process_id) REFERENCES due_diligence_processes(id) ON DELETE CASCADE
+// Table: due_diligence_processes
+//   FOREIGN KEY due_diligence_processes_analyst_id_fkey: FOREIGN KEY (analyst_id) REFERENCES auth.users(id)
+//   PRIMARY KEY due_diligence_processes_pkey: PRIMARY KEY (id)
+//   FOREIGN KEY due_diligence_processes_tenant_id_fkey: FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE
 // Table: evidence_metadata
 //   PRIMARY KEY evidence_metadata_pkey: PRIMARY KEY (id)
 // Table: evidence_requests
@@ -890,6 +1097,27 @@ export const Constants = {
 //   Policy "tenant_isolation_history" (ALL, PERMISSIVE) roles={authenticated}
 //     USING: is_tenant_member(tenant_id)
 //     WITH CHECK: is_tenant_member(tenant_id)
+// Table: dd_conflict_declarations
+//   Policy "auth_insert_ddcd" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: is_tenant_member_uuid(tenant_id)
+//   Policy "auth_select_ddcd" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: is_tenant_member_uuid(tenant_id)
+//   Policy "auth_update_ddcd" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: is_tenant_member_uuid(tenant_id)
+// Table: dd_red_flags
+//   Policy "auth_insert_ddrf" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: true
+//   Policy "auth_select_ddrf" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: true
+//   Policy "auth_update_ddrf" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: true
+// Table: due_diligence_processes
+//   Policy "auth_insert_ddp" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: is_tenant_member_uuid(tenant_id)
+//   Policy "auth_select_ddp" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: is_tenant_member_uuid(tenant_id)
+//   Policy "auth_update_ddp" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: is_tenant_member_uuid(tenant_id)
 // Table: evidence_metadata
 //   Policy "tenant_isolation_evidence" (ALL, PERMISSIVE) roles={authenticated}
 //     USING: is_tenant_member(tenant_id)
@@ -961,7 +1189,7 @@ export const Constants = {
 //       RETURN v_report_id;
 //   END;
 //   $function$
-//
+//   
 // FUNCTION fn_add_tenant_creator()
 //   CREATE OR REPLACE FUNCTION public.fn_add_tenant_creator()
 //    RETURNS trigger
@@ -969,13 +1197,13 @@ export const Constants = {
 //    SECURITY DEFINER
 //   AS $function$
 //   BEGIN
-//       INSERT INTO public.user_tenants (user_id, tenant_id)
-//       VALUES (auth.uid(), NEW.id)
+//       INSERT INTO public.user_tenants (user_id, tenant_id) 
+//       VALUES (auth.uid(), NEW.id) 
 //       ON CONFLICT DO NOTHING;
 //       RETURN NEW;
 //   END;
 //   $function$
-//
+//   
 // FUNCTION get_all_users()
 //   CREATE OR REPLACE FUNCTION public.get_all_users()
 //    RETURNS TABLE(user_id uuid, email text, name text, role text, classification text, status text, tenant_id uuid, tenant_name text, contact_phone text)
@@ -984,7 +1212,7 @@ export const Constants = {
 //   AS $function$
 //   BEGIN
 //       RETURN QUERY
-//       SELECT
+//       SELECT 
 //           u.id as user_id,
 //           u.email::text,
 //           (u.raw_user_meta_data->>'name')::text as name,
@@ -999,7 +1227,7 @@ export const Constants = {
 //       JOIN public.tenants t ON t.id = ut.tenant_id;
 //   END;
 //   $function$
-//
+//   
 // FUNCTION get_tenant_users(uuid)
 //   CREATE OR REPLACE FUNCTION public.get_tenant_users(target_tenant_id uuid)
 //    RETURNS TABLE(user_id uuid, email text, name text, role text, classification text, status text, contact_phone text)
@@ -1008,7 +1236,7 @@ export const Constants = {
 //   AS $function$
 //   BEGIN
 //       RETURN QUERY
-//       SELECT
+//       SELECT 
 //           u.id as user_id,
 //           u.email::text,
 //           (u.raw_user_meta_data->>'name')::text as name,
@@ -1021,7 +1249,7 @@ export const Constants = {
 //       WHERE ut.tenant_id = target_tenant_id;
 //   END;
 //   $function$
-//
+//   
 // FUNCTION get_user_id_by_email(text)
 //   CREATE OR REPLACE FUNCTION public.get_user_id_by_email(user_email text)
 //    RETURNS uuid
@@ -1035,7 +1263,7 @@ export const Constants = {
 //       RETURN found_user_id;
 //   END;
 //   $function$
-//
+//   
 // FUNCTION is_tenant_member(text)
 //   CREATE OR REPLACE FUNCTION public.is_tenant_member(check_tenant_id text)
 //    RETURNS boolean
@@ -1049,7 +1277,7 @@ export const Constants = {
 //       );
 //   END;
 //   $function$
-//
+//   
 // FUNCTION is_tenant_member_uuid(uuid)
 //   CREATE OR REPLACE FUNCTION public.is_tenant_member_uuid(check_tenant_id uuid)
 //    RETURNS boolean
@@ -1063,7 +1291,7 @@ export const Constants = {
 //       );
 //   END;
 //   $function$
-//
+//   
 
 // --- TRIGGERS ---
 // Table: tenants
@@ -1074,3 +1302,4 @@ export const Constants = {
 //   CREATE UNIQUE INDEX invitations_email_tenant_idx ON public.invitations USING btree (email, tenant_id)
 // Table: whistleblower_reports
 //   CREATE UNIQUE INDEX whistleblower_reports_protocol_number_key ON public.whistleblower_reports USING btree (protocol_number)
+
