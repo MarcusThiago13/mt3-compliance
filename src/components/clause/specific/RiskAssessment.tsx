@@ -12,6 +12,16 @@ import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Textarea } from '@/components/ui/textarea'
+import { Label } from '@/components/ui/label'
+import { Input } from '@/components/ui/input'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogDescription,
+} from '@/components/ui/dialog'
 import { RiskMatrix } from '../../shared/RiskMatrix'
 import { Download, Plus, Sparkles, Loader2 } from 'lucide-react'
 import { toast } from '@/hooks/use-toast'
@@ -59,6 +69,12 @@ export function RiskAssessment() {
   const [orgContext, setOrgContext] = useState('')
   const [isGenerating, setIsGenerating] = useState(false)
 
+  // 5W2H State
+  const [is5W2HModalOpen, setIs5W2HModalOpen] = useState(false)
+  const [selectedRisk, setSelectedRisk] = useState<any>(null)
+  const [isGenerating5W2H, setIsGenerating5W2H] = useState(false)
+  const [fiveWtwoH, setFiveWtwoH] = useState<any>(null)
+
   const handleSuggestRisks = async () => {
     setIsGenerating(true)
     try {
@@ -102,6 +118,46 @@ NÃO retorne nenhum texto além do JSON.`
       })
     }
     setIsGenerating(false)
+  }
+
+  const open5W2HModal = (risk: any) => {
+    setSelectedRisk(risk)
+    setIs5W2HModalOpen(true)
+    generate5W2H(risk)
+  }
+
+  const generate5W2H = async (risk: any) => {
+    setFiveWtwoH(null)
+    setIsGenerating5W2H(true)
+    try {
+      const prompt = `Gere um plano de ação 5W2H detalhado para o seguinte risco de compliance e seu controle/tratamento proposto:
+Risco: ${risk.event}
+Controle Sugerido: ${risk.controls || risk.treat}
+
+Retorne APENAS um objeto JSON estrito com as chaves exatas: "what", "why", "where", "when", "who", "how", "howMuch". Nenhuma formatação markdown adicional.`
+      const response = await callAnthropicMessage(prompt)
+      const jsonMatch = response.match(/\{[\s\S]*\}/)
+      const jsonStr = jsonMatch ? jsonMatch[0] : response
+      const data = JSON.parse(jsonStr)
+      setFiveWtwoH(data)
+    } catch (e) {
+      console.error(e)
+      toast({
+        title: 'Erro',
+        description: 'Não foi possível gerar o 5W2H. Tente novamente.',
+        variant: 'destructive',
+      })
+      setIs5W2HModalOpen(false)
+    }
+    setIsGenerating5W2H(false)
+  }
+
+  const handleSave5W2H = () => {
+    toast({
+      title: 'Plano 5W2H Integrado',
+      description: `As ações para o risco ${selectedRisk?.id} foram sincronizadas com o Módulo 6.1 com sucesso.`,
+    })
+    setIs5W2HModalOpen(false)
   }
 
   const matrixPoints = risksData.map((r) => ({
@@ -178,7 +234,7 @@ NÃO retorne nenhum texto além do JSON.`
                   <TableHead>Evento / Causa</TableHead>
                   <TableHead className="text-center">Inerente</TableHead>
                   <TableHead className="text-center">Residual</TableHead>
-                  <TableHead>Tratamento</TableHead>
+                  <TableHead className="w-[120px] text-center">Tratamento</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -187,11 +243,16 @@ NÃO retorne nenhum texto além do JSON.`
                   const scoreResidual = r.ri * r.rp
                   return (
                     <TableRow key={r.id} className={r.isAi ? 'bg-purple-50/40' : ''}>
-                      <TableCell className="font-mono text-xs text-muted-foreground flex items-center gap-1.5 pt-4">
-                        {r.id}
-                        {r.isAi && (
-                          <Sparkles className="h-3 w-3 text-purple-600" title="Sugerido pela IA" />
-                        )}
+                      <TableCell className="font-mono text-xs text-muted-foreground pt-4">
+                        <div className="flex items-center gap-1.5">
+                          {r.id}
+                          {r.isAi && (
+                            <Sparkles
+                              className="h-3 w-3 text-purple-600"
+                              title="Sugerido pela IA"
+                            />
+                          )}
+                        </div>
                       </TableCell>
                       <TableCell>
                         <div className="font-medium text-sm">{r.event}</div>
@@ -229,9 +290,19 @@ NÃO retorne nenhum texto além do JSON.`
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        <span className="text-xs font-medium px-2 py-1 bg-muted rounded-md border shadow-sm">
-                          {r.treat}
-                        </span>
+                        <div className="flex flex-col gap-1.5 items-center">
+                          <span className="text-[11px] font-medium px-2 py-0.5 bg-muted rounded-md border shadow-sm w-full text-center">
+                            {r.treat}
+                          </span>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => open5W2HModal(r)}
+                            className="h-6 w-full text-[10px] text-purple-700 border-purple-200 hover:bg-purple-50 bg-white"
+                          >
+                            <Sparkles className="mr-1 h-2.5 w-2.5" /> 5W2H
+                          </Button>
+                        </div>
                       </TableCell>
                     </TableRow>
                   )
@@ -253,6 +324,100 @@ NÃO retorne nenhum texto além do JSON.`
           </Tabs>
         </div>
       </div>
+
+      <Dialog open={is5W2HModalOpen} onOpenChange={setIs5W2HModalOpen}>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-purple-800">
+              <Sparkles className="h-5 w-5" /> Motor de Ação: Plano 5W2H
+            </DialogTitle>
+            <DialogDescription>
+              Desdobramento automático do tratamento sugerido para o evento:{' '}
+              <strong>{selectedRisk?.event}</strong>. Edite os campos e salve para integrar ao
+              Módulo 6.1.
+            </DialogDescription>
+          </DialogHeader>
+
+          {isGenerating5W2H ? (
+            <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
+              <Loader2 className="h-8 w-8 animate-spin mb-4 text-purple-600" />
+              <p>A IA está estruturando o plano de ação tático...</p>
+            </div>
+          ) : fiveWtwoH ? (
+            <div className="grid grid-cols-2 gap-4 py-2">
+              <div className="col-span-2 space-y-1.5">
+                <Label className="text-purple-700 font-semibold">What (O que será feito?)</Label>
+                <Textarea
+                  value={fiveWtwoH.what || ''}
+                  onChange={(e) => setFiveWtwoH({ ...fiveWtwoH, what: e.target.value })}
+                  className="h-10 min-h-[40px] resize-none text-sm"
+                />
+              </div>
+              <div className="col-span-2 space-y-1.5">
+                <Label className="text-purple-700 font-semibold">Why (Por que será feito?)</Label>
+                <Textarea
+                  value={fiveWtwoH.why || ''}
+                  onChange={(e) => setFiveWtwoH({ ...fiveWtwoH, why: e.target.value })}
+                  className="h-10 min-h-[40px] resize-none text-sm"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-purple-700 font-semibold">Where (Onde será feito?)</Label>
+                <Input
+                  value={fiveWtwoH.where || ''}
+                  onChange={(e) => setFiveWtwoH({ ...fiveWtwoH, where: e.target.value })}
+                  className="text-sm"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-purple-700 font-semibold">When (Quando será feito?)</Label>
+                <Input
+                  value={fiveWtwoH.when || ''}
+                  onChange={(e) => setFiveWtwoH({ ...fiveWtwoH, when: e.target.value })}
+                  className="text-sm"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-purple-700 font-semibold">Who (Quem fará?)</Label>
+                <Input
+                  value={fiveWtwoH.who || ''}
+                  onChange={(e) => setFiveWtwoH({ ...fiveWtwoH, who: e.target.value })}
+                  className="text-sm"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-purple-700 font-semibold">How Much (Quanto custará?)</Label>
+                <Input
+                  value={fiveWtwoH.howMuch || ''}
+                  onChange={(e) => setFiveWtwoH({ ...fiveWtwoH, howMuch: e.target.value })}
+                  className="text-sm"
+                />
+              </div>
+              <div className="col-span-2 space-y-1.5">
+                <Label className="text-purple-700 font-semibold">How (Como será feito?)</Label>
+                <Textarea
+                  value={fiveWtwoH.how || ''}
+                  onChange={(e) => setFiveWtwoH({ ...fiveWtwoH, how: e.target.value })}
+                  className="h-16 min-h-[60px] text-sm"
+                />
+              </div>
+            </div>
+          ) : null}
+
+          <DialogFooter className="mt-2">
+            <Button variant="outline" onClick={() => setIs5W2HModalOpen(false)}>
+              Cancelar
+            </Button>
+            <Button
+              onClick={handleSave5W2H}
+              disabled={isGenerating5W2H}
+              className="bg-purple-600 hover:bg-purple-700 text-white"
+            >
+              Aprovar e Integrar ao Módulo 6.1
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

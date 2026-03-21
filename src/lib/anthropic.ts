@@ -174,6 +174,20 @@ function mockAiResponse(prompt: string): string {
     `
   }
 
+  if (prompt.includes('5W2H')) {
+    return `
+    {
+      "what": "Implementar processo de Due Diligence aprimorada e fluxo de aprovação sistêmico",
+      "why": "Para mitigar riscos críticos mapeados e garantir alinhamento à política interna de compliance",
+      "where": "Diretoria de Suprimentos (Matriz e Filiais)",
+      "when": "Próximos 30 dias",
+      "who": "Equipe de Compliance com apoio da TI",
+      "how": "Mapear fluxo de compras atual, integrar API de background check no ERP e criar trava para impedir pagamentos sem aprovação dupla.",
+      "howMuch": "R$ 12.000,00 anuais (Software) + 40h de consultoria"
+    }
+    `
+  }
+
   if (prompt.includes('evidências necessárias para o requisito')) {
     return `### Análise Inteligente de Requisito\n\nCom base na ISO 37301, para atender adequadamente a este requisito, sugerimos a preparação e o anexo das seguintes evidências:\n\n- **Políticas e Procedimentos Documentados:** Manuais atualizados e aprovados formalmente pela alta direção.\n- **Registros de Treinamento:** Listas de presença, cronograma de aplicação e certificados de capacitação dos colaboradores chave.\n- **Relatórios de Monitoramento:** Indicadores de desempenho (KPIs) pertinentes e atas de reunião de análise crítica da direção.`
   }
