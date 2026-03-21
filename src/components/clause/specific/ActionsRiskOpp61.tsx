@@ -20,9 +20,11 @@ import {
   CheckCircle2,
   ArrowRightLeft,
   Sparkles,
+  Bell,
 } from 'lucide-react'
 import { toast } from '@/hooks/use-toast'
 import { ActionMotor5W2HModal } from '@/components/shared/ActionMotor5W2HModal'
+import { SendAlertModal } from '@/components/shared/SendAlertModal'
 
 const actions = [
   {
@@ -91,6 +93,9 @@ export function ActionsRiskOpp61() {
   const [is5W2HOpen, setIs5W2HOpen] = useState(false)
   const [selectedItem, setSelectedItem] = useState<any>(null)
 
+  const [isAlertOpen, setIsAlertOpen] = useState(false)
+  const [alertItem, setAlertItem] = useState<any>(null)
+
   const handleImport = () => {
     toast({
       title: 'Integração Automática',
@@ -105,6 +110,11 @@ export function ActionsRiskOpp61() {
   const open5W2H = (act: any) => {
     setSelectedItem(act)
     setIs5W2HOpen(true)
+  }
+
+  const openAlert = (act: any) => {
+    setAlertItem(act)
+    setIsAlertOpen(true)
   }
 
   const handleSave5W2H = (plan: any) => {
@@ -241,6 +251,14 @@ export function ActionsRiskOpp61() {
                         >
                           <Sparkles className="mr-1 h-2.5 w-2.5" /> IA
                         </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => openAlert(act)}
+                          className="h-5 text-[10px] px-2 text-amber-700 border-amber-200 hover:bg-amber-50"
+                        >
+                          <Bell className="mr-1 h-2.5 w-2.5" /> Alerta
+                        </Button>
                       </div>
                     </TableCell>
                     <TableCell className="text-sm">
@@ -353,6 +371,14 @@ export function ActionsRiskOpp61() {
         title={`5W2H: Ação ${selectedItem?.id}`}
         promptContext={`Ação a ser executada: ${selectedItem?.title}\nOrigem: ${selectedItem?.origin}\nObjetivo: Detalhar a execução desta ação de forma tática para integração ao negócio.`}
         onSave={handleSave5W2H}
+      />
+
+      <SendAlertModal
+        isOpen={isAlertOpen}
+        onOpenChange={setIsAlertOpen}
+        actionId={alertItem?.id}
+        actionTitle={alertItem?.title}
+        actionDeadline={alertItem?.deadline}
       />
     </div>
   )

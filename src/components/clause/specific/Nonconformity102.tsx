@@ -39,11 +39,13 @@ import {
   Workflow,
   ShieldAlert,
   Sparkles,
+  Bell,
 } from 'lucide-react'
 import { toast } from '@/hooks/use-toast'
 import { useAuth } from '@/hooks/use-auth'
 import { complianceService } from '@/services/compliance'
 import { ActionMotor5W2HModal } from '@/components/shared/ActionMotor5W2HModal'
+import { SendAlertModal } from '@/components/shared/SendAlertModal'
 
 const initialNonconformities = [
   {
@@ -77,6 +79,9 @@ export function Nonconformity102() {
 
   const [is5W2HOpen, setIs5W2HOpen] = useState(false)
   const [selectedItem, setSelectedItem] = useState<any>(null)
+
+  const [isAlertOpen, setIsAlertOpen] = useState(false)
+  const [alertItem, setAlertItem] = useState<any>(null)
 
   useEffect(() => {
     if (prefillGap && events.length === initialNonconformities.length) {
@@ -125,6 +130,11 @@ export function Nonconformity102() {
   const open5W2H = (nc: any) => {
     setSelectedItem(nc)
     setIs5W2HOpen(true)
+  }
+
+  const openAlert = (nc: any) => {
+    setAlertItem(nc)
+    setIsAlertOpen(true)
   }
 
   const handleSave5W2H = (plan: any) => {
@@ -199,6 +209,14 @@ export function Nonconformity102() {
                         className="h-5 text-[10px] px-2 text-purple-700 border-purple-200 hover:bg-purple-50 mt-1"
                       >
                         <Sparkles className="mr-1 h-2.5 w-2.5" /> IA Corretiva
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => openAlert(nc)}
+                        className="h-5 text-[10px] px-2 text-amber-700 border-amber-200 hover:bg-amber-50 ml-1"
+                      >
+                        <Bell className="mr-1 h-2.5 w-2.5" /> Alerta
                       </Button>
                     </TableCell>
                     <TableCell className="text-sm">{nc.origin}</TableCell>
@@ -333,6 +351,14 @@ export function Nonconformity102() {
         title={`Ação Corretiva: ${selectedItem?.id}`}
         promptContext={`Evento/Desvio: ${selectedItem?.event}\nOrigem: ${selectedItem?.origin}\nCrie um plano de ação corretiva 5W2H focando na eliminação da causa-raiz e prevenção de reincidência.`}
         onSave={handleSave5W2H}
+      />
+
+      <SendAlertModal
+        isOpen={isAlertOpen}
+        onOpenChange={setIsAlertOpen}
+        actionId={alertItem?.id}
+        actionTitle={`Corrigir: ${alertItem?.event}`}
+        actionDeadline={alertItem?.date}
       />
     </div>
   )

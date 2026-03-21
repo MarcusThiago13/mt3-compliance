@@ -88,6 +88,7 @@ export default function TenantUsers() {
   const [editingUser, setEditingUser] = useState<any>(null)
   const [editRole, setEditRole] = useState('')
   const [editClassification, setEditClassification] = useState('')
+  const [editPhone, setEditPhone] = useState('')
 
   const fetchInitialData = async () => {
     if (!tenantId) return
@@ -171,11 +172,13 @@ export default function TenantUsers() {
         await updateUser(editingUser.id, tenantId, {
           role: editRole,
           classification: editClassification,
+          contact_phone: editPhone,
         })
       } else {
         await updateInvitation(editingUser.id, {
           role: editRole,
           classification: editClassification,
+          phone: editPhone,
         })
       }
       toast({ title: 'Sucesso', description: 'Usuário atualizado.' })
@@ -230,7 +233,7 @@ export default function TenantUsers() {
       }
       const message = `Olá! Você foi convidado para acessar o sistema mt3 Compliance da organização ${activeTenant?.name}. Defina sua senha através deste link para acessar o seu ambiente seguro: ${data.link}`
       const waPhone = phoneStr ? phoneStr.replace(/\D/g, '') : ''
-      window.open(`https://wa.me/${waPhone}?text=${encodeURIComponent(message)}`, '_blank')
+      window.open(`https://wa.me/55${waPhone}?text=${encodeURIComponent(message)}`, '_blank')
       fetchInitialData()
     } catch (error: any) {
       toast({ title: 'Erro', description: error.message, variant: 'destructive' })
@@ -303,11 +306,11 @@ export default function TenantUsers() {
                   />
                 </div>
                 <div className="space-y-2 col-span-2">
-                  <Label>WhatsApp (Opcional)</Label>
+                  <Label>WhatsApp (Brasil - DDD + Número)</Label>
                   <Input
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
-                    placeholder="5511999999999"
+                    placeholder="Ex: 11999999999"
                   />
                 </div>
                 <div className="space-y-2 col-span-2 sm:col-span-1">
@@ -359,10 +362,18 @@ export default function TenantUsers() {
           <DialogHeader>
             <DialogTitle>Editar Acesso de {editingUser?.name || 'Usuário'}</DialogTitle>
             <DialogDescription>
-              Altere a permissão e classificação do usuário nesta organização.
+              Altere a permissão, classificação e contato do usuário nesta organização.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label>WhatsApp (Brasil - DDD + Número)</Label>
+              <Input
+                value={editPhone}
+                onChange={(e) => setEditPhone(e.target.value)}
+                placeholder="Ex: 11999999999"
+              />
+            </div>
             <div className="space-y-2">
               <Label>Permissão (RBAC) *</Label>
               <Select value={editRole} onValueChange={setEditRole}>
@@ -439,6 +450,11 @@ export default function TenantUsers() {
                     <TableCell>
                       <div className="font-medium text-primary">{r.name}</div>
                       <div className="text-sm text-muted-foreground">{r.email}</div>
+                      {r.phone && (
+                        <div className="text-xs text-muted-foreground mt-0.5 flex items-center gap-1">
+                          <MessageCircle className="h-3 w-3" /> {r.phone}
+                        </div>
+                      )}
                     </TableCell>
                     <TableCell>
                       <div className="flex flex-col items-start gap-1">
@@ -492,6 +508,7 @@ export default function TenantUsers() {
                               setEditingUser(r)
                               setEditRole(r.role || 'viewer')
                               setEditClassification(r.classification || USER_CLASSIFICATIONS[11])
+                              setEditPhone(r.phone || '')
                               setIsEditDialogOpen(true)
                             }}
                           >

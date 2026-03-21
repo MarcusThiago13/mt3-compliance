@@ -22,9 +22,11 @@ import {
   FileText,
   Activity,
   Sparkles,
+  Bell,
 } from 'lucide-react'
 import { toast } from '@/hooks/use-toast'
 import { ActionMotor5W2HModal } from '@/components/shared/ActionMotor5W2HModal'
+import { SendAlertModal } from '@/components/shared/SendAlertModal'
 
 const objectives = [
   {
@@ -89,6 +91,9 @@ export function ComplianceObjectives62() {
   const [is5W2HOpen, setIs5W2HOpen] = useState(false)
   const [selectedItem, setSelectedItem] = useState<any>(null)
 
+  const [isAlertOpen, setIsAlertOpen] = useState(false)
+  const [alertItem, setAlertItem] = useState<any>(null)
+
   const handleExport = (doc: string) => {
     toast({ title: 'Documento Gerado', description: `${doc} exportado com sucesso.` })
   }
@@ -96,6 +101,11 @@ export function ComplianceObjectives62() {
   const open5W2H = (obj: any) => {
     setSelectedItem(obj)
     setIs5W2HOpen(true)
+  }
+
+  const openAlert = (obj: any) => {
+    setAlertItem(obj)
+    setIsAlertOpen(true)
   }
 
   const handleSave5W2H = (plan: any) => {
@@ -217,6 +227,14 @@ export function ComplianceObjectives62() {
                         >
                           <Sparkles className="mr-1 h-2.5 w-2.5" /> 5W2H
                         </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => openAlert(obj)}
+                          className="h-5 text-[10px] px-2 text-amber-700 border-amber-200 hover:bg-amber-50 ml-1"
+                        >
+                          <Bell className="mr-1 h-2.5 w-2.5" /> Alerta
+                        </Button>
                       </div>
                     </TableCell>
                     <TableCell className="text-xs text-muted-foreground">
@@ -323,6 +341,14 @@ export function ComplianceObjectives62() {
         title={`Desdobrar Objetivo: ${selectedItem?.id}`}
         promptContext={`Objetivo de Compliance: ${selectedItem?.title}\nCategoria: ${selectedItem?.category}\nFundamentação: ${selectedItem?.foundation}\nCrie um plano estruturado 5W2H para garantir o atingimento deste objetivo.`}
         onSave={handleSave5W2H}
+      />
+
+      <SendAlertModal
+        isOpen={isAlertOpen}
+        onOpenChange={setIsAlertOpen}
+        actionId={alertItem?.id}
+        actionTitle={alertItem?.title}
+        actionDeadline={alertItem?.deadline}
       />
     </div>
   )

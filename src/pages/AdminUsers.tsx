@@ -89,6 +89,7 @@ export default function AdminUsers() {
   const [editingUser, setEditingUser] = useState<any>(null)
   const [editRole, setEditRole] = useState('')
   const [editClassification, setEditClassification] = useState('')
+  const [editPhone, setEditPhone] = useState('')
 
   useEffect(() => {
     if (isAdmin) fetchTenants()
@@ -214,11 +215,13 @@ export default function AdminUsers() {
         await updateUser(editingUser.id, selectedTenantId, {
           role: editRole,
           classification: editClassification,
+          contact_phone: editPhone,
         })
       } else {
         await updateInvitation(editingUser.id, {
           role: editRole,
           classification: editClassification,
+          phone: editPhone,
         })
       }
       toast({ title: 'Sucesso', description: 'Usuário atualizado.' })
@@ -306,7 +309,7 @@ Equipe mt3 Compliance`
       const tenantName = selectedTenant?.name || ''
       const message = `Olá ${userName || ''}! Você foi convidado(a) para acessar o sistema mt3 Compliance da organização ${tenantName}. ${data.message ? 'Como você já possui cadastro, basta acessar o sistema:' : 'Defina sua senha através deste link para acessar o seu ambiente seguro:'} ${data.link}`
 
-      window.open(`https://wa.me/${waPhone}?text=${encodeURIComponent(message)}`, '_blank')
+      window.open(`https://wa.me/55${waPhone}?text=${encodeURIComponent(message)}`, '_blank')
 
       fetchTenantUsers(selectedTenantId)
     } catch (error: any) {
@@ -401,11 +404,11 @@ Equipe mt3 Compliance`
                     />
                   </div>
                   <div className="space-y-2 col-span-2">
-                    <Label>WhatsApp (Opcional)</Label>
+                    <Label>WhatsApp (Brasil - DDD + Número)</Label>
                     <Input
                       value={phone}
                       onChange={(e) => setPhone(e.target.value)}
-                      placeholder="5511999999999"
+                      placeholder="Ex: 11999999999"
                     />
                   </div>
                   <div className="space-y-2 col-span-2 sm:col-span-1">
@@ -458,10 +461,18 @@ Equipe mt3 Compliance`
           <DialogHeader>
             <DialogTitle>Editar Acesso de {editingUser?.name || 'Usuário'}</DialogTitle>
             <DialogDescription>
-              Altere a permissão e classificação do usuário nesta organização.
+              Altere a permissão, classificação e contato do usuário nesta organização.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label>WhatsApp (Brasil - DDD + Número)</Label>
+              <Input
+                value={editPhone}
+                onChange={(e) => setEditPhone(e.target.value)}
+                placeholder="Ex: 11999999999"
+              />
+            </div>
             <div className="space-y-2">
               <Label>Permissão (RBAC) *</Label>
               <Select value={editRole} onValueChange={setEditRole}>
@@ -545,6 +556,11 @@ Equipe mt3 Compliance`
                       <TableCell>
                         <div className="font-medium text-primary">{r.name}</div>
                         <div className="text-sm text-muted-foreground">{r.email}</div>
+                        {r.phone && (
+                          <div className="text-xs text-muted-foreground mt-0.5 flex items-center gap-1">
+                            <MessageCircle className="h-3 w-3" /> {r.phone}
+                          </div>
+                        )}
                       </TableCell>
                       <TableCell>
                         <div className="flex flex-col items-start gap-1">
@@ -602,6 +618,7 @@ Equipe mt3 Compliance`
                                 setEditingUser(r)
                                 setEditRole(r.role || 'viewer')
                                 setEditClassification(r.classification || USER_CLASSIFICATIONS[11])
+                                setEditPhone(r.phone || '')
                                 setIsEditDialogOpen(true)
                               }}
                             >
