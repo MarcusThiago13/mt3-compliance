@@ -1,11 +1,17 @@
 // AVOID UPDATING THIS FILE DIRECTLY. It is automatically generated.
-export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[]
+export type Json =
+  | string
+  | number
+  | boolean
+  | null
+  | { [key: string]: Json | undefined }
+  | Json[]
 
 export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: '14.4'
+    PostgrestVersion: "14.4"
   }
   public: {
     Tables: {
@@ -126,6 +132,71 @@ export type Database = {
         }
         Relationships: []
       }
+      evidence_requests: {
+        Row: {
+          action_id: string | null
+          assignee_email: string | null
+          assignee_id: string | null
+          clause_id: string | null
+          created_at: string
+          deadline: string | null
+          file_name: string | null
+          file_url: string | null
+          id: string
+          reviewer_feedback: string | null
+          status: string
+          submitter_comments: string | null
+          task_description: string | null
+          task_title: string
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          action_id?: string | null
+          assignee_email?: string | null
+          assignee_id?: string | null
+          clause_id?: string | null
+          created_at?: string
+          deadline?: string | null
+          file_name?: string | null
+          file_url?: string | null
+          id?: string
+          reviewer_feedback?: string | null
+          status?: string
+          submitter_comments?: string | null
+          task_description?: string | null
+          task_title: string
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          action_id?: string | null
+          assignee_email?: string | null
+          assignee_id?: string | null
+          clause_id?: string | null
+          created_at?: string
+          deadline?: string | null
+          file_name?: string | null
+          file_url?: string | null
+          id?: string
+          reviewer_feedback?: string | null
+          status?: string
+          submitter_comments?: string | null
+          task_description?: string | null
+          task_title?: string
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "evidence_requests_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       gaps: {
         Row: {
           created_at: string
@@ -192,11 +263,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'invitations_tenant_id_fkey'
-            columns: ['tenant_id']
+            foreignKeyName: "invitations_tenant_id_fkey"
+            columns: ["tenant_id"]
             isOneToOne: false
-            referencedRelation: 'tenants'
-            referencedColumns: ['id']
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -221,11 +292,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'profile_reports_tenant_id_fkey'
-            columns: ['tenant_id']
+            foreignKeyName: "profile_reports_tenant_id_fkey"
+            columns: ["tenant_id"]
             isOneToOne: false
-            referencedRelation: 'tenants'
-            referencedColumns: ['id']
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -328,11 +399,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'user_tenants_tenant_id_fkey'
-            columns: ['tenant_id']
+            foreignKeyName: "user_tenants_tenant_id_fkey"
+            columns: ["tenant_id"]
             isOneToOne: false
-            referencedRelation: 'tenants'
-            referencedColumns: ['id']
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -383,31 +454,33 @@ export type Database = {
   }
 }
 
-type DatabaseWithoutInternals = Omit<Database, '__InternalSupabase'>
+type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
 
-type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, 'public'>]
+type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
 
 export type Tables<
   DefaultSchemaTableNameOrOptions extends
-    | keyof (DefaultSchema['Tables'] & DefaultSchema['Views'])
+    | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
     | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'] &
-        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Views'])
+    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
     : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
-  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'] &
-      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Views'])[TableName] extends {
+  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
       Row: infer R
     }
     ? R
     : never
-  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema['Tables'] & DefaultSchema['Views'])
-    ? (DefaultSchema['Tables'] & DefaultSchema['Views'])[DefaultSchemaTableNameOrOptions] extends {
+  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])
+    ? (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
         Row: infer R
       }
       ? R
@@ -416,23 +489,23 @@ export type Tables<
 
 export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
-    | keyof DefaultSchema['Tables']
+    | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables']
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
     : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
-  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'][TableName] extends {
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
       Insert: infer I
     }
     ? I
     : never
-  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema['Tables']
-    ? DefaultSchema['Tables'][DefaultSchemaTableNameOrOptions] extends {
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
         Insert: infer I
       }
       ? I
@@ -441,23 +514,23 @@ export type TablesInsert<
 
 export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
-    | keyof DefaultSchema['Tables']
+    | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables']
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
     : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
-  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'][TableName] extends {
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
       Update: infer U
     }
     ? U
     : never
-  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema['Tables']
-    ? DefaultSchema['Tables'][DefaultSchemaTableNameOrOptions] extends {
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
         Update: infer U
       }
       ? U
@@ -466,36 +539,36 @@ export type TablesUpdate<
 
 export type Enums<
   DefaultSchemaEnumNameOrOptions extends
-    | keyof DefaultSchema['Enums']
+    | keyof DefaultSchema["Enums"]
     | { schema: keyof DatabaseWithoutInternals },
   EnumName extends DefaultSchemaEnumNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions['schema']]['Enums']
+    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
     : never = never,
 > = DefaultSchemaEnumNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
-  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions['schema']]['Enums'][EnumName]
-  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema['Enums']
-    ? DefaultSchema['Enums'][DefaultSchemaEnumNameOrOptions]
+  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
+  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
+    ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
     : never
 
 export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
-    | keyof DefaultSchema['CompositeTypes']
+    | keyof DefaultSchema["CompositeTypes"]
     | { schema: keyof DatabaseWithoutInternals },
   CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions['schema']]['CompositeTypes']
+    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
     : never = never,
 > = PublicCompositeTypeNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
-  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions['schema']]['CompositeTypes'][CompositeTypeName]
-  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema['CompositeTypes']
-    ? DefaultSchema['CompositeTypes'][PublicCompositeTypeNameOrOptions]
+  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
+  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
+    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
     : never
 
 export const Constants = {
@@ -503,6 +576,7 @@ export const Constants = {
     Enums: {},
   },
 } as const
+
 
 // ====== DATABASE EXTENDED CONTEXT (auto-generated) ======
 // This section contains actual PostgreSQL column types, constraints, RLS policies,
@@ -545,6 +619,23 @@ export const Constants = {
 //   is_legally_valid: boolean (nullable, default: false)
 //   uploaded_by: text (nullable)
 //   created_at: timestamp with time zone (not null, default: now())
+// Table: evidence_requests
+//   id: uuid (not null, default: gen_random_uuid())
+//   tenant_id: uuid (not null)
+//   clause_id: text (nullable)
+//   action_id: text (nullable)
+//   task_title: text (not null)
+//   task_description: text (nullable)
+//   deadline: timestamp with time zone (nullable)
+//   assignee_id: uuid (nullable)
+//   assignee_email: text (nullable)
+//   status: text (not null, default: 'pending'::text)
+//   file_url: text (nullable)
+//   file_name: text (nullable)
+//   submitter_comments: text (nullable)
+//   reviewer_feedback: text (nullable)
+//   created_at: timestamp with time zone (not null, default: now())
+//   updated_at: timestamp with time zone (not null, default: now())
 // Table: gaps
 //   id: uuid (not null, default: gen_random_uuid())
 //   tenant_id: text (not null, default: 'default'::text)
@@ -605,6 +696,10 @@ export const Constants = {
 //   PRIMARY KEY compliance_history_pkey: PRIMARY KEY (id)
 // Table: evidence_metadata
 //   PRIMARY KEY evidence_metadata_pkey: PRIMARY KEY (id)
+// Table: evidence_requests
+//   FOREIGN KEY evidence_requests_assignee_id_fkey: FOREIGN KEY (assignee_id) REFERENCES auth.users(id)
+//   PRIMARY KEY evidence_requests_pkey: PRIMARY KEY (id)
+//   FOREIGN KEY evidence_requests_tenant_id_fkey: FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE
 // Table: gaps
 //   PRIMARY KEY gaps_pkey: PRIMARY KEY (id)
 // Table: invitations
@@ -639,6 +734,13 @@ export const Constants = {
 //   Policy "tenant_isolation_evidence" (ALL, PERMISSIVE) roles={authenticated}
 //     USING: is_tenant_member(tenant_id)
 //     WITH CHECK: is_tenant_member(tenant_id)
+// Table: evidence_requests
+//   Policy "evidence_requests_insert" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: is_tenant_member_uuid(tenant_id)
+//   Policy "evidence_requests_select" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: ((assignee_email = (auth.jwt() ->> 'email'::text)) OR is_tenant_member_uuid(tenant_id))
+//   Policy "evidence_requests_update" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: ((assignee_email = (auth.jwt() ->> 'email'::text)) OR is_tenant_member_uuid(tenant_id))
 // Table: gaps
 //   Policy "tenant_isolation_gaps" (ALL, PERMISSIVE) roles={authenticated}
 //     USING: is_tenant_member(tenant_id)
@@ -676,13 +778,13 @@ export const Constants = {
 //    SECURITY DEFINER
 //   AS $function$
 //   BEGIN
-//       INSERT INTO public.user_tenants (user_id, tenant_id)
-//       VALUES (auth.uid(), NEW.id)
+//       INSERT INTO public.user_tenants (user_id, tenant_id) 
+//       VALUES (auth.uid(), NEW.id) 
 //       ON CONFLICT DO NOTHING;
 //       RETURN NEW;
 //   END;
 //   $function$
-//
+//   
 // FUNCTION get_all_users()
 //   CREATE OR REPLACE FUNCTION public.get_all_users()
 //    RETURNS TABLE(user_id uuid, email text, name text, role text, classification text, status text, tenant_id uuid, tenant_name text, contact_phone text)
@@ -691,7 +793,7 @@ export const Constants = {
 //   AS $function$
 //   BEGIN
 //       RETURN QUERY
-//       SELECT
+//       SELECT 
 //           u.id as user_id,
 //           u.email::text,
 //           (u.raw_user_meta_data->>'name')::text as name,
@@ -706,7 +808,7 @@ export const Constants = {
 //       JOIN public.tenants t ON t.id = ut.tenant_id;
 //   END;
 //   $function$
-//
+//   
 // FUNCTION get_tenant_users(uuid)
 //   CREATE OR REPLACE FUNCTION public.get_tenant_users(target_tenant_id uuid)
 //    RETURNS TABLE(user_id uuid, email text, name text, role text, classification text, status text, contact_phone text)
@@ -715,7 +817,7 @@ export const Constants = {
 //   AS $function$
 //   BEGIN
 //       RETURN QUERY
-//       SELECT
+//       SELECT 
 //           u.id as user_id,
 //           u.email::text,
 //           (u.raw_user_meta_data->>'name')::text as name,
@@ -728,7 +830,7 @@ export const Constants = {
 //       WHERE ut.tenant_id = target_tenant_id;
 //   END;
 //   $function$
-//
+//   
 // FUNCTION get_user_id_by_email(text)
 //   CREATE OR REPLACE FUNCTION public.get_user_id_by_email(user_email text)
 //    RETURNS uuid
@@ -742,7 +844,7 @@ export const Constants = {
 //       RETURN found_user_id;
 //   END;
 //   $function$
-//
+//   
 // FUNCTION is_tenant_member(text)
 //   CREATE OR REPLACE FUNCTION public.is_tenant_member(check_tenant_id text)
 //    RETURNS boolean
@@ -756,7 +858,7 @@ export const Constants = {
 //       );
 //   END;
 //   $function$
-//
+//   
 // FUNCTION is_tenant_member_uuid(uuid)
 //   CREATE OR REPLACE FUNCTION public.is_tenant_member_uuid(check_tenant_id uuid)
 //    RETURNS boolean
@@ -770,7 +872,7 @@ export const Constants = {
 //       );
 //   END;
 //   $function$
-//
+//   
 
 // --- TRIGGERS ---
 // Table: tenants
@@ -779,3 +881,4 @@ export const Constants = {
 // --- INDEXES ---
 // Table: invitations
 //   CREATE UNIQUE INDEX invitations_email_tenant_idx ON public.invitations USING btree (email, tenant_id)
+
