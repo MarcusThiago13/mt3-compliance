@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react'
-import { useParams } from 'react-router-dom'
+import { useState } from 'react'
+import { useParams, Navigate } from 'react-router-dom'
 import { Lock, Send, ShieldCheck, User, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -11,6 +11,11 @@ import { toast } from '@/hooks/use-toast'
 
 export default function PublicReportStatus() {
   const { tenantId } = useParams<{ tenantId: string }>()
+
+  const isValidUUID = tenantId
+    ? /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(tenantId)
+    : false
+
   const [protocol, setProtocol] = useState('')
   const [password, setPassword] = useState('')
   const [isLoggingIn, setIsLoggingIn] = useState(false)
@@ -23,10 +28,10 @@ export default function PublicReportStatus() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!protocol || !password) return
+    if (!protocol || !password || !tenantId) return
     setIsLoggingIn(true)
     try {
-      const id = await whistleblowingService.checkCredentials(protocol, password)
+      const id = await whistleblowingService.checkCredentials(tenantId, protocol, password)
       if (id) {
         setReportId(id)
         fetchData(id)
@@ -67,6 +72,10 @@ export default function PublicReportStatus() {
     } finally {
       setIsSending(false)
     }
+  }
+
+  if (!isValidUUID) {
+    return <Navigate to="/404" replace />
   }
 
   if (!reportId) {

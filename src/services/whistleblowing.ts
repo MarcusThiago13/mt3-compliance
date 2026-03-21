@@ -11,8 +11,9 @@ export const whistleblowingService = {
     return data
   },
 
-  async checkCredentials(protocol: string, passwordHash: string) {
+  async checkCredentials(tenantId: string, protocol: string, passwordHash: string) {
     const { data, error } = await supabase.rpc('check_report_credentials', {
+      p_tenant_id: tenantId,
       p_protocol: protocol,
       p_password: passwordHash,
     })

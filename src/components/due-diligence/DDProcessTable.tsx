@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
-import { Loader2, Plus, AlertTriangle, Search } from 'lucide-react'
+import { Loader2, Plus, AlertTriangle, Search, Info } from 'lucide-react'
 import { ddService } from '@/services/due-diligence'
 import {
   Table,
@@ -56,6 +56,9 @@ export function DDProcessTable({
   const [hasHist, setHasHist] = useState(false)
   const [val, setVal] = useState('low')
 
+  const [hasIntegrationPlan, setHasIntegrationPlan] = useState(false)
+  const [hasLiabilities, setHasLiabilities] = useState(false)
+
   const fetchProcesses = async () => {
     if (!tenantId) return
     setLoading(true)
@@ -85,6 +88,11 @@ export function DDProcessTable({
       else if (val === 'medium') score += 3
       else score += 1
 
+      if (type === 'M&A') {
+        if (!hasIntegrationPlan) score += 3
+        if (hasLiabilities) score += 4
+      }
+
       const risk_level = score <= 4 ? 'Baixo' : score <= 9 ? 'Médio' : 'Alto'
       const dd_level = score <= 4 ? 'SDD' : score <= 9 ? 'CDD' : 'EDD'
 
@@ -109,6 +117,8 @@ export function DDProcessTable({
       setHasGov(false)
       setHasHist(false)
       setVal('low')
+      setHasIntegrationPlan(false)
+      setHasLiabilities(false)
       fetchProcesses()
     } catch (e: any) {
       toast({ title: 'Erro', description: e.message, variant: 'destructive' })
@@ -291,6 +301,27 @@ export function DDProcessTable({
                 </Select>
               </div>
             </div>
+
+            {type === 'M&A' && (
+              <div className="border-t pt-4 mt-4 space-y-4 animate-fade-in">
+                <div className="flex items-center gap-2 mb-2">
+                  <h4 className="text-sm font-semibold text-primary">Campos M&A</h4>
+                  <Info className="h-4 w-4 text-muted-foreground" />
+                </div>
+                <div className="flex items-center justify-between">
+                  <Label className="text-sm text-muted-foreground">
+                    Plano de Integração (100 Dias) Definido?
+                  </Label>
+                  <Switch checked={hasIntegrationPlan} onCheckedChange={setHasIntegrationPlan} />
+                </div>
+                <div className="flex items-center justify-between">
+                  <Label className="text-sm text-muted-foreground">
+                    Sucessão de Passivos Trabalhistas/Fiscais?
+                  </Label>
+                  <Switch checked={hasLiabilities} onCheckedChange={setHasLiabilities} />
+                </div>
+              </div>
+            )}
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsNewOpen(false)}>

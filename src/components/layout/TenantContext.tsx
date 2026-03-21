@@ -10,9 +10,19 @@ export default function TenantContext() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(false)
 
+  const isValidUUID = tenantId
+    ? /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(tenantId)
+    : false
+
   useEffect(() => {
     const fetchTenant = async () => {
-      if (!tenantId) return
+      if (!isValidUUID || !tenantId) {
+        setError(true)
+        setActiveTenant(null)
+        setLoading(false)
+        return
+      }
+
       setLoading(true)
       const { data, error } = await supabase.from('tenants').select('*').eq('id', tenantId).single()
 
@@ -32,7 +42,7 @@ export default function TenantContext() {
       // Optional: Cleanup when leaving tenant context completely
       // setActiveTenant(null) is handled by the Tenants list page mount
     }
-  }, [tenantId, setActiveTenant])
+  }, [tenantId, isValidUUID, setActiveTenant])
 
   if (loading) {
     return (
@@ -45,7 +55,7 @@ export default function TenantContext() {
     )
   }
 
-  if (error) {
+  if (error || !isValidUUID) {
     return <Navigate to="/tenants" replace />
   }
 

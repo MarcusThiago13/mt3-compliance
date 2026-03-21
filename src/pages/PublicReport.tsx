@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useParams, Link, useNavigate } from 'react-router-dom'
+import { useParams, Link, useNavigate, Navigate } from 'react-router-dom'
 import { ShieldCheck, Lock, EyeOff, User, ArrowRight, CheckCircle2, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -20,6 +20,11 @@ import { toast } from '@/hooks/use-toast'
 export default function PublicReport() {
   const { tenantId } = useParams<{ tenantId: string }>()
   const navigate = useNavigate()
+
+  const isValidUUID = tenantId
+    ? /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(tenantId)
+    : false
+
   const [tenantName, setTenantName] = useState('Organização')
   const [step, setStep] = useState(0)
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -38,14 +43,7 @@ export default function PublicReport() {
   })
 
   useEffect(() => {
-    if (tenantId) {
-      // Validate UUID format to prevent DB errors and act as first layer of validation
-      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
-      if (!uuidRegex.test(tenantId)) {
-        navigate('/404', { replace: true })
-        return
-      }
-
+    if (isValidUUID && tenantId) {
       supabase
         .from('tenants')
         .select('name')
@@ -53,13 +51,13 @@ export default function PublicReport() {
         .single()
         .then(({ data, error }) => {
           if (error || !data) {
-            navigate('/404', { replace: true })
+            setTenantName('Organização (Não Encontrada)')
           } else {
             setTenantName(data.name)
           }
         })
     }
-  }, [tenantId, navigate])
+  }, [tenantId, isValidUUID])
 
   const handleNext = () => setStep((s) => s + 1)
   const handleBack = () => setStep((s) => s - 1)
@@ -80,12 +78,13 @@ export default function PublicReport() {
         new Date().getFullYear() +
         '-' +
         Math.random().toString(36).substring(2, 8).toUpperCase()
-      const pass = Math.random().toString(36).substring(2, 10).toUpperCase()
+
+      const pass = Math.random().toString(36).substring(2, 10).padEnd(8, 'X').toUpperCase()
 
       await whistleblowingService.submitReport({
         tenant_id: tenantId,
         protocol_number: protocol,
-        access_password_hash: pass, // Now securely hashed via DB trigger on insert
+        access_password_hash: pass,
         is_anonymous: formData.is_anonymous,
         reporter_name: formData.is_anonymous ? null : formData.reporter_name,
         reporter_email: formData.is_anonymous ? null : formData.reporter_email,
@@ -103,6 +102,10 @@ export default function PublicReport() {
     } finally {
       setIsSubmitting(false)
     }
+  }
+
+  if (!isValidUUID) {
+    return <Navigate to="/404" replace />
   }
 
   return (

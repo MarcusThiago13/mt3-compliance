@@ -1,9 +1,11 @@
 import { useEffect, useState, useMemo } from 'react'
 import { Sparkles, Check, X } from 'lucide-react'
 import { complianceService } from '@/services/compliance'
+import { ddService } from '@/services/due-diligence'
 import { useAuth } from '@/hooks/use-auth'
 import { toast } from '@/hooks/use-toast'
 import { Button } from '@/components/ui/button'
+import { useParams } from 'react-router-dom'
 
 export interface RiskPoint {
   id: string
@@ -20,6 +22,7 @@ export function RiskMatrix({
   aiSuggestion?: string
 }) {
   const { user } = useAuth()
+  const { tenantId } = useParams<{ tenantId: string }>()
   const [dbRisks, setDbRisks] = useState<RiskPoint[]>([])
   const [suggestion, setSuggestion] = useState<any>(null)
 
@@ -27,12 +30,13 @@ export function RiskMatrix({
     if (!points) {
       loadData()
     }
-  }, [points])
+  }, [points, tenantId])
 
   const loadData = async () => {
     const risksData = await complianceService.getRisks()
     setDbRisks(risksData.map((r) => ({ id: r.id, title: r.title, i: r.impact, p: r.probability })))
 
+    // Check for Gaps
     const gaps = await complianceService.getGaps()
     const criticalGap = gaps.find(
       (g) =>
@@ -42,14 +46,32 @@ export function RiskMatrix({
         g.severity === 'High',
     )
 
-    if (criticalGap && risksData.length > 0) {
+    let ddRedFlagCount = 0
+    if (tenantId) {
+      try {
+        const ddProcesses = await ddService.getProcesses(tenantId)
+        ddRedFlagCount = ddProcesses.reduce((acc, p) => acc + (p.dd_red_flags?.length || 0), 0)
+      } catch (e) {
+        console.error('Error fetching DD processes for risk matrix:', e)
+      }
+    }
+
+    if (risksData.length > 0) {
       const targetRisk = risksData[0]
-      if (targetRisk.probability < 5 || targetRisk.impact < 5) {
+      if (criticalGap && (targetRisk.probability < 5 || targetRisk.impact < 5)) {
         setSuggestion({
           riskId: targetRisk.id,
           title: targetRisk.title,
           text: `A IA detectou o Gap "${criticalGap.rule}" (${criticalGap.severity}). Sugere-se elevar o Risco "${targetRisk.title}".`,
           newImpact: Math.min(5, targetRisk.impact + 1),
+          newProb: Math.min(5, targetRisk.probability + 1),
+        })
+      } else if (ddRedFlagCount > 0 && targetRisk.probability < 4) {
+        setSuggestion({
+          riskId: targetRisk.id,
+          title: targetRisk.title,
+          text: `A IA detectou ${ddRedFlagCount} Red Flag(s) ativas em processos de Due Diligence. Sugere-se elevar a Probabilidade do Risco "${targetRisk.title}".`,
+          newImpact: targetRisk.impact,
           newProb: Math.min(5, targetRisk.probability + 1),
         })
       }
@@ -61,7 +83,7 @@ export function RiskMatrix({
     await complianceService.updateRisk(suggestion.riskId, suggestion.newImpact, suggestion.newProb)
     await complianceService.addAuditLog(
       '4.6',
-      `Risco ${suggestion.title} atualizado via IA devido a Gaps.`,
+      `Risco ${suggestion.title} atualizado via IA devido a cruzamento de dados (Gaps/Due Diligence).`,
       user?.email || 'Sistema',
     )
     toast({

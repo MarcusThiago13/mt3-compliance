@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useParams } from 'react-router-dom'
+import { useParams, useNavigate } from 'react-router-dom'
 import {
   Table,
   TableBody,
@@ -11,7 +11,14 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogDescription,
+} from '@/components/ui/dialog'
 import {
   Select,
   SelectContent,
@@ -29,18 +36,26 @@ import {
   Loader2,
   MessageSquare,
   Send,
+  FileSearch,
+  CheckCircle2,
 } from 'lucide-react'
 import { whistleblowingService } from '@/services/whistleblowing'
+import { ddService } from '@/services/due-diligence'
 import { toast } from '@/hooks/use-toast'
 
 export function WhistleblowingCanal() {
   const { tenantId } = useParams<{ tenantId: string }>()
+  const navigate = useNavigate()
+
   const [reports, setReports] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedReport, setSelectedReport] = useState<any>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [messages, setMessages] = useState<any[]>([])
   const [newMessage, setNewMessage] = useState('')
+
+  const [isCreatingDD, setIsCreatingDD] = useState(false)
+  const [ddModalOpen, setDdModalOpen] = useState(false)
 
   const fetchReports = async () => {
     if (!tenantId) return
@@ -89,9 +104,49 @@ export function WhistleblowingCanal() {
     }
   }
 
+  const handleTriggerDD = async () => {
+    if (!selectedReport || !tenantId) return
+    setIsCreatingDD(true)
+
+    try {
+      // Create a High Risk DD Process automatically linked to the involved persons
+      await ddService.createProcess({
+        tenant_id: tenantId,
+        target_type: 'Investigação Interna',
+        target_name: selectedReport.involved_persons || 'Envolvido não especificado',
+        target_document: selectedReport.protocol_number,
+        risk_score: 10,
+        risk_level: 'Alto',
+        dd_level: 'EDD',
+      })
+
+      toast({
+        title: 'Due Diligence Iniciada',
+        description: 'Um processo de EDD (Enhanced Due Diligence) foi criado para os envolvidos.',
+      })
+
+      // Auto-update status to investigation
+      if (selectedReport.status !== 'em_investigacao') {
+        await handleUpdateStatus('em_investigacao')
+      }
+
+      setDdModalOpen(false)
+    } catch (e: any) {
+      toast({
+        title: 'Erro',
+        description: e.message || 'Falha ao criar Due Diligence',
+        variant: 'destructive',
+      })
+    } finally {
+      setIsCreatingDD(false)
+    }
+  }
+
   const triageReports = reports.filter((r) =>
     ['nova', 'em_triagem', 'em_admissibilidade', 'arquivada'].includes(r.status),
   )
+
+  const investigationReports = reports.filter((r) => ['em_investigacao'].includes(r.status))
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -105,15 +160,18 @@ export function WhistleblowingCanal() {
       </div>
 
       <Tabs defaultValue="triage">
-        <TabsList className="grid w-full grid-cols-1 md:grid-cols-3 mb-4 h-auto p-1 gap-1">
+        <TabsList className="grid w-full grid-cols-1 md:grid-cols-4 mb-4 h-auto p-1 gap-1">
           <TabsTrigger value="triage" className="py-2">
             Triagem (Inbox)
+          </TabsTrigger>
+          <TabsTrigger value="investigation" className="py-2">
+            Em Investigação
           </TabsTrigger>
           <TabsTrigger value="protection" className="py-2">
             Medidas de Proteção
           </TabsTrigger>
           <TabsTrigger value="preview" className="py-2">
-            Portal Público (Acesso)
+            Portal Público
           </TabsTrigger>
         </TabsList>
 
@@ -182,6 +240,65 @@ export function WhistleblowingCanal() {
           </div>
         </TabsContent>
 
+        <TabsContent value="investigation">
+          <div className="flex justify-between items-center mb-4">
+            <h4 className="text-sm font-semibold flex items-center gap-2">
+              <FileSearch className="h-4 w-4" /> Casos em Investigação Ativa
+            </h4>
+          </div>
+          <div className="rounded-md border bg-card overflow-x-auto">
+            {loading ? (
+              <div className="p-8 flex justify-center">
+                <Loader2 className="animate-spin h-6 w-6 text-primary" />
+              </div>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Protocolo</TableHead>
+                    <TableHead>Envolvidos</TableHead>
+                    <TableHead>Categoria</TableHead>
+                    <TableHead>Início da Investigação</TableHead>
+                    <TableHead className="text-right">Ação</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {investigationReports.length === 0 && (
+                    <TableRow>
+                      <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
+                        Nenhum caso em investigação no momento.
+                      </TableCell>
+                    </TableRow>
+                  )}
+                  {investigationReports.map((c) => (
+                    <TableRow key={c.id}>
+                      <TableCell className="font-mono text-xs font-semibold">
+                        {c.protocol_number}
+                      </TableCell>
+                      <TableCell>
+                        <div className="font-medium text-sm max-w-[200px] truncate">
+                          {c.involved_persons || 'N/A'}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="outline">{c.category}</Badge>
+                      </TableCell>
+                      <TableCell className="text-sm">
+                        {new Date(c.updated_at || c.created_at).toLocaleDateString()}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <Button variant="outline" size="sm" onClick={() => openReport(c)}>
+                          <FileSearch className="h-4 w-4 mr-2" /> Detalhes
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
+          </div>
+        </TabsContent>
+
         <TabsContent value="protection">
           <div className="p-4 bg-blue-50 border border-blue-100 rounded-lg space-y-3">
             <h4 className="font-semibold text-blue-900 flex items-center gap-2">
@@ -219,20 +336,32 @@ export function WhistleblowingCanal() {
       </Tabs>
 
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className="max-w-3xl">
+        <DialogContent className="max-w-4xl">
           <DialogHeader>
             <DialogTitle className="flex items-center justify-between border-b pb-2">
               <span>Caso: {selectedReport?.protocol_number}</span>
-              <Badge variant="outline">
-                {selectedReport?.is_anonymous ? 'Relato Anônimo' : 'Relato Identificado'}
-              </Badge>
+              <div className="flex gap-2">
+                <Badge variant="outline">
+                  {selectedReport?.is_anonymous ? 'Relato Anônimo' : 'Relato Identificado'}
+                </Badge>
+                {selectedReport?.status === 'em_admissibilidade' && (
+                  <Button
+                    size="sm"
+                    className="h-6 text-[10px] bg-purple-600 hover:bg-purple-700 text-white"
+                    onClick={() => setDdModalOpen(true)}
+                  >
+                    <FileSearch className="h-3 w-3 mr-1" />
+                    Iniciar Due Diligence
+                  </Button>
+                )}
+              </div>
             </DialogTitle>
           </DialogHeader>
           {selectedReport && (
             <div className="grid md:grid-cols-2 gap-6 py-4">
               <div className="space-y-4">
                 <div className="space-y-1">
-                  <Label className="text-xs text-muted-foreground">Status Atual (Triagem)</Label>
+                  <Label className="text-xs text-muted-foreground">Status Atual</Label>
                   <Select value={selectedReport.status} onValueChange={handleUpdateStatus}>
                     <SelectTrigger className="font-semibold">
                       <SelectValue />
@@ -241,10 +370,12 @@ export function WhistleblowingCanal() {
                       <SelectItem value="nova">Nova</SelectItem>
                       <SelectItem value="em_triagem">Em Triagem</SelectItem>
                       <SelectItem value="em_admissibilidade">Em Admissibilidade</SelectItem>
-                      <SelectItem value="em_investigacao">
-                        Encaminhar p/ Investigação (8.4)
+                      <SelectItem value="em_investigacao">Em Investigação (8.4)</SelectItem>
+                      <SelectItem value="arquivada">Arquivada (Inadmissível)</SelectItem>
+                      <SelectItem value="encerrada_procedente">Encerrada (Procedente)</SelectItem>
+                      <SelectItem value="encerrada_improcedente">
+                        Encerrada (Improcedente)
                       </SelectItem>
-                      <SelectItem value="arquivada">Arquivar (Inadmissível)</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -273,7 +404,7 @@ export function WhistleblowingCanal() {
                 )}
                 <div>
                   <Label className="font-bold">Descrição do Relato</Label>
-                  <p className="text-sm mt-1 bg-slate-50 p-3 rounded-md border min-h-[100px] whitespace-pre-wrap">
+                  <p className="text-sm mt-1 bg-slate-50 p-3 rounded-md border min-h-[100px] max-h-[150px] overflow-y-auto whitespace-pre-wrap">
                     {selectedReport.description}
                   </p>
                 </div>
@@ -314,6 +445,45 @@ export function WhistleblowingCanal() {
               </div>
             </div>
           )}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={ddModalOpen} onOpenChange={setDdModalOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <FileSearch className="h-5 w-5 text-purple-600" />
+              Integrar com Due Diligence
+            </DialogTitle>
+            <DialogDescription>
+              Deseja criar um processo de Enhanced Due Diligence (EDD) para os envolvidos nesta
+              denúncia? O status será alterado automaticamente para "Em Investigação".
+            </DialogDescription>
+          </DialogHeader>
+          <div className="bg-purple-50 p-4 rounded-md border border-purple-100 my-2">
+            <p className="text-sm text-purple-900 font-medium mb-1">Alvo da Investigação:</p>
+            <p className="text-sm text-purple-700">
+              {selectedReport?.involved_persons ||
+                'Não especificado (Será criado como "Alvo Indeterminado")'}
+            </p>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDdModalOpen(false)}>
+              Cancelar
+            </Button>
+            <Button
+              className="bg-purple-600 hover:bg-purple-700 text-white"
+              onClick={handleTriggerDD}
+              disabled={isCreatingDD}
+            >
+              {isCreatingDD ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <CheckCircle2 className="mr-2 h-4 w-4" />
+              )}
+              Criar Processo DD
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
