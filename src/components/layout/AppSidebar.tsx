@@ -27,6 +27,7 @@ import {
   Search,
   FileSearch,
   BrainCircuit,
+  History,
 } from 'lucide-react'
 import { getParentClauses, getClausesByParent } from '@/lib/iso-data'
 import { useAppStore } from '@/stores/main'
@@ -141,6 +142,25 @@ export function AppSidebar() {
                       <Link to={`${tid}/onboarding`}>
                         <FileText />
                         <span>Perfil da Organização</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton
+                      asChild
+                      isActive={location.pathname.includes('/communications')}
+                    >
+                      <Link to={`${tid}/communications`}>
+                        <History />
+                        <span>Histórico de E-mails</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton asChild isActive={location.pathname.includes('/templates')}>
+                      <Link to={`${tid}/templates`}>
+                        <FileText />
+                        <span>Templates de E-mail</span>
                       </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>

@@ -79,6 +79,7 @@ export default function Tenants() {
   const [isCreating, setIsCreating] = useState(false)
 
   const [isEmailModalOpen, setIsEmailModalOpen] = useState(false)
+  const [emailTenantId, setEmailTenantId] = useState<string | undefined>(undefined)
 
   const fetchTenants = async () => {
     setLoading(true)
@@ -180,14 +181,6 @@ export default function Tenants() {
           <p className="text-muted-foreground">Administração multi-tenant do sistema</p>
         </div>
         <div className="flex flex-wrap gap-2 w-full sm:w-auto">
-          <Button variant="outline" onClick={() => setIsEmailModalOpen(true)}>
-            <Mail className="mr-2 h-4 w-4" /> E-mail Avulso
-          </Button>
-          <Button variant="outline" asChild>
-            <Link to="/admin/templates">
-              <FileText className="mr-2 h-4 w-4" /> Templates
-            </Link>
-          </Button>
           <Button variant="outline" asChild>
             <Link to="/collection-links">
               <LinkIcon className="mr-2 h-4 w-4" /> Links de Coleta
@@ -306,6 +299,17 @@ export default function Tenants() {
                           <DropdownMenuItem onClick={() => navigate(`/${t.id}/communications`)}>
                             <History className="mr-2 h-4 w-4" /> Histórico de E-mails
                           </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => navigate(`/${t.id}/templates`)}>
+                            <FileText className="mr-2 h-4 w-4" /> Templates de E-mail
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => {
+                              setEmailTenantId(t.id)
+                              setIsEmailModalOpen(true)
+                            }}
+                          >
+                            <Mail className="mr-2 h-4 w-4" /> Disparar E-mail
+                          </DropdownMenuItem>
                           <DropdownMenuSeparator />
                           <DropdownMenuItem onClick={() => handleToggleStatus(t)}>
                             <Power className="mr-2 h-4 w-4" />{' '}
@@ -350,7 +354,11 @@ export default function Tenants() {
         </AlertDialogContent>
       </AlertDialog>
 
-      <SendEmailModal isOpen={isEmailModalOpen} onOpenChange={setIsEmailModalOpen} />
+      <SendEmailModal
+        isOpen={isEmailModalOpen}
+        onOpenChange={setIsEmailModalOpen}
+        tenantId={emailTenantId}
+      />
     </div>
   )
 }

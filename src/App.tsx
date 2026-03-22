@@ -17,7 +17,7 @@ import Tenants from './pages/Tenants'
 import TenantUsers from './pages/TenantUsers'
 import AdminUsers from './pages/AdminUsers'
 import AdminAIUsage from './pages/AdminAIUsage'
-import AdminTemplates from './pages/AdminTemplates'
+import TenantTemplates from './pages/TenantTemplates'
 import Onboarding from './pages/Onboarding'
 import ClauseView from './pages/ClauseView'
 import Intelligence from './pages/Intelligence'
@@ -103,7 +103,6 @@ const App = () => (
               <Route path="/tenants" element={<Tenants />} />
               <Route path="/admin/users" element={<AdminUsers />} />
               <Route path="/admin/ai-usage" element={<AdminAIUsage />} />
-              <Route path="/admin/templates" element={<AdminTemplates />} />
               <Route path="/collection-links" element={<CollectionLinks />} />
               <Route path="/onboarding" element={<Onboarding />} />
               <Route path="/submit/:requestId" element={<SubmitEvidence />} />
@@ -118,6 +117,7 @@ const App = () => (
                 <Route path="inbox" element={<EvidenceInbox />} />
                 <Route path="due-diligence" element={<DueDiligence />} />
                 <Route path="communications" element={<CommunicationsLog />} />
+                <Route path="templates" element={<TenantTemplates />} />
               </Route>
             </Route>
             <Route path="*" element={<NotFound />} />

@@ -55,12 +55,18 @@ export function SendEmailModal({
       setSelectedTemplate('none')
 
       const fetchTemplates = async () => {
-        const { data } = await supabase.from('email_templates').select('*').order('name')
+        let query = supabase.from('email_templates').select('*').order('name')
+        if (tenantId) {
+          query = query.or(`tenant_id.eq.${tenantId},tenant_id.is.null`)
+        } else {
+          query = query.is('tenant_id', null)
+        }
+        const { data } = await query
         if (data) setTemplates(data)
       }
       fetchTemplates()
     }
-  }, [isOpen, defaultSubject, defaultBody, defaultTo])
+  }, [isOpen, defaultSubject, defaultBody, defaultTo, tenantId])
 
   const handleTemplateChange = (val: string) => {
     setSelectedTemplate(val)
@@ -122,7 +128,7 @@ export function SendEmailModal({
                 <SelectItem value="none">Mensagem Livre (Personalizada)</SelectItem>
                 {templates.map((t) => (
                   <SelectItem key={t.id} value={t.id}>
-                    {t.name}
+                    {t.name} {t.tenant_id ? '(Personalizado)' : '(Global)'}
                   </SelectItem>
                 ))}
               </SelectContent>

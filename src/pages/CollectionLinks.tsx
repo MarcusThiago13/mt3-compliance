@@ -61,7 +61,7 @@ export default function CollectionLinks() {
 
   // Email modal state
   const [emailModalOpen, setEmailModalOpen] = useState(false)
-  const [emailData, setEmailData] = useState({ subject: '', body: '' })
+  const [emailData, setEmailData] = useState({ subject: '', body: '', tenantId: '' })
 
   const { user } = useAuth()
 
@@ -136,6 +136,7 @@ export default function CollectionLinks() {
     setEmailData({
       subject: `Solicitação de Dados - ${formName}`,
       body: `Olá,\n\nSolicitamos o preenchimento seguro das informações de ${formName} através da nossa plataforma de compliance.\n\nPor favor, acesse o link único e seguro abaixo para enviar os dados:\n${link}\n\nEste link expira automaticamente após o envio ou ao término da validade estipulada.\n\nAtenciosamente,\nEquipe mt3 Compliance`,
+      tenantId: t.tenant_id,
     })
     setEmailModalOpen(true)
   }
@@ -393,6 +394,7 @@ export default function CollectionLinks() {
         onOpenChange={setEmailModalOpen}
         defaultSubject={emailData.subject}
         defaultBody={emailData.body}
+        tenantId={emailData.tenantId}
       />
     </div>
   )

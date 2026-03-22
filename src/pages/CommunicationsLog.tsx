@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
-import { History, Loader2, Mail, CheckCircle2, Eye, XCircle } from 'lucide-react'
+import { History, Loader2, Mail, CheckCircle2, Eye, XCircle, Send } from 'lucide-react'
 import { supabase } from '@/lib/supabase/client'
 import { Card, CardContent } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
 import {
   Table,
   TableBody,
@@ -13,26 +14,28 @@ import {
 } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
 import { useAppStore } from '@/stores/main'
+import { SendEmailModal } from '@/components/shared/SendEmailModal'
 
 export default function CommunicationsLog() {
   const { tenantId } = useParams<{ tenantId: string }>()
   const { activeTenant } = useAppStore()
   const [logs, setLogs] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+  const [isEmailModalOpen, setIsEmailModalOpen] = useState(false)
+
+  const fetchLogs = async () => {
+    setLoading(true)
+    const { data } = await supabase
+      .from('communication_logs')
+      .select('*')
+      .eq('tenant_id', tenantId)
+      .order('created_at', { ascending: false })
+    if (data) setLogs(data)
+    setLoading(false)
+  }
 
   useEffect(() => {
-    if (!tenantId) return
-    const fetchLogs = async () => {
-      setLoading(true)
-      const { data } = await supabase
-        .from('communication_logs')
-        .select('*')
-        .eq('tenant_id', tenantId)
-        .order('created_at', { ascending: false })
-      if (data) setLogs(data)
-      setLoading(false)
-    }
-    fetchLogs()
+    if (tenantId) fetchLogs()
   }, [tenantId])
 
   const getStatusBadge = (status: string) => {
@@ -80,6 +83,9 @@ export default function CommunicationsLog() {
             {activeTenant?.name || 'esta organização'}.
           </p>
         </div>
+        <Button onClick={() => setIsEmailModalOpen(true)}>
+          <Send className="mr-2 h-4 w-4" /> Nova Comunicação
+        </Button>
       </div>
 
       <Card>
@@ -121,6 +127,15 @@ export default function CommunicationsLog() {
           )}
         </CardContent>
       </Card>
+
+      <SendEmailModal
+        isOpen={isEmailModalOpen}
+        onOpenChange={(open) => {
+          setIsEmailModalOpen(open)
+          if (!open) fetchLogs()
+        }}
+        tenantId={tenantId}
+      />
     </div>
   )
 }
