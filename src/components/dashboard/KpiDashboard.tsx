@@ -1,26 +1,68 @@
+import { useEffect, useState } from 'react'
+import { useParams } from 'react-router-dom'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-
-const activities = [
-  {
-    id: 1,
-    action: 'Nova evidência anexada',
-    item: '4.1 Contexto',
-    user: 'Ana Silva',
-    time: 'Há 2h',
-  },
-  {
-    id: 2,
-    action: 'Status alterado para Conforme',
-    item: '5.2 Política',
-    user: 'Carlos Gomes',
-    time: 'Há 5h',
-  },
-  { id: 3, action: 'Novo Risco Identificado', item: '4.6 Riscos', user: 'Sistema', time: 'Ontem' },
-  { id: 4, action: 'Denúncia recebida', item: '8.3 Canal', user: 'Anônimo', time: 'Ontem' },
-]
+import { supabase } from '@/lib/supabase/client'
 
 export function KpiDashboard() {
+  const { tenantId } = useParams<{ tenantId: string }>()
+  const [activities, setActivities] = useState<any[]>([])
+  const [maturityScore, setMaturityScore] = useState<number>(0)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    if (!tenantId) return
+
+    const fetchDashboardData = async () => {
+      setLoading(true)
+      const { data: logs } = await supabase
+        .from('audit_logs')
+        .select('*')
+        .eq('tenant_id', tenantId)
+        .order('created_at', { ascending: false })
+        .limit(5)
+
+      if (logs) setActivities(logs)
+
+      const { data: history } = await supabase
+        .from('compliance_history')
+        .select('*')
+        .eq('tenant_id', tenantId)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single()
+
+      if (history) {
+        setMaturityScore(history.conformity_score)
+      } else {
+        setMaturityScore(0)
+      }
+      setLoading(false)
+    }
+
+    fetchDashboardData()
+  }, [tenantId])
+
+  const formatTime = (dateString: string) => {
+    const date = new Date(dateString)
+    return (
+      date.toLocaleDateString('pt-BR') +
+      ' ' +
+      date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+    )
+  }
+
+  const getLevelName = (score: number) => {
+    if (score === 0) return 'Não Avaliado'
+    if (score < 2) return 'Inicial'
+    if (score < 3) return 'Básico'
+    if (score < 4) return 'Gerenciado'
+    return 'Otimizado'
+  }
+
+  const scoreBase5 = maturityScore > 0 ? maturityScore / 20 : 0
+  const scoreDisplay = maturityScore > 0 ? scoreBase5.toFixed(1) : '0.0'
+
   return (
     <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
       <Card className="col-span-1 lg:col-span-2">
@@ -28,21 +70,24 @@ export function KpiDashboard() {
           <CardTitle>Maturidade do Compliance</CardTitle>
         </CardHeader>
         <CardContent className="flex items-center justify-center h-[250px]">
-          <div className="relative w-48 h-48 rounded-full border-[16px] border-muted flex items-center justify-center">
+          {loading ? (
+            <div className="text-muted-foreground text-sm">Carregando métricas...</div>
+          ) : (
             <div
-              className="absolute inset-0 rounded-full border-[16px] border-primary"
+              className="relative w-48 h-48 rounded-full flex items-center justify-center transition-all duration-1000"
               style={{
-                clipPath: 'polygon(50% 0, 100% 0, 100% 100%, 50% 100%)',
-                transform: 'rotate(45deg)',
+                background: `conic-gradient(hsl(var(--primary)) ${(scoreBase5 / 5) * 100}%, hsl(var(--muted)) 0)`,
               }}
-            ></div>
-            <div className="text-center">
-              <div className="text-4xl font-bold text-primary">3.2</div>
-              <div className="text-sm text-muted-foreground uppercase tracking-widest mt-1">
-                Gerenciado
+            >
+              <div className="absolute inset-[16px] bg-card rounded-full"></div>
+              <div className="relative z-10 text-center">
+                <div className="text-4xl font-bold text-primary">{scoreDisplay}</div>
+                <div className="text-sm text-muted-foreground uppercase tracking-widest mt-1">
+                  {getLevelName(scoreBase5)}
+                </div>
               </div>
             </div>
-          </div>
+          )}
         </CardContent>
       </Card>
 
@@ -52,23 +97,35 @@ export function KpiDashboard() {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {activities.map((act) => (
-              <div
-                key={act.id}
-                className="flex flex-col gap-1 border-b border-border pb-3 last:border-0 last:pb-0"
-              >
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium">{act.action}</span>
-                  <span className="text-xs text-muted-foreground">{act.time}</span>
+            {loading ? (
+              <div className="text-muted-foreground text-sm py-4">Carregando atividades...</div>
+            ) : activities.length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-4">
+                Nenhuma atividade recente encontrada no registro.
+              </p>
+            ) : (
+              activities.map((act) => (
+                <div
+                  key={act.id}
+                  className="flex flex-col gap-1 border-b border-border pb-3 last:border-0 last:pb-0"
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium">{act.action}</span>
+                    <span className="text-xs text-muted-foreground">
+                      {formatTime(act.created_at)}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-muted-foreground truncate max-w-[150px]">
+                      {act.user_email || 'Sistema'}
+                    </span>
+                    <Badge variant="outline" className="text-[10px] h-5 px-1.5 whitespace-nowrap">
+                      {act.clause_id}
+                    </Badge>
+                  </div>
                 </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-xs text-muted-foreground">{act.user}</span>
-                  <Badge variant="outline" className="text-[10px] h-5 px-1.5">
-                    {act.item}
-                  </Badge>
-                </div>
-              </div>
-            ))}
+              ))
+            )}
           </div>
         </CardContent>
       </Card>

@@ -10,7 +10,6 @@ import {
 } from '@/components/ui/select'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
 import { toast } from '@/hooks/use-toast'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Switch } from '@/components/ui/switch'
@@ -33,7 +32,7 @@ export function OrgProfiling() {
   const handleBatchReport = async () => {
     setIsGenerating(true)
     setIsDialogOpen(true)
-    const prompt = `Gere um Relatório de Perfil de Integridade consolidando os dados da organização (Grande Porte, Alta Interação Pública, Setor de Construção Civil) e mapeie de acordo com os eixos exigidos pelo Decreto 11.129/22.`
+    const prompt = `Gere um Relatório de Perfil de Integridade consolidando os dados da organização e mapeie de acordo com os eixos exigidos pelo Decreto 11.129/22.`
     const response = await createBatchRequest(prompt, useSonnet)
     setReport(response)
     setIsGenerating(false)
@@ -54,9 +53,9 @@ export function OrgProfiling() {
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
                 <Label>I. Porte (Empregados)</Label>
-                <Select defaultValue="large">
+                <Select>
                   <SelectTrigger>
-                    <SelectValue />
+                    <SelectValue placeholder="Selecione..." />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="small">Até 99 (Pequena)</SelectItem>
@@ -67,9 +66,9 @@ export function OrgProfiling() {
               </div>
               <div className="space-y-2">
                 <Label>II. Complexidade Hierárquica</Label>
-                <Select defaultValue="high">
+                <Select>
                   <SelectTrigger>
-                    <SelectValue />
+                    <SelectValue placeholder="Selecione..." />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="low">Baixa</SelectItem>
@@ -80,9 +79,9 @@ export function OrgProfiling() {
               </div>
               <div className="space-y-2">
                 <Label>III. Agentes Intermediários</Label>
-                <Select defaultValue="yes">
+                <Select>
                   <SelectTrigger>
-                    <SelectValue />
+                    <SelectValue placeholder="Selecione..." />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="yes">
@@ -94,13 +93,13 @@ export function OrgProfiling() {
               </div>
               <div className="space-y-2">
                 <Label>IV. Setor de Mercado</Label>
-                <Input defaultValue="Construção Civil e Infraestrutura" />
+                <Input placeholder="Ex: Tecnologia, Engenharia, Saúde..." />
               </div>
               <div className="space-y-2">
                 <Label>V. Atuação Internacional</Label>
-                <Select defaultValue="national">
+                <Select>
                   <SelectTrigger>
-                    <SelectValue />
+                    <SelectValue placeholder="Selecione..." />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="national">Apenas Nacional</SelectItem>
@@ -111,9 +110,9 @@ export function OrgProfiling() {
               </div>
               <div className="space-y-2">
                 <Label>VI. Interação com Setor Público</Label>
-                <Select defaultValue="high">
+                <Select>
                   <SelectTrigger>
-                    <SelectValue />
+                    <SelectValue placeholder="Selecione..." />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="low">Baixa (Apenas licenças padrão)</SelectItem>
@@ -124,13 +123,13 @@ export function OrgProfiling() {
               </div>
               <div className="space-y-2">
                 <Label>VII. Quantidade de PJs no Grupo</Label>
-                <Input type="number" defaultValue="4" />
+                <Input type="number" placeholder="Ex: 1" />
               </div>
               <div className="space-y-2">
                 <Label>VIII. Qualificação de Parceiros</Label>
-                <Select defaultValue="high_risk">
+                <Select>
                   <SelectTrigger>
-                    <SelectValue />
+                    <SelectValue placeholder="Selecione..." />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="low_risk">Baixo Risco (Serviços Gerais)</SelectItem>
@@ -156,18 +155,10 @@ export function OrgProfiling() {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4 text-sm">
-            <div className="flex justify-between items-center pb-3 border-b border-primary/10">
-              <span className="font-semibold text-muted-foreground">Grau de Exigência CGU:</span>
-              <Badge className="bg-destructive hover:bg-destructive text-white">Rigor Máximo</Badge>
-            </div>
             <p className="text-muted-foreground">
-              Com base no perfil selecionado, os avaliadores exigirão evidências robustas de:
+              Defina o perfil da organização acima para que a Inteligência Artificial possa calibrar
+              as exigências do programa de compliance e sugerir o grau de rigor adequado.
             </p>
-            <ul className="list-disc pl-4 space-y-2 text-muted-foreground text-xs mt-2">
-              <li>Canal de denúncias operado por terceiros e 100% independente.</li>
-              <li>Due Diligence aprofundada (Background check) para parceiros.</li>
-              <li>Auditoria externa e independente periódica do Programa.</li>
-            </ul>
           </CardContent>
         </Card>
 
@@ -213,7 +204,6 @@ export function OrgProfiling() {
               <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
                 <Loader2 className="h-8 w-8 animate-spin mb-4 text-purple-600" />
                 <p>Processando via Anthropic Batch API...</p>
-                <p className="text-xs mt-2 opacity-70">Aguardando lote (Simulado)</p>
               </div>
             ) : (
               <div className="prose prose-sm max-w-none text-foreground whitespace-pre-wrap">
