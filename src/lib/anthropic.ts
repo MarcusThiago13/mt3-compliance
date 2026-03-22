@@ -209,6 +209,71 @@ export async function callAnthropicChat(
   }
 }
 
+export async function generateComplianceDocument(
+  tenantId: string,
+  template: any,
+  params: any,
+): Promise<string> {
+  // Fetch required RAG context from the tenant
+  const { data: tenant } = await supabase.from('tenants').select('*').eq('id', tenantId).single()
+  const { data: risks } = await supabase.from('risks').select('*').eq('tenant_id', tenantId)
+  const { data: gaps } = await supabase.from('gaps').select('*').eq('tenant_id', tenantId)
+
+  const contextData = {
+    organizacao: tenant?.name,
+    cnpj: tenant?.cnpj,
+    perfil: tenant?.step_1,
+    governanca: tenant?.step_2,
+    efetivo: tenant?.step_4,
+    riscos_mapeados: risks?.map((r) => ({
+      titulo: r.title,
+      impacto: r.impact,
+      probabilidade: r.probability,
+    })),
+    gaps_identificados: gaps?.map((g) => ({
+      regra: g.rule,
+      descricao: g.description,
+      severidade: g.severity,
+      status: g.status,
+    })),
+  }
+
+  const prompt = `Você é o motor de elaboração documental inteligente de compliance.
+Seu objetivo é gerar a primeira minuta qualificada do documento com base exclusivamente nos dados do cliente e no template fornecido.
+
+TEMPLATE SELECIONADO: ${template.name}
+Categoria: ${template.category}
+
+ESTRUTURA BASE DO DOCUMENTO:
+${template.base_structure}
+
+INSTRUÇÕES ESPECÍFICAS DA IA PARA ESTE TEMPLATE:
+${template.ai_instructions}
+
+PARÂMETROS DA GERAÇÃO SOLICITADOS PELO USUÁRIO:
+- Título do Documento: ${params.title}
+- Audiência Alvo: ${params.audience}
+- Nível de Confidencialidade: ${params.confidentiality}
+- Período de Referência: ${params.period_ref}
+- Instruções Adicionais do Usuário: ${params.additional_instructions || 'Nenhuma'}
+
+DADOS DO CLIENTE PARA CONTEXTO (RAG):
+${JSON.stringify(contextData, null, 2)}
+
+REGRAS DE OURO DA GERAÇÃO (OBRIGATÓRIO):
+1. Utilize estritamente os dados do cliente fornecidos no contexto acima. NUNCA invente indicadores, valores ou métricas fictícias.
+2. Se uma informação exigida pelo template não estiver disponível no contexto, escreva explicitamente: "[Informação não disponível no sistema até a data da emissão]".
+3. O texto deve ser formatado impecavelmente em Markdown. Não use tags HTML soltas.
+4. Ajuste a profundidade e a linguagem de acordo com a "Audiência Alvo" especificada.
+5. Não retorne nenhum texto conversacional (ex: "Aqui está o seu documento:"). Retorne APENAS o código Markdown do documento.
+
+Gere o documento agora:
+`
+
+  // Use the advanced Sonnet model for comprehensive document generation
+  return callAnthropicMessage(prompt, 4096, true, tenantId)
+}
+
 function mockChatResponse(): {
   role: 'assistant'
   content: string
@@ -233,6 +298,10 @@ function mockAiResponse(prompt: string): string {
 
   if (prompt.includes('5W2H')) {
     return `{ "what": "", "why": "", "where": "", "when": "", "who": "", "how": "", "howMuch": "" }`
+  }
+
+  if (prompt.includes('motor inteligente de elaboração documental')) {
+    return `# Documento Gerado em Modo Mock\n\n## Atenção\nA funcionalidade de geração de relatórios por Inteligência Artificial requer uma chave de API válida da Anthropic (Claude) configurada nas variáveis de ambiente (\`VITE_ANTHROPIC_API_KEY\`).\n\n## 1. Dados Recebidos\nOs dados do tenant foram capturados, mas a IA não processou o texto.\n[Verifique a integração para utilizar o motor real].`
   }
 
   return 'A funcionalidade de Inteligência Artificial requer uma chave de API válida (Anthropic) configurada no painel de Integração de Backend do sistema.'

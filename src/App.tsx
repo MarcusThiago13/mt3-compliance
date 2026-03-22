@@ -30,6 +30,8 @@ import DueDiligence from './pages/DueDiligence'
 import PublicFormCollection from './pages/PublicFormCollection'
 import CollectionLinks from './pages/CollectionLinks'
 import CommunicationsLog from './pages/CommunicationsLog'
+import TenantDocuments from './pages/TenantDocuments'
+import DocumentEditor from './pages/DocumentEditor'
 
 const AuthGuard = ({ children }: { children: React.ReactNode }) => {
   const { user, loading, signIn } = useAuth()
@@ -118,6 +120,8 @@ const App = () => (
                 <Route path="due-diligence" element={<DueDiligence />} />
                 <Route path="communications" element={<CommunicationsLog />} />
                 <Route path="templates" element={<TenantTemplates />} />
+                <Route path="documents" element={<TenantDocuments />} />
+                <Route path="documents/:docId" element={<DocumentEditor />} />
               </Route>
             </Route>
             <Route path="*" element={<NotFound />} />

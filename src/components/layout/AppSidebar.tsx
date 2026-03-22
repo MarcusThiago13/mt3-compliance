@@ -28,6 +28,7 @@ import {
   FileSearch,
   BrainCircuit,
   History,
+  Library,
 } from 'lucide-react'
 import { getParentClauses, getClausesByParent } from '@/lib/iso-data'
 import { useAppStore } from '@/stores/main'
@@ -134,6 +135,14 @@ export function AppSidebar() {
                       <Link to={`${tid}/due-diligence`}>
                         <FileSearch />
                         <span>Due Diligence (KYS)</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton asChild isActive={location.pathname.includes('/documents')}>
+                      <Link to={`${tid}/documents`}>
+                        <Library />
+                        <span>Documentos Inteligentes</span>
                       </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
