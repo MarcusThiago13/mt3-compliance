@@ -11,15 +11,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Progress } from '@/components/ui/progress'
-import {
-  Download,
-  Plus,
-  Target,
-  Layers,
-  ArrowRightCircle,
-  CheckCircle2,
-  Sparkles,
-} from 'lucide-react'
+import { Download, Plus, Target, Layers, CheckCircle2, Sparkles } from 'lucide-react'
 import { toast } from '@/hooks/use-toast'
 import { ActionMotor5W2HModal } from '@/components/shared/ActionMotor5W2HModal'
 
@@ -106,17 +98,23 @@ export function ContinualImprovement101() {
       </div>
 
       <Tabs defaultValue="opportunities">
-        <TabsList className="flex flex-wrap justify-start w-full mb-4 h-auto p-1 gap-1">
+        <TabsList className="grid grid-cols-1 sm:grid-cols-3 w-full mb-4 h-auto p-1 gap-1">
           <TabsTrigger
             value="opportunities"
-            className="py-2 text-xs sm:text-sm flex-1 min-w-[150px]"
+            className="py-2 text-xs sm:text-sm whitespace-normal h-auto text-center"
           >
             Oportunidades de Melhoria
           </TabsTrigger>
-          <TabsTrigger value="impact" className="py-2 text-xs sm:text-sm flex-1 min-w-[150px]">
+          <TabsTrigger
+            value="impact"
+            className="py-2 text-xs sm:text-sm whitespace-normal h-auto text-center"
+          >
             Análise de Impacto Sistêmico
           </TabsTrigger>
-          <TabsTrigger value="tracking" className="py-2 text-xs sm:text-sm flex-1 min-w-[150px]">
+          <TabsTrigger
+            value="tracking"
+            className="py-2 text-xs sm:text-sm whitespace-normal h-auto text-center"
+          >
             Acompanhamento (Workflow)
           </TabsTrigger>
         </TabsList>
@@ -147,7 +145,7 @@ export function ContinualImprovement101() {
                         onClick={() => open5W2H(imp)}
                         className="h-5 text-[10px] px-2 text-purple-700 border-purple-200 hover:bg-purple-50 mt-1"
                       >
-                        <Sparkles className="mr-1 h-2.5 w-2.5" /> 5W2H Projeto
+                        <Sparkles className="mr-1 h-2.5 w-2.5" /> Gerar com IA
                       </Button>
                     </TableCell>
                     <TableCell className="text-sm text-muted-foreground">{imp.origin}</TableCell>

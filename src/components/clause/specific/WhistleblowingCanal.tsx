@@ -161,17 +161,29 @@ export function WhistleblowingCanal() {
       </div>
 
       <Tabs defaultValue="triage">
-        <TabsList className="grid w-full grid-cols-1 md:grid-cols-4 mb-4 h-auto p-1 gap-1">
-          <TabsTrigger value="triage" className="py-2">
+        <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 mb-4 h-auto p-1 gap-1">
+          <TabsTrigger
+            value="triage"
+            className="py-2 text-xs sm:text-sm whitespace-normal h-auto text-center"
+          >
             Triagem (Inbox)
           </TabsTrigger>
-          <TabsTrigger value="investigation" className="py-2">
+          <TabsTrigger
+            value="investigation"
+            className="py-2 text-xs sm:text-sm whitespace-normal h-auto text-center"
+          >
             Em Investigação
           </TabsTrigger>
-          <TabsTrigger value="protection" className="py-2">
+          <TabsTrigger
+            value="protection"
+            className="py-2 text-xs sm:text-sm whitespace-normal h-auto text-center"
+          >
             Medidas de Proteção
           </TabsTrigger>
-          <TabsTrigger value="preview" className="py-2">
+          <TabsTrigger
+            value="preview"
+            className="py-2 text-xs sm:text-sm whitespace-normal h-auto text-center"
+          >
             Portal Público
           </TabsTrigger>
         </TabsList>

@@ -100,17 +100,29 @@ export function InternalAudit92() {
       </div>
 
       <Tabs defaultValue="plan">
-        <TabsList className="flex flex-wrap justify-start w-full mb-4 h-auto p-1 gap-1">
-          <TabsTrigger value="plan" className="py-2 text-xs sm:text-sm flex-1 min-w-[120px]">
+        <TabsList className="grid grid-cols-2 md:grid-cols-4 w-full mb-4 h-auto p-1 gap-1">
+          <TabsTrigger
+            value="plan"
+            className="py-2 text-xs sm:text-sm whitespace-normal h-auto text-center"
+          >
             Planejamento
           </TabsTrigger>
-          <TabsTrigger value="team" className="py-2 text-xs sm:text-sm flex-1 min-w-[120px]">
+          <TabsTrigger
+            value="team"
+            className="py-2 text-xs sm:text-sm whitespace-normal h-auto text-center"
+          >
             Independência (Equipe)
           </TabsTrigger>
-          <TabsTrigger value="execution" className="py-2 text-xs sm:text-sm flex-1 min-w-[120px]">
+          <TabsTrigger
+            value="execution"
+            className="py-2 text-xs sm:text-sm whitespace-normal h-auto text-center"
+          >
             Execução & Achados
           </TabsTrigger>
-          <TabsTrigger value="followup" className="py-2 text-xs sm:text-sm flex-1 min-w-[120px]">
+          <TabsTrigger
+            value="followup"
+            className="py-2 text-xs sm:text-sm whitespace-normal h-auto text-center"
+          >
             Acompanhamento
           </TabsTrigger>
         </TabsList>
@@ -147,7 +159,7 @@ export function InternalAudit92() {
                         onClick={() => open5W2H(a)}
                         className="h-5 text-[10px] px-2 text-purple-700 border-purple-200 hover:bg-purple-50 mt-1"
                       >
-                        <Sparkles className="mr-1 h-2.5 w-2.5" /> IA Plano
+                        <Sparkles className="mr-1 h-2.5 w-2.5" /> Gerar com IA
                       </Button>
                     </TableCell>
                     <TableCell className="text-sm text-muted-foreground">{a.criteria}</TableCell>
