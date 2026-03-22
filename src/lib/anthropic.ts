@@ -1,3 +1,5 @@
+import { supabase } from '@/lib/supabase/client'
+
 export const DEFAULT_MODEL = 'claude-haiku-4-5-20251001'
 export const SONNET_MODEL = 'claude-sonnet-4-6'
 
@@ -7,10 +9,48 @@ const SYSTEM_PROMPT =
 const ISO_CACHE_TEXT =
   'A norma ABNT NBR ISO 37301:2021 especifica os requisitos e fornece diretrizes para estabelecer, desenvolver, implementar, avaliar, manter e melhorar continuamente um sistema de gestão de compliance eficaz dentro de uma organização. O Decreto 11.129/2022 regulamenta a Lei Anticorrupção no Brasil. (Este bloco simula o conteúdo completo da norma para efeito de caching).'
 
+async function logAiUsage(
+  model: string,
+  inputTokens: number,
+  outputTokens: number,
+  providedTenantId?: string,
+) {
+  try {
+    let tenantId = providedTenantId
+
+    // Fallback: tentar inferir o tenantId da URL atual se não fornecido
+    if (!tenantId && typeof window !== 'undefined') {
+      const match = window.location.pathname.match(
+        /^\/([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/i,
+      )
+      if (match) tenantId = match[1]
+    }
+
+    let userId = null
+    if (typeof window !== 'undefined') {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
+      userId = user?.id
+    }
+
+    await supabase.from('ai_usage_logs' as any).insert({
+      model,
+      input_tokens: inputTokens,
+      output_tokens: outputTokens,
+      tenant_id: tenantId || null,
+      user_id: userId || null,
+    })
+  } catch (error) {
+    console.error('Falha ao registrar log de consumo de IA', error)
+  }
+}
+
 export async function callAnthropicMessage(
   prompt: string,
   maxTokens: number = 1024,
   useSonnet: boolean = false,
+  tenantId?: string,
 ): Promise<string> {
   const model = useSonnet ? SONNET_MODEL : DEFAULT_MODEL
   const apiKey = import.meta.env.VITE_ANTHROPIC_API_KEY
@@ -52,6 +92,12 @@ export async function callAnthropicMessage(
     }
 
     const data = await response.json()
+
+    // Log usage
+    if (data.usage) {
+      logAiUsage(model, data.usage.input_tokens || 0, data.usage.output_tokens || 0, tenantId)
+    }
+
     return data.content[0].text
   } catch (error) {
     console.error('Falha de rede ao contatar a API da Anthropic:', error)
@@ -62,33 +108,14 @@ export async function callAnthropicMessage(
 export async function createBatchRequest(
   prompt: string,
   useSonnet: boolean = false,
+  tenantId?: string,
 ): Promise<string> {
   const model = useSonnet ? SONNET_MODEL : DEFAULT_MODEL
   const apiKey = import.meta.env.VITE_ANTHROPIC_API_KEY
 
-  if (apiKey) {
-    try {
-      fetch('https://api.anthropic.com/v1/messages', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-api-key': apiKey,
-          'anthropic-version': '2023-06-01',
-          'anthropic-dangerous-direct-browser-access': 'true',
-        },
-        body: JSON.stringify({
-          model,
-          max_tokens: 4096,
-          system: SYSTEM_PROMPT,
-          messages: [{ role: 'user', content: prompt }],
-        }),
-      }).catch(console.error)
-    } catch (error) {
-      console.error(error)
-    }
-  }
-
-  const res = await callAnthropicMessage(prompt, 4096, useSonnet)
+  // The original function fired a background request and then awaited a normal one.
+  // We'll keep the await behavior which does the actual return and logs usage.
+  const res = await callAnthropicMessage(prompt, 4096, useSonnet, tenantId)
   return res
 }
 
@@ -96,6 +123,7 @@ export async function callAnthropicChat(
   message: string,
   history: { role: 'user' | 'assistant'; content: string }[],
   tenantName: string,
+  tenantId?: string,
 ): Promise<{ role: 'assistant'; content: string; references?: string[] }> {
   const apiKey = import.meta.env.VITE_ANTHROPIC_API_KEY
 
@@ -134,6 +162,16 @@ export async function callAnthropicChat(
     }
 
     const data = await response.json()
+
+    if (data.usage) {
+      logAiUsage(
+        DEFAULT_MODEL,
+        data.usage.input_tokens || 0,
+        data.usage.output_tokens || 0,
+        tenantId,
+      )
+    }
+
     const text = data.content[0].text
 
     const refMatch = text.match(/\[Ref:(.*?)\]/g)

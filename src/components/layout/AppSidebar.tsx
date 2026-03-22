@@ -26,6 +26,7 @@ import {
   RefreshCcw,
   Search,
   FileSearch,
+  BrainCircuit,
 } from 'lucide-react'
 import { getParentClauses, getClausesByParent } from '@/lib/iso-data'
 import { useAppStore } from '@/stores/main'
@@ -90,6 +91,14 @@ export function AppSidebar() {
                       <Link to="/admin/users">
                         <UserCog />
                         <span>Gestão de Usuários</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton asChild isActive={location.pathname === '/admin/ai-usage'}>
+                      <Link to="/admin/ai-usage">
+                        <BrainCircuit />
+                        <span>Consumo de IA</span>
                       </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
