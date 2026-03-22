@@ -1,7 +1,7 @@
 {
   "_versions": {
-    "admin-invite": 9,
-    "admin-users": 9,
-    "generate-dossier": 2
+    "admin-invite": 10,
+    "admin-users": 10,
+    "generate-dossier": 3
   }
 }
