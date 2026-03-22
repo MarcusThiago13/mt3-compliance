@@ -11,7 +11,7 @@ import {
   Trash2,
   Users,
   Link as LinkIcon,
-  Mail,
+  MessageCircle,
   FileText,
   History,
 } from 'lucide-react'
@@ -58,7 +58,7 @@ import { Label } from '@/components/ui/label'
 import { toast } from '@/hooks/use-toast'
 import { useAppStore } from '@/stores/main'
 import { useAuth } from '@/hooks/use-auth'
-import { SendEmailModal } from '@/components/shared/SendEmailModal'
+import { SendCommunicationModal } from '@/components/shared/SendCommunicationModal'
 
 export default function Tenants() {
   const navigate = useNavigate()
@@ -308,7 +308,7 @@ export default function Tenants() {
                               setIsEmailModalOpen(true)
                             }}
                           >
-                            <Mail className="mr-2 h-4 w-4" /> Disparar E-mail
+                            <MessageCircle className="mr-2 h-4 w-4" /> Nova Comunicação
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
                           <DropdownMenuItem onClick={() => handleToggleStatus(t)}>
@@ -354,7 +354,7 @@ export default function Tenants() {
         </AlertDialogContent>
       </AlertDialog>
 
-      <SendEmailModal
+      <SendCommunicationModal
         isOpen={isEmailModalOpen}
         onOpenChange={setIsEmailModalOpen}
         tenantId={emailTenantId}

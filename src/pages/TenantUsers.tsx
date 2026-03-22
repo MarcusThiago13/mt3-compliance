@@ -62,7 +62,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { USER_CLASSIFICATIONS, USER_ROLES } from '@/lib/constants'
 import { InviteCommunicationModal } from '@/components/shared/InviteCommunicationModal'
-import { SendEmailModal } from '@/components/shared/SendEmailModal'
+import { SendCommunicationModal } from '@/components/shared/SendCommunicationModal'
 
 export default function TenantUsers() {
   const { tenantId } = useParams<{ tenantId: string }>()
@@ -95,10 +95,12 @@ export default function TenantUsers() {
   const [inviteModalOpen, setInviteModalOpen] = useState(false)
   const [inviteData, setInviteData] = useState<any>(null)
 
-  const [genericEmailModalOpen, setGenericEmailModalOpen] = useState(false)
-  const [genericEmailData, setGenericEmailData] = useState<{ email: string; name: string } | null>(
-    null,
-  )
+  const [genericModalOpen, setGenericModalOpen] = useState(false)
+  const [genericData, setGenericData] = useState<{
+    email: string
+    phone: string
+    name: string
+  } | null>(null)
 
   const fetchInitialData = async () => {
     if (!tenantId) return
@@ -542,11 +544,11 @@ export default function TenantUsers() {
                             )}
                           <DropdownMenuItem
                             onClick={() => {
-                              setGenericEmailData({ email: r.email, name: r.name })
-                              setGenericEmailModalOpen(true)
+                              setGenericData({ email: r.email, phone: r.phone || '', name: r.name })
+                              setGenericModalOpen(true)
                             }}
                           >
-                            <Mail className="mr-2 h-4 w-4" /> Enviar Notificação (E-mail)
+                            <MessageCircle className="mr-2 h-4 w-4" /> Enviar Comunicação
                           </DropdownMenuItem>
                           <DropdownMenuItem
                             onClick={() => {
@@ -592,11 +594,12 @@ export default function TenantUsers() {
         />
       )}
 
-      {genericEmailData && (
-        <SendEmailModal
-          isOpen={genericEmailModalOpen}
-          onOpenChange={setGenericEmailModalOpen}
-          defaultTo={genericEmailData.email}
+      {genericData && (
+        <SendCommunicationModal
+          isOpen={genericModalOpen}
+          onOpenChange={setGenericModalOpen}
+          defaultToEmail={genericData.email}
+          defaultToPhone={genericData.phone}
           tenantId={tenantId}
         />
       )}
