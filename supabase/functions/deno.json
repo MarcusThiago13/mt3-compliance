@@ -1,9 +1,9 @@
 {
   "_versions": {
-    "admin-invite": 10,
-    "admin-users": 10,
-    "generate-dossier": 4,
-    "send-email": 3,
+    "admin-invite": 11,
+    "admin-users": 11,
+    "generate-dossier": 5,
+    "send-email": 4,
     "resend-webhook": 1
   }
 }
