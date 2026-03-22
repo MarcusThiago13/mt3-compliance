@@ -1,7 +1,12 @@
 import { supabase } from '@/lib/supabase/client'
 
 export const collectionService = {
-  async generateToken(tenantId: string, formType: 'onboarding' | 'context', daysValid: number = 7) {
+  async generateToken(
+    tenantId: string,
+    formType: string,
+    daysValid: number = 3,
+    createdBy?: string,
+  ) {
     const expiresAt = new Date()
     expiresAt.setDate(expiresAt.getDate() + daysValid)
 
@@ -11,6 +16,7 @@ export const collectionService = {
         tenant_id: tenantId,
         form_type: formType,
         expires_at: expiresAt.toISOString(),
+        created_by: createdBy,
       })
       .select('token')
       .single()
@@ -25,10 +31,11 @@ export const collectionService = {
       .select('form_type, tenants(name)')
       .eq('token', token)
       .eq('is_used', false)
+      .eq('is_revoked', false)
       .gt('expires_at', new Date().toISOString())
       .single()
 
-    if (error) throw new Error('Link inválido, já utilizado ou expirado.')
+    if (error) throw new Error('Link inválido, já utilizado, revogado ou expirado.')
     return data
   },
 
@@ -40,5 +47,26 @@ export const collectionService = {
 
     if (error) throw new Error(error.message)
     return data
+  },
+
+  async getTokens(tenantId?: string) {
+    let q = supabase
+      .from('form_collection_tokens' as any)
+      .select('id, token, form_type, expires_at, is_used, is_revoked, created_at, tenants(name)')
+      .order('created_at', { ascending: false })
+
+    if (tenantId) q = q.eq('tenant_id', tenantId)
+
+    const { data, error } = await q
+    if (error) throw new Error(error.message)
+    return data
+  },
+
+  async revokeToken(id: string) {
+    const { error } = await supabase
+      .from('form_collection_tokens' as any)
+      .update({ is_revoked: true })
+      .eq('id', id)
+    if (error) throw new Error(error.message)
   },
 }

@@ -27,6 +27,7 @@ import PublicReport from './pages/PublicReport'
 import PublicReportStatus from './pages/PublicReportStatus'
 import DueDiligence from './pages/DueDiligence'
 import PublicFormCollection from './pages/PublicFormCollection'
+import CollectionLinks from './pages/CollectionLinks'
 
 const AuthGuard = ({ children }: { children: React.ReactNode }) => {
   const { user, loading, signIn } = useAuth()
@@ -100,6 +101,7 @@ const App = () => (
               <Route path="/tenants" element={<Tenants />} />
               <Route path="/admin/users" element={<AdminUsers />} />
               <Route path="/admin/ai-usage" element={<AdminAIUsage />} />
+              <Route path="/collection-links" element={<CollectionLinks />} />
               <Route path="/onboarding" element={<Onboarding />} />
               <Route path="/submit/:requestId" element={<SubmitEvidence />} />
 

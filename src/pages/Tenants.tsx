@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import {
   Plus,
   Building2,
@@ -10,6 +10,7 @@ import {
   Power,
   Trash2,
   Users,
+  Link as LinkIcon,
 } from 'lucide-react'
 import { supabase } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
@@ -172,48 +173,56 @@ export default function Tenants() {
           <h1 className="text-3xl font-bold text-primary">Gestão de Clientes</h1>
           <p className="text-muted-foreground">Administração multi-tenant do sistema</p>
         </div>
-        <Dialog open={isNewTenantOpen} onOpenChange={setIsNewTenantOpen}>
-          <DialogTrigger asChild>
-            <Button>
-              <Plus className="mr-2 h-4 w-4" /> Novo Cliente
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Cadastrar Nova Organização</DialogTitle>
-              <DialogDescription>
-                Crie um novo ambiente isolado. O administrador atual será vinculado automaticamente.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="space-y-4 py-4">
-              <div className="space-y-2">
-                <Label>Nome da Organização *</Label>
-                <Input
-                  value={newTenantName}
-                  onChange={(e) => setNewTenantName(e.target.value)}
-                  placeholder="Ex: Acme Corp"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>CNPJ</Label>
-                <Input
-                  value={newTenantCnpj}
-                  onChange={(e) => setNewTenantCnpj(e.target.value)}
-                  placeholder="00.000.000/0001-00"
-                />
-              </div>
-            </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setIsNewTenantOpen(false)}>
-                Cancelar
+        <div className="flex gap-2 w-full sm:w-auto">
+          <Button variant="outline" asChild>
+            <Link to="/collection-links">
+              <LinkIcon className="mr-2 h-4 w-4" /> Links de Coleta
+            </Link>
+          </Button>
+          <Dialog open={isNewTenantOpen} onOpenChange={setIsNewTenantOpen}>
+            <DialogTrigger asChild>
+              <Button>
+                <Plus className="mr-2 h-4 w-4" /> Novo Cliente
               </Button>
-              <Button onClick={handleCreateTenant} disabled={isCreating}>
-                {isCreating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Salvar
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Cadastrar Nova Organização</DialogTitle>
+                <DialogDescription>
+                  Crie um novo ambiente isolado. O administrador atual será vinculado
+                  automaticamente.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4 py-4">
+                <div className="space-y-2">
+                  <Label>Nome da Organização *</Label>
+                  <Input
+                    value={newTenantName}
+                    onChange={(e) => setNewTenantName(e.target.value)}
+                    placeholder="Ex: Acme Corp"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>CNPJ</Label>
+                  <Input
+                    value={newTenantCnpj}
+                    onChange={(e) => setNewTenantCnpj(e.target.value)}
+                    placeholder="00.000.000/0001-00"
+                  />
+                </div>
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setIsNewTenantOpen(false)}>
+                  Cancelar
+                </Button>
+                <Button onClick={handleCreateTenant} disabled={isCreating}>
+                  {isCreating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  Salvar
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
 
       <Card>

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link as LinkIcon, Loader2, Copy, CheckCircle2 } from 'lucide-react'
+import { Link as LinkIcon, Loader2, Copy, CheckCircle2, Calendar } from 'lucide-react'
 import {
   Dialog,
   DialogContent,
@@ -10,8 +10,10 @@ import {
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import { toast } from '@/hooks/use-toast'
 import { collectionService } from '@/services/collection'
+import { useAuth } from '@/hooks/use-auth'
 
 interface Props {
   tenantId: string
@@ -24,15 +26,22 @@ export function GenerateLinkModal({
   formType,
   buttonLabel = 'Gerar Link de Coleta',
 }: Props) {
+  const { user } = useAuth()
   const [isOpen, setIsOpen] = useState(false)
   const [loading, setLoading] = useState(false)
   const [link, setLink] = useState('')
   const [copied, setCopied] = useState(false)
+  const [validityDays, setValidityDays] = useState(3)
 
   const handleGenerate = async () => {
     setLoading(true)
     try {
-      const token = await collectionService.generateToken(tenantId, formType, 7)
+      const token = await collectionService.generateToken(
+        tenantId,
+        formType,
+        validityDays,
+        user?.id,
+      )
       const generatedLink = `${window.location.origin}/f/${token}`
       setLink(generatedLink)
       setCopied(false)
@@ -71,21 +80,39 @@ export function GenerateLinkModal({
         <DialogHeader>
           <DialogTitle>Gerar Link de Coleta Externa</DialogTitle>
           <DialogDescription>
-            Crie um link temporário (válido por 7 dias) e de uso único para o cliente preencher os
-            dados. Após o envio pelo cliente, o link expira automaticamente.
+            Crie um link seguro para o cliente preencher os dados. Após o envio pelo cliente, o link
+            expira automaticamente (uso único).
           </DialogDescription>
         </DialogHeader>
 
         <div className="py-4 space-y-4">
           {!link ? (
-            <Button onClick={handleGenerate} disabled={loading} className="w-full">
-              {loading ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              ) : (
-                <LinkIcon className="mr-2 h-4 w-4" />
-              )}
-              Gerar Link Exclusivo
-            </Button>
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label>Validade (em dias)</Label>
+                <div className="flex items-center gap-2">
+                  <Calendar className="h-4 w-4 text-muted-foreground" />
+                  <Input
+                    type="number"
+                    min={1}
+                    max={30}
+                    value={validityDays}
+                    onChange={(e) => setValidityDays(parseInt(e.target.value) || 1)}
+                  />
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  O padrão de segurança recomendado é de 3 dias.
+                </p>
+              </div>
+              <Button onClick={handleGenerate} disabled={loading} className="w-full">
+                {loading ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <LinkIcon className="mr-2 h-4 w-4" />
+                )}
+                Gerar Link Exclusivo
+              </Button>
+            </div>
           ) : (
             <div className="space-y-3 animate-fade-in">
               <div className="bg-emerald-50 p-3 rounded-lg border border-emerald-100 flex items-start gap-3">
@@ -101,7 +128,11 @@ export function GenerateLinkModal({
               <div className="flex gap-2">
                 <Input value={link} readOnly className="font-mono text-xs bg-muted" />
                 <Button onClick={handleCopy} variant="secondary" className="shrink-0">
-                  {copied ? <CheckCircle2 className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                  {copied ? (
+                    <CheckCircle2 className="h-4 w-4 text-success" />
+                  ) : (
+                    <Copy className="h-4 w-4" />
+                  )}
                 </Button>
               </div>
             </div>
