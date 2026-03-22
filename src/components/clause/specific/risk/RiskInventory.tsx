@@ -11,7 +11,7 @@ import {
 } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Plus, Sparkles, Loader2, Search } from 'lucide-react'
+import { Plus, Sparkles, Loader2, Search, ShieldAlert } from 'lucide-react'
 import { toast } from '@/hooks/use-toast'
 
 export function RiskInventory() {
@@ -36,24 +36,11 @@ export function RiskInventory() {
     setAiLoading(true)
     setTimeout(() => {
       toast({
-        title: 'Gatilhos Analisados pela IA',
+        title: 'Mapeamento de Gatilhos (IA)',
         description:
-          'A IA identificou novos gatilhos (Red Flags de Due Diligence) e mapeou 1 novo risco sugerido.',
+          'A IA analisou os dados operacionais e não encontrou novos padrões ou gatilhos de risco neste momento.',
       })
       setAiLoading(false)
-      setRisks((prev) => [
-        {
-          id: 'new-ai',
-          code: 'AI-04',
-          title: 'Contratação de Terceiros PEP sem Diligência Prévia',
-          category: 'Interações Públicas',
-          status: 'Identificado',
-          owner: 'Compliance',
-          assessments: [{ inherent_score: 20, residual_score: 20 }],
-          isAi: true,
-        },
-        ...prev,
-      ])
     }, 2500)
   }
 
@@ -122,7 +109,9 @@ export function RiskInventory() {
                   <div className="font-semibold text-sm">{r.title}</div>
                   <div className="text-[11px] text-muted-foreground mt-0.5">
                     {r.category} | Resp:{' '}
-                    <span className="font-medium text-foreground">{r.owner}</span>
+                    <span className="font-medium text-foreground">
+                      {r.owner_id || 'Não atribuído'}
+                    </span>
                   </div>
                 </TableCell>
                 <TableCell>
@@ -158,8 +147,17 @@ export function RiskInventory() {
             ))}
             {risks.length === 0 && (
               <TableRow>
-                <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
-                  Nenhum risco cadastrado no inventário.
+                <TableCell colSpan={6} className="h-48 text-center">
+                  <div className="flex flex-col items-center justify-center text-muted-foreground space-y-3">
+                    <ShieldAlert className="h-10 w-10 opacity-40" />
+                    <div>
+                      <p className="font-medium text-foreground">Nenhum risco cadastrado</p>
+                      <p className="text-sm">Inicie o mapeamento para construir o inventário.</p>
+                    </div>
+                    <Button variant="outline" size="sm" className="mt-2">
+                      <Plus className="mr-2 h-4 w-4" /> Cadastrar Primeiro Risco
+                    </Button>
+                  </div>
                 </TableCell>
               </TableRow>
             )}

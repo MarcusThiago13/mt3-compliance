@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
-import { Loader2, Plus, AlertTriangle, Search, Info } from 'lucide-react'
+import { Loader2, Plus, AlertTriangle, Search, Info, Building2 } from 'lucide-react'
 import { ddService } from '@/services/due-diligence'
 import {
   Table,
@@ -167,8 +167,26 @@ export function DDProcessTable({
               <TableBody>
                 {processes.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center py-6 text-muted-foreground">
-                      Nenhum processo encontrado.
+                    <TableCell colSpan={7} className="h-48 text-center">
+                      <div className="flex flex-col items-center justify-center text-muted-foreground space-y-3">
+                        <Building2 className="h-10 w-10 opacity-40" />
+                        <div>
+                          <p className="font-medium text-foreground">
+                            Nenhum processo de Due Diligence registrado
+                          </p>
+                          <p className="text-sm">
+                            Cadastre o primeiro alvo para iniciar o compliance de terceiros.
+                          </p>
+                        </div>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setIsNewOpen(true)}
+                          className="mt-2"
+                        >
+                          <Plus className="mr-2 h-4 w-4" /> Cadastrar Processo
+                        </Button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 )}

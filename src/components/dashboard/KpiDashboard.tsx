@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { supabase } from '@/lib/supabase/client'
+import { History } from 'lucide-react'
 
 export function KpiDashboard() {
   const { tenantId } = useParams<{ tenantId: string }>()
@@ -100,9 +101,11 @@ export function KpiDashboard() {
             {loading ? (
               <div className="text-muted-foreground text-sm py-4">Carregando atividades...</div>
             ) : activities.length === 0 ? (
-              <p className="text-sm text-muted-foreground text-center py-4">
-                Nenhuma atividade recente encontrada no registro.
-              </p>
+              <div className="flex flex-col items-center justify-center py-10 text-muted-foreground">
+                <History className="h-8 w-8 mb-3 opacity-40" />
+                <p className="text-sm text-center">Nenhuma atividade recente registrada.</p>
+                <p className="text-xs text-center mt-1">O histórico operacional aparecerá aqui.</p>
+              </div>
             ) : (
               activities.map((act) => (
                 <div

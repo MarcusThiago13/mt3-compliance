@@ -158,8 +158,26 @@ export default function CommunicationsLog() {
                 ))}
                 {logs.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={4} className="text-center py-12 text-muted-foreground">
-                      Nenhuma comunicação registrada para esta organização.
+                    <TableCell colSpan={4} className="h-48 text-center">
+                      <div className="flex flex-col items-center justify-center text-muted-foreground space-y-3">
+                        <Mail className="h-10 w-10 opacity-40" />
+                        <div>
+                          <p className="font-medium text-foreground">
+                            Nenhuma comunicação registrada
+                          </p>
+                          <p className="text-sm">
+                            Os disparos de E-mail ou WhatsApp aparecerão aqui.
+                          </p>
+                        </div>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setIsModalOpen(true)}
+                          className="mt-2"
+                        >
+                          <Send className="mr-2 h-4 w-4" /> Iniciar Primeira Comunicação
+                        </Button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 )}
