@@ -62,6 +62,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { USER_CLASSIFICATIONS, USER_ROLES } from '@/lib/constants'
 import { InviteCommunicationModal } from '@/components/shared/InviteCommunicationModal'
+import { SendEmailModal } from '@/components/shared/SendEmailModal'
 
 export default function TenantUsers() {
   const { tenantId } = useParams<{ tenantId: string }>()
@@ -93,6 +94,11 @@ export default function TenantUsers() {
 
   const [inviteModalOpen, setInviteModalOpen] = useState(false)
   const [inviteData, setInviteData] = useState<any>(null)
+
+  const [genericEmailModalOpen, setGenericEmailModalOpen] = useState(false)
+  const [genericEmailData, setGenericEmailData] = useState<{ email: string; name: string } | null>(
+    null,
+  )
 
   const fetchInitialData = async () => {
     if (!tenantId) return
@@ -515,7 +521,7 @@ export default function TenantUsers() {
                                     )
                                   }
                                 >
-                                  <Mail className="mr-2 h-4 w-4" /> Enviar E-mail
+                                  <Mail className="mr-2 h-4 w-4" /> Enviar Convite (E-mail)
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
                                   onClick={() =>
@@ -528,11 +534,20 @@ export default function TenantUsers() {
                                     )
                                   }
                                 >
-                                  <MessageCircle className="mr-2 h-4 w-4" /> Enviar WhatsApp
+                                  <MessageCircle className="mr-2 h-4 w-4" /> Enviar Convite
+                                  (WhatsApp)
                                 </DropdownMenuItem>
                                 <DropdownMenuSeparator />
                               </>
                             )}
+                          <DropdownMenuItem
+                            onClick={() => {
+                              setGenericEmailData({ email: r.email, name: r.name })
+                              setGenericEmailModalOpen(true)
+                            }}
+                          >
+                            <Mail className="mr-2 h-4 w-4" /> Enviar Notificação (E-mail)
+                          </DropdownMenuItem>
                           <DropdownMenuItem
                             onClick={() => {
                               setEditingUser(r)
@@ -573,6 +588,14 @@ export default function TenantUsers() {
           inviteLink={inviteData.inviteLink}
           isExistingUser={inviteData.isExistingUser}
           defaultTab={inviteData.defaultTab}
+        />
+      )}
+
+      {genericEmailData && (
+        <SendEmailModal
+          isOpen={genericEmailModalOpen}
+          onOpenChange={setGenericEmailModalOpen}
+          defaultTo={genericEmailData.email}
         />
       )}
     </div>

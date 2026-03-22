@@ -11,6 +11,7 @@ import {
   Trash2,
   Users,
   Link as LinkIcon,
+  Mail,
 } from 'lucide-react'
 import { supabase } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
@@ -55,6 +56,7 @@ import { Label } from '@/components/ui/label'
 import { toast } from '@/hooks/use-toast'
 import { useAppStore } from '@/stores/main'
 import { useAuth } from '@/hooks/use-auth'
+import { SendEmailModal } from '@/components/shared/SendEmailModal'
 
 export default function Tenants() {
   const navigate = useNavigate()
@@ -73,6 +75,8 @@ export default function Tenants() {
   const [newTenantName, setNewTenantName] = useState('')
   const [newTenantCnpj, setNewTenantCnpj] = useState('')
   const [isCreating, setIsCreating] = useState(false)
+
+  const [isEmailModalOpen, setIsEmailModalOpen] = useState(false)
 
   const fetchTenants = async () => {
     setLoading(true)
@@ -173,7 +177,10 @@ export default function Tenants() {
           <h1 className="text-3xl font-bold text-primary">Gestão de Clientes</h1>
           <p className="text-muted-foreground">Administração multi-tenant do sistema</p>
         </div>
-        <div className="flex gap-2 w-full sm:w-auto">
+        <div className="flex flex-wrap gap-2 w-full sm:w-auto">
+          <Button variant="outline" onClick={() => setIsEmailModalOpen(true)}>
+            <Mail className="mr-2 h-4 w-4" /> Comunicações
+          </Button>
           <Button variant="outline" asChild>
             <Link to="/collection-links">
               <LinkIcon className="mr-2 h-4 w-4" /> Links de Coleta
@@ -331,6 +338,8 @@ export default function Tenants() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <SendEmailModal isOpen={isEmailModalOpen} onOpenChange={setIsEmailModalOpen} />
     </div>
   )
 }
