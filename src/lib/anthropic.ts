@@ -219,7 +219,7 @@ export async function generateComplianceDocument(
   const { data: risks } = await supabase.from('risks').select('*').eq('tenant_id', tenantId)
   const { data: gaps } = await supabase.from('gaps').select('*').eq('tenant_id', tenantId)
 
-  // Enrich Context with DD and Incident data to produce high-value analytical reports
+  // Enrich Context with DD, Incident, Controls, History and Audit data
   const { data: dd } = await supabase
     .from('due_diligence_processes')
     .select('target_name, target_type, risk_level, status')
@@ -228,6 +228,22 @@ export async function generateComplianceDocument(
     .from('whistleblower_reports')
     .select('category, status, severity')
     .eq('tenant_id', tenantId)
+  const { data: controls } = await supabase
+    .from('controls_library')
+    .select('name, description, status')
+    .eq('tenant_id', tenantId)
+  const { data: history } = await supabase
+    .from('compliance_history')
+    .select('month, conformity_score, deviations')
+    .eq('tenant_id', tenantId)
+    .order('created_at', { ascending: false })
+    .limit(6)
+  const { data: audits } = await supabase
+    .from('audit_logs')
+    .select('action, created_at')
+    .eq('tenant_id', tenantId)
+    .order('created_at', { ascending: false })
+    .limit(20)
 
   const contextData = {
     organizacao: tenant?.name,
@@ -246,6 +262,11 @@ export async function generateComplianceDocument(
       severidade: g.severity,
       status: g.status,
     })),
+    controles_internos: controls?.map((c) => ({
+      nome: c.name,
+      descricao: c.description,
+      status: c.status,
+    })),
     due_diligence: dd?.map((d) => ({
       alvo: d.target_name,
       tipo: d.target_type,
@@ -256,6 +277,15 @@ export async function generateComplianceDocument(
       categoria: c.category,
       severidade: c.severity || 'N/A',
       status: c.status,
+    })),
+    historico_conformidade: history?.map((h) => ({
+      mes: h.month,
+      score: h.conformity_score,
+      desvios: h.deviations,
+    })),
+    ultimas_atividades_auditoria: audits?.map((a) => ({
+      acao: a.action,
+      data: new Date(a.created_at).toLocaleDateString('pt-BR'),
     })),
   }
 
@@ -273,9 +303,11 @@ ${template.ai_instructions}
 
 PARÂMETROS DA GERAÇÃO SOLICITADOS PELO USUÁRIO:
 - Título do Documento: ${params.title}
-- Audiência Alvo: ${params.audience}
-- Nível de Confidencialidade: ${params.confidentiality}
-- Período de Referência: ${params.period_ref}
+- Escopo / Unidade Organizacional: ${params.scope || 'Organização Global'}
+- Período de Referência: ${params.period_ref || 'Não especificado'}
+- Audiência Alvo: ${params.audience || 'Não especificada'}
+- Nível de Confidencialidade: ${params.confidentiality || 'Uso Interno'}
+- Nível de Detalhe (Profundidade): ${params.depth || 'Técnico Padrão'}
 - Instruções Adicionais do Usuário: ${params.additional_instructions || 'Nenhuma'}
 
 DADOS DO CLIENTE PARA CONTEXTO (RAG):
@@ -285,8 +317,9 @@ REGRAS DE OURO DA GERAÇÃO (OBRIGATÓRIO):
 1. Utilize estritamente os dados do cliente fornecidos no contexto acima. NUNCA invente indicadores, valores ou métricas fictícias.
 2. Se uma informação exigida pelo template não estiver disponível no contexto, escreva explicitamente: "[Informação não disponível no sistema até a data da emissão]".
 3. O texto deve ser formatado impecavelmente em Markdown. Não use tags HTML soltas.
-4. Ajuste a profundidade e a linguagem de acordo com a "Audiência Alvo" especificada.
-5. Não retorne nenhum texto conversacional (ex: "Aqui está o seu documento:"). Retorne APENAS o código Markdown do documento.
+4. Ajuste a profundidade, tom e estrutura de acordo com o "Nível de Detalhe" e a "Audiência Alvo" especificados.
+5. Em relatórios classificados como PÚBLICOS, omita automaticamente nomes e dados sensíveis de investigações ou due diligence.
+6. Não retorne nenhum texto conversacional (ex: "Aqui está o seu documento:"). Retorne APENAS o código Markdown do documento.
 
 Gere o documento agora:
 `
@@ -321,8 +354,8 @@ function mockAiResponse(prompt: string): string {
     return `{ "what": "", "why": "", "where": "", "when": "", "who": "", "how": "", "howMuch": "" }`
   }
 
-  if (prompt.includes('motor inteligente de elaboração documental')) {
-    return `# Documento Gerado em Modo Mock\n\n## Atenção\nA funcionalidade de geração de relatórios por Inteligência Artificial requer uma chave de API válida da Anthropic (Claude) configurada nas variáveis de ambiente (\`VITE_ANTHROPIC_API_KEY\`).\n\n## 1. Dados Recebidos\nOs dados do tenant foram capturados, mas a IA não processou o texto.\n[Verifique a integração para utilizar o motor real].`
+  if (prompt.includes('motor de elaboração documental inteligente')) {
+    return `# Documento Gerado em Modo Mock\n\n## Atenção\nA funcionalidade de geração de relatórios por Inteligência Artificial requer uma chave de API válida da Anthropic (Claude) configurada nas variáveis de ambiente (\`VITE_ANTHROPIC_API_KEY\`).\n\n## 1. Dados Recebidos\nOs dados do tenant foram capturados e parametrizados, mas a IA não processou o texto.\n[Verifique a integração para utilizar o motor real e a biblioteca de minutas].`
   }
 
   return 'A funcionalidade de Inteligência Artificial requer uma chave de API válida (Anthropic) configurada no painel de Integração de Backend do sistema.'

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
-import { Library, Loader2, Plus, FileText, BrainCircuit, Calendar, ShieldCheck } from 'lucide-react'
+import { Library, Loader2, Plus, FileText, BrainCircuit, Calendar, Building2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -42,6 +42,8 @@ export default function TenantDocuments() {
   const [audience, setAudience] = useState('')
   const [confidentiality, setConfidentiality] = useState('')
   const [period, setPeriod] = useState('')
+  const [scope, setScope] = useState('')
+  const [depth, setDepth] = useState('')
   const [instructions, setInstructions] = useState('')
   const [isGenerating, setIsGenerating] = useState(false)
 
@@ -84,6 +86,8 @@ export default function TenantDocuments() {
         audience,
         confidentiality,
         period_ref: period,
+        scope,
+        depth,
         additional_instructions: instructions,
       })
 
@@ -142,14 +146,15 @@ export default function TenantDocuments() {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b pb-4">
         <div>
           <h1 className="text-3xl font-bold text-primary flex items-center gap-3">
-            <Library className="h-8 w-8" /> Documentos Inteligentes
+            <Library className="h-8 w-8" /> Central de Relatórios e Documentos
           </h1>
           <p className="text-muted-foreground mt-1">
-            Motor de elaboração documental e relatórios de compliance com RAG isolado.
+            Motor de elaboração documental inteligente com biblioteca normativa de 16 padrões
+            operacionais.
           </p>
         </div>
         <Button onClick={() => setActiveTab('new')}>
-          <Plus className="mr-2 h-4 w-4" /> Novo Documento (IA)
+          <Plus className="mr-2 h-4 w-4" /> Novo Relatório (IA)
         </Button>
       </div>
 
@@ -159,10 +164,10 @@ export default function TenantDocuments() {
             Meus Documentos
           </TabsTrigger>
           <TabsTrigger value="new" className="py-2">
-            Gerador
+            Gerador Inteligente
           </TabsTrigger>
           <TabsTrigger value="templates" className="py-2">
-            Biblioteca
+            Biblioteca de Minutas
           </TabsTrigger>
         </TabsList>
 
@@ -229,11 +234,12 @@ export default function TenantDocuments() {
           <Card className="border-t-4 border-t-purple-500 shadow-md">
             <CardHeader className="bg-purple-50/30">
               <CardTitle className="flex items-center gap-2 text-purple-800">
-                <BrainCircuit className="h-5 w-5" /> Motor de Geração Documental (RAG)
+                <BrainCircuit className="h-5 w-5" /> Parametrização do Motor Documental (RAG)
               </CardTitle>
               <CardDescription>
-                A Inteligência Artificial irá analisar os dados cadastrados neste tenant para
-                preencher o template selecionado de forma confiável e sem invenções.
+                A Inteligência Artificial irá estruturar o relatório com base nos dados reais
+                disponíveis (Riscos, Denúncias, Controles), obedecendo às restrições de audiência e
+                profundidade escolhidas.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6 pt-6">
@@ -242,7 +248,7 @@ export default function TenantDocuments() {
                   <Label>Template Base *</Label>
                   <Select value={selectedTemplate} onValueChange={setSelectedTemplate}>
                     <SelectTrigger className="h-12 border-primary/20 bg-primary/5">
-                      <SelectValue placeholder="Selecione o modelo estrutural desejado..." />
+                      <SelectValue placeholder="Selecione o modelo estrutural desejado (Biblioteca Padrão)..." />
                     </SelectTrigger>
                     <SelectContent>
                       {templates.map((t) => (
@@ -277,6 +283,33 @@ export default function TenantDocuments() {
                 </div>
 
                 <div className="space-y-3">
+                  <Label>Escopo / Unidade Organizacional</Label>
+                  <div className="relative">
+                    <Building2 className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      className="pl-9"
+                      value={scope}
+                      onChange={(e) => setScope(e.target.value)}
+                      placeholder="Ex: Matriz, Filial SP, Toda a Empresa..."
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  <Label>Nível de Detalhe</Label>
+                  <Select value={depth} onValueChange={setDepth}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Opcional" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Executivo (Sintético)">Executivo (Sintético)</SelectItem>
+                      <SelectItem value="Técnico Padrão">Técnico Padrão</SelectItem>
+                      <SelectItem value="Extenso e Detalhado">Extenso e Detalhado</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-3">
                   <Label>Audiência Alvo</Label>
                   <Select value={audience} onValueChange={setAudience}>
                     <SelectTrigger>
@@ -287,13 +320,13 @@ export default function TenantDocuments() {
                         Alta Direção / Conselho
                       </SelectItem>
                       <SelectItem value="Público Externo (Institucional)">
-                        Público Externo
+                        Público Externo / Sociedade
                       </SelectItem>
                       <SelectItem value="Técnico/Operacional">
                         Equipe Técnica / Operacional
                       </SelectItem>
                       <SelectItem value="Órgãos Fiscalizadores">
-                        Regulador / Fiscalização
+                        Regulador / Auditoria Externa
                       </SelectItem>
                     </SelectContent>
                   </Select>
@@ -306,11 +339,13 @@ export default function TenantDocuments() {
                       <SelectValue placeholder="Opcional" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="Público">Público (Sem restrições)</SelectItem>
+                      <SelectItem value="Público">
+                        Público (Atenção: Irá ocultar dados sensíveis)
+                      </SelectItem>
                       <SelectItem value="Interno">Interno (Somente Colaboradores)</SelectItem>
                       <SelectItem value="Restrito">Restrito (Áreas específicas)</SelectItem>
                       <SelectItem value="Confidencial Estratégico">
-                        Confidencial (Alta Direção)
+                        Confidencial (Sigilo Absoluto)
                       </SelectItem>
                     </SelectContent>
                   </Select>
@@ -322,7 +357,7 @@ export default function TenantDocuments() {
                     rows={4}
                     value={instructions}
                     onChange={(e) => setInstructions(e.target.value)}
-                    placeholder="Ex: Focar na análise do processo de fusão, dar ênfase aos gaps de treinamento, usar tom mais severo, etc..."
+                    placeholder="Ex: Focar na análise do processo de fusão, dar ênfase aos gaps de treinamento de parceiros, sugerir planos de ação drásticos para os riscos financeiros..."
                   />
                 </div>
               </div>
@@ -336,12 +371,12 @@ export default function TenantDocuments() {
                 >
                   {isGenerating ? (
                     <>
-                      <Loader2 className="mr-2 h-5 w-5 animate-spin" /> Analisando Dados do Tenant e
-                      Gerando...
+                      <Loader2 className="mr-2 h-5 w-5 animate-spin" /> Processando Dados e Gerando
+                      Relatório...
                     </>
                   ) : (
                     <>
-                      <BrainCircuit className="mr-2 h-5 w-5" /> Iniciar Elaboração Inteligente
+                      <BrainCircuit className="mr-2 h-5 w-5" /> Iniciar Geração Inteligente
                     </>
                   )}
                 </Button>
@@ -351,19 +386,26 @@ export default function TenantDocuments() {
         </TabsContent>
 
         <TabsContent value="templates" className="mt-6 outline-none">
-          <div className="grid md:grid-cols-2 gap-4">
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
             {templates.map((t) => (
-              <Card key={t.id} className="hover:border-primary/50 transition-colors">
-                <CardHeader className="pb-3">
-                  <div className="flex justify-between items-start">
-                    <CardTitle className="text-base font-bold text-slate-800">{t.name}</CardTitle>
-                    <Badge variant="outline" className="text-[10px] shrink-0">
+              <Card key={t.id} className="hover:border-primary/50 transition-colors flex flex-col">
+                <CardHeader className="pb-3 flex-none">
+                  <div className="flex justify-between items-start mb-2">
+                    <Badge variant="outline" className="text-[10px] shrink-0 bg-slate-50">
                       {t.category}
                     </Badge>
                   </div>
+                  <CardTitle className="text-sm font-bold text-slate-800 leading-tight">
+                    {t.name}
+                  </CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-muted-foreground mb-4">{t.description}</p>
+                <CardContent className="flex-1 flex flex-col justify-between">
+                  <p
+                    className="text-xs text-muted-foreground mb-4 line-clamp-3"
+                    title={t.description}
+                  >
+                    {t.description}
+                  </p>
                   <Button
                     variant="secondary"
                     size="sm"
@@ -373,7 +415,7 @@ export default function TenantDocuments() {
                       setActiveTab('new')
                     }}
                   >
-                    Usar este Template
+                    Usar este Modelo
                   </Button>
                 </CardContent>
               </Card>

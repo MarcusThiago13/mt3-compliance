@@ -139,7 +139,7 @@ export default function DocumentEditor() {
         <!DOCTYPE html>
         <html>
           <head>
-            <title>${document?.title || 'Documento de Compliance'}</title>
+            <title>${document?.title || 'Relatório de Compliance'}</title>
             <style>
               body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; padding: 40px 60px; line-height: 1.6; color: #333; max-width: 900px; margin: 0 auto; }
               h1 { color: #111; font-size: 24px; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 20px;}
@@ -154,10 +154,11 @@ export default function DocumentEditor() {
           </head>
           <body>
             <div class="meta-header">
-              <p><strong>DOCUMENTO OFICIAL DE COMPLIANCE</strong></p>
+              <p><strong>DOCUMENTO OFICIAL DE COMPLIANCE / RELATÓRIO TÉCNICO</strong></p>
               <p><strong>Título:</strong> ${document?.title}</p>
               <p><strong>Confidencialidade:</strong> ${document?.confidentiality || 'Uso Interno'}</p>
               <p><strong>Período Ref.:</strong> ${document?.period_ref || 'N/A'}</p>
+              <p><strong>Audiência Alvo:</strong> ${document?.audience || 'Geral'}</p>
               <p><strong>Versão Atual:</strong> v${document?.version}</p>
               <p><strong>Gerado em:</strong> ${new Date(document?.created_at).toLocaleDateString('pt-BR')}</p>
             </div>
@@ -204,14 +205,16 @@ export default function DocumentEditor() {
           </Button>
           <div>
             <div className="flex items-center gap-3">
-              <h1 className="text-2xl font-bold text-slate-800">{document?.title}</h1>
+              <h1 className="text-2xl font-bold text-slate-800 truncate max-w-lg">
+                {document?.title}
+              </h1>
               {getStatusBadge(document?.status)}
               <Badge variant="outline" className="font-mono text-xs">
                 v{document?.version}
               </Badge>
             </div>
-            <p className="text-xs text-muted-foreground flex items-center mt-1">
-              <ShieldCheck className="h-3 w-3 mr-1" /> Template:{' '}
+            <p className="text-xs text-muted-foreground flex items-center mt-1 truncate max-w-lg">
+              <ShieldCheck className="h-3 w-3 mr-1" /> Modelo:{' '}
               {document?.template?.name || 'Personalizado'}
             </p>
           </div>
@@ -219,14 +222,14 @@ export default function DocumentEditor() {
 
         <div className="flex items-center gap-2 w-full sm:w-auto">
           <Button variant="outline" onClick={handleExportPrint} title="Imprimir ou Salvar PDF">
-            <Printer className="mr-2 h-4 w-4" /> Exportar
+            <Printer className="mr-2 h-4 w-4" /> Imprimir / PDF
           </Button>
           <Button
             variant="outline"
             onClick={() => exportToText(`${document.title}.md`, content)}
-            title="Baixar Markdown"
+            title="Baixar Markdown (DOCX Compatível)"
           >
-            <FileDown className="h-4 w-4" />
+            <FileDown className="mr-2 h-4 w-4" /> Baixar MD
           </Button>
           <Button
             className="bg-primary hover:bg-primary/90 shadow-md"
@@ -246,10 +249,10 @@ export default function DocumentEditor() {
       <div className="flex flex-col lg:flex-row gap-4 flex-1 min-h-0">
         <div className="flex-1 border rounded-lg shadow-inner overflow-hidden flex flex-col bg-card">
           <div className="bg-muted/30 border-b px-4 py-2 text-xs font-mono text-muted-foreground flex items-center justify-between shrink-0">
-            <span>Editor de Conformidade (Markdown)</span>
+            <span>Editor Estrutural (Markdown) - Modificações manuais devem ser salvas</span>
             {document?.status === 'emitted' && (
               <span className="text-destructive font-bold flex items-center">
-                <Info className="h-3 w-3 mr-1" /> Cuidado: Documento já emitido
+                <Info className="h-3 w-3 mr-1" /> Cuidado: Relatório já emitido
               </span>
             )}
           </div>
@@ -258,6 +261,7 @@ export default function DocumentEditor() {
             value={content}
             onChange={(e) => setContent(e.target.value)}
             style={{ fontFamily: 'monospace', lineHeight: '1.6' }}
+            spellCheck={false}
           />
         </div>
 
@@ -265,7 +269,7 @@ export default function DocumentEditor() {
           <Card>
             <CardHeader className="py-4">
               <CardTitle className="text-sm font-bold flex items-center">
-                <FileText className="h-4 w-4 mr-2 text-primary" /> Metadados
+                <FileText className="h-4 w-4 mr-2 text-primary" /> Metadados da Geração
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -277,7 +281,7 @@ export default function DocumentEditor() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="draft">Rascunho</SelectItem>
-                    <SelectItem value="review">Em Revisão</SelectItem>
+                    <SelectItem value="review">Em Revisão (Requer Aprovação)</SelectItem>
                     <SelectItem value="approved">Aprovado Oficialmente</SelectItem>
                     <SelectItem value="emitted">Emitido / Publicado</SelectItem>
                   </SelectContent>
@@ -286,13 +290,20 @@ export default function DocumentEditor() {
 
               <div className="bg-slate-50 p-3 rounded text-xs space-y-2 border">
                 <p>
-                  <strong>Audiência:</strong> {document?.audience || 'N/D'}
+                  <strong className="text-slate-700">Audiência:</strong>{' '}
+                  {document?.audience || 'Geral'}
                 </p>
                 <p>
-                  <strong>Confidencialidade:</strong> {document?.confidentiality || 'N/D'}
+                  <strong className="text-slate-700">Confidencialidade:</strong>{' '}
+                  {document?.confidentiality || 'Uso Interno'}
                 </p>
                 <p>
-                  <strong>Período:</strong> {document?.period_ref || 'N/D'}
+                  <strong className="text-slate-700">Período Ref.:</strong>{' '}
+                  {document?.period_ref || 'Não especificado'}
+                </p>
+                <p>
+                  <strong className="text-slate-700">Rastreabilidade:</strong> IA Baseada em RAG
+                  (Dados Locais)
                 </p>
               </div>
 
@@ -302,7 +313,7 @@ export default function DocumentEditor() {
                   className="w-full text-xs"
                   onClick={() => setIsVersionModalOpen(true)}
                 >
-                  <Save className="h-3 w-3 mr-2" /> Congelar Nova Versão
+                  <Save className="h-3 w-3 mr-2" /> Congelar Nova Versão Histórica
                 </Button>
               </div>
               <div>
@@ -313,7 +324,7 @@ export default function DocumentEditor() {
                     loadVersions()
                   }}
                 >
-                  <History className="h-3 w-3 mr-2" /> Atualizar Histórico
+                  <History className="h-3 w-3 mr-2" /> Exibir Histórico Completo
                 </Button>
               </div>
             </CardContent>
@@ -323,7 +334,7 @@ export default function DocumentEditor() {
             <Card>
               <CardHeader className="py-3">
                 <CardTitle className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                  Trilha de Versões
+                  Trilha de Revisão e Versões
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3 pb-4">
@@ -352,19 +363,19 @@ export default function DocumentEditor() {
       <Dialog open={isVersionModalOpen} onOpenChange={setIsVersionModalOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Congelar Nova Versão</DialogTitle>
+            <DialogTitle>Congelar Nova Versão Histórica</DialogTitle>
             <DialogDescription>
-              Isso criará um registro imutável do texto atual no histórico de versões, mantendo a
-              rastreabilidade do documento (v{document?.version + 1}).
+              Isso criará um registro imutável do texto atual no histórico de versões, garantindo a
+              rastreabilidade exigida em auditorias (Salvar como v{document?.version + 1}).
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label>Motivo da Alteração / Justificativa *</Label>
+              <Label>Motivo da Revisão / Justificativa (Obrigatório)</Label>
               <Input
                 value={changeReason}
                 onChange={(e) => setChangeReason(e.target.value)}
-                placeholder="Ex: Ajustes solicitados pela diretoria no item 4."
+                placeholder="Ex: Ajustes exigidos pela alta direção na seção de riscos."
               />
             </div>
           </div>
@@ -372,7 +383,7 @@ export default function DocumentEditor() {
             <Button variant="outline" onClick={() => setIsVersionModalOpen(false)}>
               Cancelar
             </Button>
-            <Button onClick={() => handleSave(true)} disabled={saving}>
+            <Button onClick={() => handleSave(true)} disabled={saving || !changeReason}>
               Salvar como v{document?.version + 1}
             </Button>
           </div>
