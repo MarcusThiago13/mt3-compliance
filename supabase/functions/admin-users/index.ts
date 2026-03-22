@@ -4,7 +4,8 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3'
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, x-supabase-client-platform, apikey, content-type',
+  'Access-Control-Allow-Headers':
+    'authorization, x-client-info, x-supabase-client-platform, apikey, content-type',
 }
 
 Deno.serve(async (req: Request) => {
@@ -33,9 +34,11 @@ Deno.serve(async (req: Request) => {
       data: { user },
       error: userError,
     } = await supabaseClient.auth.getUser(token)
-    
+
     if (userError || !user) {
-      throw new Error(`Não autorizado (Token inválido): ${userError?.message || 'Sessão não identificada'}`)
+      throw new Error(
+        `Não autorizado (Token inválido): ${userError?.message || 'Sessão não identificada'}`,
+      )
     }
 
     const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey)
@@ -45,9 +48,11 @@ Deno.serve(async (req: Request) => {
       const { action, tenant_id, target_user_id, target_tenant_id, updates } = body
 
       if (action === 'get_users') {
-        let users = [];
+        let users = []
         if (tenant_id) {
-          const { data, error } = await supabaseAdmin.rpc('get_tenant_users', { target_tenant_id: tenant_id })
+          const { data, error } = await supabaseAdmin.rpc('get_tenant_users', {
+            target_tenant_id: tenant_id,
+          })
           if (error) throw new Error(`Erro ao buscar usuários: ${error.message}`)
           users = (data || []).map((u: any) => ({
             id: u.user_id,
@@ -56,7 +61,7 @@ Deno.serve(async (req: Request) => {
             status: u.status,
             role: u.role,
             classification: u.classification,
-            phone: u.contact_phone
+            phone: u.contact_phone,
           }))
         } else {
           const { data, error } = await supabaseAdmin.rpc('get_all_users')
@@ -69,7 +74,7 @@ Deno.serve(async (req: Request) => {
             role: u.role,
             classification: u.classification,
             tenant: { id: u.tenant_id, name: u.tenant_name },
-            phone: u.contact_phone
+            phone: u.contact_phone,
           }))
         }
 
@@ -85,9 +90,9 @@ Deno.serve(async (req: Request) => {
           .from('user_tenants')
           .update(updates)
           .match({ user_id: target_user_id, tenant_id: target_tenant_id })
-        
+
         if (error) throw new Error(`Erro ao atualizar usuário: ${error.message}`)
-        
+
         const { data: userResp } = await supabaseAdmin.auth.admin.getUserById(target_user_id)
         if (userResp?.user?.email) {
           // Prepare invitation updates mapping contact_phone to phone
@@ -110,16 +115,16 @@ Deno.serve(async (req: Request) => {
 
       if (action === 'remove_user') {
         if (!target_user_id || !target_tenant_id) throw new Error('Parâmetros inválidos')
-        
+
         const { data: userResp } = await supabaseAdmin.auth.admin.getUserById(target_user_id)
 
         const { error } = await supabaseAdmin
           .from('user_tenants')
           .delete()
           .match({ user_id: target_user_id, tenant_id: target_tenant_id })
-          
+
         if (error) throw new Error(`Erro ao remover usuário: ${error.message}`)
-        
+
         if (userResp?.user?.email) {
           await supabaseAdmin
             .from('invitations')
@@ -132,7 +137,7 @@ Deno.serve(async (req: Request) => {
           status: 200,
         })
       }
-      
+
       throw new Error('Ação não suportada.')
     }
 

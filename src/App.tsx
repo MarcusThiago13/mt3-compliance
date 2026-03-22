@@ -26,6 +26,7 @@ import SubmitEvidence from './pages/SubmitEvidence'
 import PublicReport from './pages/PublicReport'
 import PublicReportStatus from './pages/PublicReportStatus'
 import DueDiligence from './pages/DueDiligence'
+import PublicFormCollection from './pages/PublicFormCollection'
 
 const AuthGuard = ({ children }: { children: React.ReactNode }) => {
   const { user, loading, signIn } = useAuth()
@@ -85,6 +86,7 @@ const App = () => (
             {/* Public Routes */}
             <Route path="/r/:tenantId/report" element={<PublicReport />} />
             <Route path="/r/:tenantId/status" element={<PublicReportStatus />} />
+            <Route path="/f/:token" element={<PublicFormCollection />} />
 
             {/* Protected Routes */}
             <Route

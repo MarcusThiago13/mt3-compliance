@@ -12,6 +12,7 @@ import { Step4 } from '@/components/onboarding/Step4'
 import { Step5 } from '@/components/onboarding/Step5'
 import { Step6 } from '@/components/onboarding/Step6'
 import { cn } from '@/lib/utils'
+import { GenerateLinkModal } from '@/components/shared/GenerateLinkModal'
 
 const sections = [
   {
@@ -155,7 +156,6 @@ export default function Onboarding() {
       }, 3000)
       return currentId || tenantIdRef.current
     } catch (error) {
-      console.error(error)
       setSaveStatus('error')
       return currentId
     }
@@ -167,13 +167,10 @@ export default function Onboarding() {
       return
     }
     if (isFetching.current) return
-
     if (debounceTimer.current) clearTimeout(debounceTimer.current)
-
     debounceTimer.current = setTimeout(() => {
       saveTenant(tenantData)
     }, 1500)
-
     return () => {
       if (debounceTimer.current) clearTimeout(debounceTimer.current)
     }
@@ -192,15 +189,11 @@ export default function Onboarding() {
       })
       return
     }
-
     setIsProcessing(true)
     try {
       let finalTenantId = tenantIdRef.current
-      if (!finalTenantId) {
-        finalTenantId = await saveTenant(tenantData)
-      } else {
-        await saveTenant(tenantData)
-      }
+      if (!finalTenantId) finalTenantId = await saveTenant(tenantData)
+      else await saveTenant(tenantData)
 
       if (!finalTenantId) throw new Error('Erro ao identificar a organização')
 
@@ -212,23 +205,13 @@ export default function Onboarding() {
 
       if (tenant?.status === 'draft') {
         await supabase.from('tenants').update({ status: 'active' }).eq('id', finalTenantId)
-
         const reportContent = `### Relatório de Perfil de Integridade (ISO 37301 Module 4.1)\n\n**Razão Social:** ${tenantData.step_1.razao_social}\n**CNPJ:** ${tenantData.step_1.cnpj}\n**Status:** Ativo\n\nEste relatório foi gerado automaticamente a partir dos dados consolidados no processo de onboarding.`
-
-        await supabase.from('profile_reports').insert({
-          tenant_id: finalTenantId,
-          content: reportContent,
-        })
-
-        toast({
-          title: 'Onboarding Concluído',
-          description: 'Ambiente isolado gerado e Relatório de Perfil emitido com sucesso.',
-        })
+        await supabase
+          .from('profile_reports')
+          .insert({ tenant_id: finalTenantId, content: reportContent })
+        toast({ title: 'Onboarding Concluído', description: 'Ambiente isolado gerado.' })
       } else {
-        toast({
-          title: 'Atualização Concluída',
-          description: 'Dados da organização atualizados com sucesso.',
-        })
+        toast({ title: 'Atualização Concluída', description: 'Dados da organização atualizados.' })
       }
       navigate(`/${finalTenantId}/clause/4.1`)
     } catch (err: any) {
@@ -244,46 +227,38 @@ export default function Onboarding() {
       let currentActive = sections[0].id
       for (const section of sections) {
         const element = document.getElementById(section.id)
-        if (element && element.offsetTop <= scrollPosition) {
-          currentActive = section.id
-        }
+        if (element && element.offsetTop <= scrollPosition) currentActive = section.id
       }
       setActiveSection(currentActive)
     }
-
     window.addEventListener('scroll', handleScroll)
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
   const scrollToSection = (id: string) => {
     const element = document.getElementById(id)
-    if (element) {
-      window.scrollTo({ top: element.offsetTop - 80, behavior: 'smooth' })
-    }
+    if (element) window.scrollTo({ top: element.offsetTop - 80, behavior: 'smooth' })
   }
 
   const renderSaveStatus = () => {
-    if (saveStatus === 'saving') {
+    if (saveStatus === 'saving')
       return (
         <span className="flex items-center text-muted-foreground text-sm font-medium">
           <Loader2 className="h-4 w-4 mr-2 animate-spin text-primary" /> Salvando...
         </span>
       )
-    }
-    if (saveStatus === 'saved') {
+    if (saveStatus === 'saved')
       return (
         <span className="flex items-center text-success text-sm font-medium">
           <Check className="h-4 w-4 mr-2" /> Salvo na nuvem
         </span>
       )
-    }
-    if (saveStatus === 'error') {
+    if (saveStatus === 'error')
       return (
         <span className="flex items-center text-destructive text-sm font-medium">
           <AlertCircle className="h-4 w-4 mr-2" /> Erro ao salvar
         </span>
       )
-    }
     return (
       <span className="flex items-center text-muted-foreground/60 text-sm">
         <Save className="h-4 w-4 mr-2" /> Salvamento automático ativo
@@ -304,7 +279,6 @@ export default function Onboarding() {
     if (tenantData.step_5?.contract_history?.length >= 0) completed++
     if (tenantData.step_6?.compliance_officer_name || tenantData.step_6?.compliance_inception_date)
       completed++
-
     return Math.round((completed / sections.length) * 100)
   }
 
@@ -328,13 +302,15 @@ export default function Onboarding() {
             automaticamente.
           </p>
         </div>
-        <div className="hidden md:flex flex-col items-end bg-muted/30 px-4 py-2 rounded-lg border">
-          {renderSaveStatus()}
+        <div className="flex items-center gap-3">
+          {tenantId && <GenerateLinkModal tenantId={tenantId} formType="onboarding" />}
+          <div className="hidden md:flex flex-col items-end bg-muted/30 px-4 py-2 rounded-lg border h-10 justify-center">
+            {renderSaveStatus()}
+          </div>
         </div>
       </div>
 
       <div className="flex flex-col md:flex-row gap-8 relative items-start">
-        {/* Sidebar / Scroll Spy */}
         <aside className="w-full md:w-72 shrink-0 md:sticky md:top-24 self-start order-1 md:order-1 z-10">
           <div className="border rounded-xl p-5 bg-card shadow-sm mb-6 md:mb-0">
             <div className="flex justify-between items-center mb-4">
@@ -343,21 +319,16 @@ export default function Onboarding() {
               </h3>
               <span className="text-xs font-bold text-primary">{getProgress()}%</span>
             </div>
-
-            {/* Progress bar */}
             <div className="w-full bg-muted rounded-full h-2 mb-6 overflow-hidden">
               <div
                 className="bg-primary h-2 transition-all duration-700 ease-out"
                 style={{ width: `${getProgress()}%` }}
               ></div>
             </div>
-
             <nav className="hidden md:block space-y-1 relative">
               <div className="absolute left-[11px] top-4 bottom-4 w-0.5 bg-muted"></div>
-
               {sections.map((section, index) => {
                 const isActive = activeSection === section.id
-
                 let isCompleted = false
                 if (index === 0 && tenantData.step_1.razao_social) isCompleted = true
                 if (
@@ -403,7 +374,6 @@ export default function Onboarding() {
                 )
               })}
             </nav>
-
             <div className="mt-8 pt-5 border-t">
               <Button
                 onClick={handleFinalize}
@@ -415,14 +385,8 @@ export default function Onboarding() {
               </Button>
             </div>
           </div>
-
-          {/* Mobile save status */}
-          <div className="md:hidden flex justify-center mb-6 bg-muted/30 py-2 rounded-lg border">
-            {renderSaveStatus()}
-          </div>
         </aside>
 
-        {/* Main Content */}
         <div className="flex-1 space-y-8 order-2 md:order-2 pb-32 min-w-0">
           {!tenantId && !tenantData.step_1.razao_social && (
             <div className="bg-primary/10 border border-primary/20 text-primary px-5 py-4 rounded-xl flex items-start shadow-sm animate-fade-in">
@@ -430,8 +394,7 @@ export default function Onboarding() {
               <div>
                 <h4 className="font-semibold text-sm mb-1">Ação Necessária</h4>
                 <p className="text-sm opacity-90">
-                  Preencha a <strong>Razão Social</strong> para iniciar o cadastro. Isso habilitará
-                  o salvamento automático para o restante do formulário.
+                  Preencha a <strong>Razão Social</strong> para habilitar o salvamento automático.
                 </p>
               </div>
             </div>
@@ -444,11 +407,9 @@ export default function Onboarding() {
 
             return (
               <section key={section.id} id={section.id} className="scroll-mt-24 relative">
-                {/* Connecting line for aesthetic */}
                 {index < sections.length - 1 && (
                   <div className="hidden md:block absolute left-8 top-full bottom-[-2rem] w-px bg-muted z-0"></div>
                 )}
-
                 <Card
                   className={cn(
                     'transition-all duration-500 overflow-hidden relative z-10',
@@ -496,22 +457,6 @@ export default function Onboarding() {
               </section>
             )
           })}
-
-          <div className="flex flex-col sm:flex-row items-center justify-between border-t pt-8 mt-8 gap-4">
-            <div className="flex items-center w-full sm:w-auto justify-center sm:justify-start bg-muted/20 px-4 py-2 rounded-lg border">
-              {renderSaveStatus()}
-            </div>
-            <Button
-              size="lg"
-              onClick={handleFinalize}
-              disabled={isProcessing || (!tenantId && !tenantData.step_1.razao_social)}
-              className="w-full sm:w-auto bg-success hover:bg-success/90 text-white shadow-lg text-base"
-            >
-              {isProcessing && <Loader2 className="mr-2 h-5 w-5 animate-spin" />}
-              {tenantId ? 'Atualizar e Voltar ao Painel' : 'Finalizar e Consolidar'}
-              {!isProcessing && <ChevronRight className="ml-2 h-5 w-5" />}
-            </Button>
-          </div>
         </div>
       </div>
     </div>
