@@ -12,8 +12,9 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Input } from '@/components/ui/input'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Mail, MessageCircle } from 'lucide-react'
+import { Mail, MessageCircle, Send, ExternalLink, Loader2 } from 'lucide-react'
 import { toast } from '@/hooks/use-toast'
+import { emailService } from '@/services/email'
 
 export interface InviteCommunicationModalProps {
   isOpen: boolean
@@ -42,6 +43,7 @@ export function InviteCommunicationModal({
   const [body, setBody] = useState('')
   const [waMessage, setWaMessage] = useState('')
   const [activeTab, setActiveTab] = useState(defaultTab)
+  const [isSending, setIsSending] = useState(false)
 
   useEffect(() => {
     if (isOpen) {
@@ -57,10 +59,31 @@ export function InviteCommunicationModal({
     }
   }, [isOpen, userName, tenantName, inviteLink, isExistingUser, defaultTab])
 
-  const handleSendEmail = () => {
+  const handleSendClientEmail = () => {
     window.location.href = `mailto:${userEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`
-    toast({ title: 'Sucesso', description: 'Abrindo o cliente de e-mail.' })
+    toast({ title: 'Aviso', description: 'Abrindo o seu cliente local de e-mail.' })
     onOpenChange(false)
+  }
+
+  const handleSendSystemEmail = async () => {
+    if (!userEmail) {
+      toast({
+        title: 'Atenção',
+        description: 'E-mail do usuário não informado.',
+        variant: 'destructive',
+      })
+      return
+    }
+    setIsSending(true)
+    try {
+      await emailService.sendEmail(userEmail, subject, body)
+      toast({ title: 'Sucesso', description: 'Convite enviado com sucesso através do sistema.' })
+      onOpenChange(false)
+    } catch (e: any) {
+      toast({ title: 'Erro', description: e.message, variant: 'destructive' })
+    } finally {
+      setIsSending(false)
+    }
   }
 
   const handleSendWhatsApp = () => {
@@ -92,7 +115,7 @@ export function InviteCommunicationModal({
         <DialogHeader>
           <DialogTitle>Enviar Convite de Acesso</DialogTitle>
           <DialogDescription>
-            Revise a mensagem pré-cadastrada antes de disparar o envio pelo seu aplicativo.
+            Revise a mensagem pré-cadastrada antes de disparar o convite ao usuário.
           </DialogDescription>
         </DialogHeader>
 
@@ -129,17 +152,24 @@ export function InviteCommunicationModal({
           </TabsContent>
         </Tabs>
 
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+        <DialogFooter className="flex-col sm:flex-row gap-2 sm:gap-0 mt-2">
+          <Button variant="ghost" onClick={() => onOpenChange(false)} disabled={isSending}>
             Cancelar
           </Button>
           {activeTab === 'email' ? (
-            <Button
-              onClick={handleSendEmail}
-              className="bg-slate-800 hover:bg-slate-700 text-white"
-            >
-              <Mail className="w-4 h-4 mr-2" /> Abrir E-mail
-            </Button>
+            <div className="flex flex-col sm:flex-row gap-2">
+              <Button variant="outline" onClick={handleSendClientEmail} disabled={isSending}>
+                <ExternalLink className="w-4 h-4 mr-2" /> Abrir no meu App
+              </Button>
+              <Button onClick={handleSendSystemEmail} disabled={isSending}>
+                {isSending ? (
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                ) : (
+                  <Send className="w-4 h-4 mr-2" />
+                )}
+                Disparar via Sistema
+              </Button>
+            </div>
           ) : (
             <Button
               onClick={handleSendWhatsApp}

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link as LinkIcon, Loader2, Copy, CheckCircle2, Calendar } from 'lucide-react'
+import { Link as LinkIcon, Loader2, Copy, CheckCircle2, Calendar, Mail, Send } from 'lucide-react'
 import {
   Dialog,
   DialogContent,
@@ -11,8 +11,10 @@ import {
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
 import { toast } from '@/hooks/use-toast'
 import { collectionService } from '@/services/collection'
+import { emailService } from '@/services/email'
 import { useAuth } from '@/hooks/use-auth'
 
 interface Props {
@@ -33,6 +35,11 @@ export function GenerateLinkModal({
   const [copied, setCopied] = useState(false)
   const [validityDays, setValidityDays] = useState(3)
 
+  // Email form state
+  const [showEmailForm, setShowEmailForm] = useState(false)
+  const [emailTo, setEmailTo] = useState('')
+  const [isSendingEmail, setIsSendingEmail] = useState(false)
+
   const handleGenerate = async () => {
     setLoading(true)
     try {
@@ -45,6 +52,7 @@ export function GenerateLinkModal({
       const generatedLink = `${window.location.origin}/f/${token}`
       setLink(generatedLink)
       setCopied(false)
+      setShowEmailForm(false)
     } catch (e: any) {
       toast({ title: 'Erro', description: e.message, variant: 'destructive' })
     } finally {
@@ -59,12 +67,43 @@ export function GenerateLinkModal({
     toast({ title: 'Copiado', description: 'Link copiado para a área de transferência.' })
   }
 
+  const handleSendEmail = async () => {
+    if (!emailTo) {
+      toast({
+        title: 'Atenção',
+        description: 'Informe o e-mail de destino.',
+        variant: 'destructive',
+      })
+      return
+    }
+    setIsSendingEmail(true)
+    try {
+      const formName =
+        formType === 'onboarding' ? 'Perfil da Organização' : 'Contexto da Organização'
+      const subject = `Solicitação de Dados - ${formName}`
+      const body = `Olá,\n\nSolicitamos o preenchimento seguro das informações de ${formName} através da nossa plataforma de compliance.\n\nPor favor, acesse o link único e seguro abaixo para enviar os dados:\n${link}\n\nEste link tem validade de ${validityDays} dias e expira automaticamente após o envio ou prazo.\n\nAtenciosamente,\nEquipe mt3 Compliance`
+
+      await emailService.sendEmail(emailTo, subject, body)
+      toast({ title: 'Enviado', description: `O link foi enviado com sucesso para ${emailTo}` })
+      setShowEmailForm(false)
+      setEmailTo('')
+    } catch (e: any) {
+      toast({ title: 'Erro', description: e.message, variant: 'destructive' })
+    } finally {
+      setIsSendingEmail(false)
+    }
+  }
+
   return (
     <Dialog
       open={isOpen}
       onOpenChange={(open) => {
         setIsOpen(open)
-        if (!open) setLink('')
+        if (!open) {
+          setLink('')
+          setShowEmailForm(false)
+          setEmailTo('')
+        }
       }}
     >
       <DialogTrigger asChild>
@@ -114,7 +153,7 @@ export function GenerateLinkModal({
               </Button>
             </div>
           ) : (
-            <div className="space-y-3 animate-fade-in">
+            <div className="space-y-4 animate-fade-in">
               <div className="bg-emerald-50 p-3 rounded-lg border border-emerald-100 flex items-start gap-3">
                 <CheckCircle2 className="h-5 w-5 text-emerald-600 mt-0.5 shrink-0" />
                 <div className="text-sm text-emerald-800">
@@ -135,6 +174,40 @@ export function GenerateLinkModal({
                   )}
                 </Button>
               </div>
+
+              {!showEmailForm ? (
+                <Button variant="outline" className="w-full" onClick={() => setShowEmailForm(true)}>
+                  <Mail className="mr-2 h-4 w-4" /> Disparar link por E-mail
+                </Button>
+              ) : (
+                <div className="bg-muted/30 p-4 rounded-lg border space-y-3 animate-fade-in-up">
+                  <Label>E-mail do Cliente</Label>
+                  <Input
+                    type="email"
+                    placeholder="exemplo@cliente.com"
+                    value={emailTo}
+                    onChange={(e) => setEmailTo(e.target.value)}
+                  />
+                  <div className="flex justify-end gap-2 pt-2">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setShowEmailForm(false)}
+                      disabled={isSendingEmail}
+                    >
+                      Cancelar
+                    </Button>
+                    <Button size="sm" onClick={handleSendEmail} disabled={isSendingEmail}>
+                      {isSendingEmail ? (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      ) : (
+                        <Send className="mr-2 h-4 w-4" />
+                      )}
+                      Enviar Convite
+                    </Button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>

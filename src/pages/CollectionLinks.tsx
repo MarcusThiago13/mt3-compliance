@@ -9,6 +9,7 @@ import {
   Clock,
   ExternalLink,
   Plus,
+  Mail,
 } from 'lucide-react'
 import {
   Table,
@@ -42,6 +43,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { useAuth } from '@/hooks/use-auth'
+import { SendEmailModal } from '@/components/shared/SendEmailModal'
 
 export default function CollectionLinks() {
   const [tokens, setTokens] = useState<any[]>([])
@@ -56,6 +58,10 @@ export default function CollectionLinks() {
   const [validity, setValidity] = useState(3)
   const [isGenerating, setIsGenerating] = useState(false)
   const [newLink, setNewLink] = useState('')
+
+  // Email modal state
+  const [emailModalOpen, setEmailModalOpen] = useState(false)
+  const [emailData, setEmailData] = useState({ subject: '', body: '' })
 
   const { user } = useAuth()
 
@@ -121,6 +127,17 @@ export default function CollectionLinks() {
     } finally {
       setIsGenerating(false)
     }
+  }
+
+  const openEmailModal = (t: any) => {
+    const link = `${window.location.origin}/f/${t.token}`
+    const formName =
+      t.form_type === 'onboarding' ? 'Perfil da Organização' : 'Contexto da Organização'
+    setEmailData({
+      subject: `Solicitação de Dados - ${formName}`,
+      body: `Olá,\n\nSolicitamos o preenchimento seguro das informações de ${formName} através da nossa plataforma de compliance.\n\nPor favor, acesse o link único e seguro abaixo para enviar os dados:\n${link}\n\nEste link expira automaticamente após o envio ou ao término da validade estipulada.\n\nAtenciosamente,\nEquipe mt3 Compliance`,
+    })
+    setEmailModalOpen(true)
   }
 
   const getStatus = (t: any) => {
@@ -320,7 +337,7 @@ export default function CollectionLinks() {
                         </Badge>
                       </TableCell>
                       <TableCell className="text-right">
-                        <div className="flex items-center justify-end gap-2">
+                        <div className="flex items-center justify-end gap-1 sm:gap-2">
                           {isActive && (
                             <>
                               <Button
@@ -334,6 +351,15 @@ export default function CollectionLinks() {
                                 ) : (
                                   <Copy className="h-4 w-4" />
                                 )}
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                title="Disparar por E-mail"
+                                className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                                onClick={() => openEmailModal(t)}
+                              >
+                                <Mail className="h-4 w-4" />
                               </Button>
                               <Button
                                 variant="ghost"
@@ -361,6 +387,13 @@ export default function CollectionLinks() {
           )}
         </CardContent>
       </Card>
+
+      <SendEmailModal
+        isOpen={emailModalOpen}
+        onOpenChange={setEmailModalOpen}
+        defaultSubject={emailData.subject}
+        defaultBody={emailData.body}
+      />
     </div>
   )
 }
