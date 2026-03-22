@@ -2,6 +2,7 @@
   "_versions": {
     "admin-invite": 10,
     "admin-users": 10,
-    "generate-dossier": 3
+    "generate-dossier": 3,
+    "send-email": 1
   }
 }
