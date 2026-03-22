@@ -116,14 +116,20 @@ export default function DocumentEditor() {
   }
 
   const handleExportPrint = () => {
+    // Improved Markdown Regex Parser for Print View
     const renderMarkdown = (md: string) => {
       return md
-        .replace(/^# (.*$)/gim, '<h1>$1</h1>')
-        .replace(/^## (.*$)/gim, '<h2>$1</h2>')
         .replace(/^### (.*$)/gim, '<h3>$1</h3>')
+        .replace(/^## (.*$)/gim, '<h2>$1</h2>')
+        .replace(/^# (.*$)/gim, '<h1>$1</h1>')
         .replace(/\*\*(.*?)\*\*/gim, '<strong>$1</strong>')
         .replace(/\*(.*?)\*/gim, '<em>$1</em>')
-        .replace(/\n$/gim, '<br />')
+        .replace(/^\s*-\s+(.*$)/gim, '<li>$1</li>')
+        .replace(
+          /(<li>.*<\/li>)/gis,
+          '<ul style="margin-top: 5px; margin-bottom: 15px; padding-left: 20px;">$1</ul>',
+        )
+        .replace(/\n\n/gim, '<br /><br />')
     }
 
     const htmlContent = renderMarkdown(content)
@@ -139,6 +145,7 @@ export default function DocumentEditor() {
               h1 { color: #111; font-size: 24px; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 20px;}
               h2 { color: #222; font-size: 20px; margin-top: 30px;}
               h3 { color: #444; font-size: 16px;}
+              li { margin-bottom: 6px; }
               .meta-header { background: #f8f9fa; padding: 15px; border-radius: 6px; margin-bottom: 40px; font-size: 12px; color: #555; }
               .meta-header p { margin: 4px 0; }
               strong { color: #000; }
@@ -304,8 +311,6 @@ export default function DocumentEditor() {
                   className="w-full text-xs text-muted-foreground"
                   onClick={() => {
                     loadVersions()
-                    // Using a simple alert or standard DOM dialog to show versions is fine if we keep it light.
-                    // But we can just use another state. We'll do a simple list below.
                   }}
                 >
                   <History className="h-3 w-3 mr-2" /> Atualizar Histórico

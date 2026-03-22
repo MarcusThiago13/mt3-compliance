@@ -1,11 +1,6 @@
 import 'jsr:@supabase/functions-js/edge-runtime.d.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3'
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, x-supabase-client-platform, apikey, content-type',
-}
+import { corsHeaders } from '../_shared/cors.ts'
 
 Deno.serve(async (req: Request) => {
   if (req.method === 'OPTIONS') {
@@ -26,18 +21,23 @@ Deno.serve(async (req: Request) => {
       throw new Error('Não autorizado (Token ausente).')
     }
 
-    const token = authHeader.replace('Bearer ', '')
-    const supabaseClient = createClient(supabaseUrl, supabaseAnonKey)
+    // Initialize client with user's JWT to enforce RLS and permissions natively
+    const supabaseClient = createClient(supabaseUrl, supabaseAnonKey, {
+      global: { headers: { Authorization: authHeader } },
+    })
 
     const {
       data: { user },
       error: userError,
-    } = await supabaseClient.auth.getUser(token)
-    
+    } = await supabaseClient.auth.getUser()
+
     if (userError || !user) {
-      throw new Error(`Não autorizado (Token inválido): ${userError?.message || 'Sessão não identificada'}`)
+      throw new Error(
+        `Não autorizado (Token inválido): ${userError?.message || 'Sessão não identificada'}`,
+      )
     }
 
+    const isSuperAdmin = user.email === 'admin@example.com' || user.app_metadata?.role === 'admin'
     const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey)
 
     if (req.method === 'POST') {
@@ -45,31 +45,45 @@ Deno.serve(async (req: Request) => {
       const { action, tenant_id, target_user_id, target_tenant_id, updates } = body
 
       if (action === 'get_users') {
-        let users = [];
+        let users = []
         if (tenant_id) {
-          const { data, error } = await supabaseAdmin.rpc('get_tenant_users', { target_tenant_id: tenant_id })
+          // Security Check: Verify if caller is authorized for this tenant
+          if (!isSuperAdmin) {
+            const { data: isMember } = await supabaseClient.rpc('is_tenant_member_uuid', {
+              check_tenant_id: tenant_id,
+            })
+            if (!isMember) throw new Error('Acesso negado ao tenant especificado.')
+          }
+
+          const { data, error } = await supabaseAdmin.rpc('get_tenant_users', {
+            target_tenant_id: tenant_id,
+          })
           if (error) throw new Error(`Erro ao buscar usuários: ${error.message}`)
           users = (data || []).map((u: any) => ({
             id: u.user_id,
             email: u.email,
-            name: u.name || 'Marcus Vinicius dos Santos Thiago',
+            name: u.name || 'Usuário',
             status: u.status,
             role: u.role,
             classification: u.classification,
-            phone: u.contact_phone
+            phone: u.contact_phone,
           }))
         } else {
+          // Only superadmins can fetch all users globally
+          if (!isSuperAdmin)
+            throw new Error('Acesso negado. Operação restrita a administradores globais.')
+
           const { data, error } = await supabaseAdmin.rpc('get_all_users')
           if (error) throw new Error(`Erro ao buscar usuários: ${error.message}`)
           users = (data || []).map((u: any) => ({
             id: u.user_id,
             email: u.email,
-            name: u.name || 'Marcus Vinicius dos Santos Thiago',
+            name: u.name || 'Usuário',
             status: u.status,
             role: u.role,
             classification: u.classification,
             tenant: { id: u.tenant_id, name: u.tenant_name },
-            phone: u.contact_phone
+            phone: u.contact_phone,
           }))
         }
 
@@ -79,52 +93,53 @@ Deno.serve(async (req: Request) => {
         })
       }
 
-      if (action === 'update_user') {
+      if (action === 'update_user' || action === 'remove_user') {
         if (!target_user_id || !target_tenant_id) throw new Error('Parâmetros inválidos')
-        const { error } = await supabaseAdmin
-          .from('user_tenants')
-          .update(updates)
-          .match({ user_id: target_user_id, tenant_id: target_tenant_id })
-        
-        if (error) throw new Error(`Erro ao atualizar usuário: ${error.message}`)
-        
-        const { data: userResp } = await supabaseAdmin.auth.admin.getUserById(target_user_id)
-        if (userResp?.user?.email) {
-          // Prepare invitation updates mapping contact_phone to phone
-          const invUpdates = { ...updates }
-          if (invUpdates.contact_phone !== undefined) {
-            invUpdates.phone = invUpdates.contact_phone
-            delete invUpdates.contact_phone
+
+        // Security Check for mutations
+        if (!isSuperAdmin) {
+          const { data: isMember } = await supabaseClient.rpc('is_tenant_member_uuid', {
+            check_tenant_id: target_tenant_id,
+          })
+          if (!isMember) throw new Error('Acesso negado para modificar acessos neste tenant.')
+        }
+
+        if (action === 'update_user') {
+          const { error } = await supabaseAdmin
+            .from('user_tenants')
+            .update(updates)
+            .match({ user_id: target_user_id, tenant_id: target_tenant_id })
+
+          if (error) throw new Error(`Erro ao atualizar usuário: ${error.message}`)
+
+          const { data: userResp } = await supabaseAdmin.auth.admin.getUserById(target_user_id)
+          if (userResp?.user?.email) {
+            const invUpdates = { ...updates }
+            if (invUpdates.contact_phone !== undefined) {
+              invUpdates.phone = invUpdates.contact_phone
+              delete invUpdates.contact_phone
+            }
+            await supabaseAdmin
+              .from('invitations')
+              .update(invUpdates)
+              .match({ email: userResp.user.email, tenant_id: target_tenant_id })
           }
-          await supabaseAdmin
-            .from('invitations')
-            .update(invUpdates)
-            .match({ email: userResp.user.email, tenant_id: target_tenant_id })
-        }
+        } else if (action === 'remove_user') {
+          const { data: userResp } = await supabaseAdmin.auth.admin.getUserById(target_user_id)
 
-        return new Response(JSON.stringify({ success: true }), {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 200,
-        })
-      }
-
-      if (action === 'remove_user') {
-        if (!target_user_id || !target_tenant_id) throw new Error('Parâmetros inválidos')
-        
-        const { data: userResp } = await supabaseAdmin.auth.admin.getUserById(target_user_id)
-
-        const { error } = await supabaseAdmin
-          .from('user_tenants')
-          .delete()
-          .match({ user_id: target_user_id, tenant_id: target_tenant_id })
-          
-        if (error) throw new Error(`Erro ao remover usuário: ${error.message}`)
-        
-        if (userResp?.user?.email) {
-          await supabaseAdmin
-            .from('invitations')
+          const { error } = await supabaseAdmin
+            .from('user_tenants')
             .delete()
-            .match({ email: userResp.user.email, tenant_id: target_tenant_id })
+            .match({ user_id: target_user_id, tenant_id: target_tenant_id })
+
+          if (error) throw new Error(`Erro ao remover usuário: ${error.message}`)
+
+          if (userResp?.user?.email) {
+            await supabaseAdmin
+              .from('invitations')
+              .delete()
+              .match({ email: userResp.user.email, tenant_id: target_tenant_id })
+          }
         }
 
         return new Response(JSON.stringify({ success: true }), {
@@ -132,7 +147,7 @@ Deno.serve(async (req: Request) => {
           status: 200,
         })
       }
-      
+
       throw new Error('Ação não suportada.')
     }
 
@@ -140,7 +155,7 @@ Deno.serve(async (req: Request) => {
   } catch (error: any) {
     return new Response(JSON.stringify({ error: error.message || 'Erro desconhecido.' }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      status: 200,
+      status: 400,
     })
   }
 })

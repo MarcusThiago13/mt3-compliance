@@ -125,8 +125,17 @@ Retorne APENAS um objeto JSON estrito (sem formatação markdown) com a estrutur
 {"external":{"Regulatório":"","Legal":"","Econômico":"","Político":"","Social":"","Cultural":"","Ambiental":""},"internal":{"Estrutura Organizacional":"","Governança":"","Políticas e Objetivos":"","Processos Operacionais":"","Recursos (Humanos, Fin, Tech)":"","Maturidade de TI":""}}`
 
       const response = await callAnthropicMessage(prompt, 1024, false, tenantId)
-      const jsonMatch = response.match(/\{[\s\S]*\}/)
-      const jsonStr = jsonMatch ? jsonMatch[0] : response
+
+      // Robust JSON extraction to prevent crashes if Anthropic adds markdown or preambles
+      let jsonStr = response
+      const jsonBlockMatch = response.match(/```(?:json)?\s*([\s\S]*?)\s*```/)
+      if (jsonBlockMatch) {
+        jsonStr = jsonBlockMatch[1]
+      } else {
+        const curlyMatch = response.match(/\{[\s\S]*\}/)
+        if (curlyMatch) jsonStr = curlyMatch[0]
+      }
+
       const data = JSON.parse(jsonStr)
 
       if (data) {
@@ -137,7 +146,7 @@ Retorne APENAS um objeto JSON estrito (sem formatação markdown) com a estrutur
     } catch (e) {
       toast({
         title: 'Erro de IA',
-        description: 'Não foi possível gerar a análise.',
+        description: 'Não foi possível gerar a análise. A IA retornou um formato inesperado.',
         variant: 'destructive',
       })
     }

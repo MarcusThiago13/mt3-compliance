@@ -214,10 +214,20 @@ export async function generateComplianceDocument(
   template: any,
   params: any,
 ): Promise<string> {
-  // Fetch required RAG context from the tenant
+  // Fetch required RAG context securely - Supabase client will enforce RLS automatically
   const { data: tenant } = await supabase.from('tenants').select('*').eq('id', tenantId).single()
   const { data: risks } = await supabase.from('risks').select('*').eq('tenant_id', tenantId)
   const { data: gaps } = await supabase.from('gaps').select('*').eq('tenant_id', tenantId)
+
+  // Enrich Context with DD and Incident data to produce high-value analytical reports
+  const { data: dd } = await supabase
+    .from('due_diligence_processes')
+    .select('target_name, target_type, risk_level, status')
+    .eq('tenant_id', tenantId)
+  const { data: claims } = await supabase
+    .from('whistleblower_reports')
+    .select('category, status, severity')
+    .eq('tenant_id', tenantId)
 
   const contextData = {
     organizacao: tenant?.name,
@@ -235,6 +245,17 @@ export async function generateComplianceDocument(
       descricao: g.description,
       severidade: g.severity,
       status: g.status,
+    })),
+    due_diligence: dd?.map((d) => ({
+      alvo: d.target_name,
+      tipo: d.target_type,
+      risco: d.risk_level,
+      status: d.status,
+    })),
+    denuncias_registradas: claims?.map((c) => ({
+      categoria: c.category,
+      severidade: c.severity || 'N/A',
+      status: c.status,
     })),
   }
 

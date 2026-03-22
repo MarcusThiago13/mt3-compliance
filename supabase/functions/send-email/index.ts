@@ -8,29 +8,57 @@ Deno.serve(async (req: Request) => {
   }
 
   try {
+    const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? ''
+    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY') ?? ''
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     const resendApiKey = Deno.env.get('RESEND_API_KEY')
-    if (!resendApiKey) {
-      throw new Error('Serviço de e-mail não configurado (RESEND_API_KEY ausente nas variáveis de ambiente).')
+
+    if (!resendApiKey || !supabaseUrl || !supabaseServiceKey) {
+      throw new Error('Serviço não configurado corretamente (variáveis ausentes).')
     }
+
+    const authHeader = req.headers.get('Authorization')
+    if (!authHeader) throw new Error('Não autorizado. Token ausente.')
+
+    // Initialize authenticated client to check credentials
+    const supabaseClient = createClient(supabaseUrl, supabaseAnonKey, {
+      global: { headers: { Authorization: authHeader } },
+    })
+    const {
+      data: { user },
+      error: userError,
+    } = await supabaseClient.auth.getUser()
+    if (userError || !user) throw new Error('Não autorizado. Sessão inválida.')
 
     const { to, subject, html, log_body, tenant_id } = await req.json()
 
     if (!to || !subject || !html) {
-      throw new Error('Parâmetros incompletos para envio de e-mail. Necessário: to, subject, html.')
+      throw new Error('Parâmetros incompletos. Necessário: to, subject, html.')
+    }
+
+    // Enforce Tenant Security
+    if (tenant_id) {
+      const isSuperAdmin = user.email === 'admin@example.com' || user.app_metadata?.role === 'admin'
+      if (!isSuperAdmin) {
+        const { data: isMember } = await supabaseClient.rpc('is_tenant_member_uuid', {
+          check_tenant_id: tenant_id,
+        })
+        if (!isMember) throw new Error('Acesso negado para enviar e-mails em nome deste tenant.')
+      }
     }
 
     const res = await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${resendApiKey}`
+        Authorization: `Bearer ${resendApiKey}`,
       },
       body: JSON.stringify({
-        from: 'mt3 Compliance <onboarding@resend.dev>', // Em produção, altere para seu domínio verificado no Resend
+        from: 'mt3 Compliance <onboarding@resend.dev>', // Update for production domain
         to: [to],
         subject: subject,
-        html: html
-      })
+        html: html,
+      }),
     })
 
     const data = await res.json()
@@ -40,17 +68,14 @@ Deno.serve(async (req: Request) => {
     }
 
     if (data.id) {
-      const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? ''
-      const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
       const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey)
-      
       await supabaseAdmin.from('communication_logs').insert({
         tenant_id: tenant_id || null,
         to_email: to,
         subject: subject,
         body: log_body || html,
         status: 'sent',
-        external_id: data.id
+        external_id: data.id,
       })
     }
 
