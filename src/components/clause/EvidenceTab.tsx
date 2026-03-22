@@ -300,7 +300,7 @@ export function EvidenceTab({ clause }: { clause?: IsoClause }) {
             <div className="flex items-center space-x-2">
               <Switch id="sonnet-summary" checked={useSonnet} onCheckedChange={setUseSonnet} />
               <Label htmlFor="sonnet-summary" className="text-xs cursor-pointer">
-                Usar Sonnet
+                Gerar com IA
               </Label>
             </div>
             <Button

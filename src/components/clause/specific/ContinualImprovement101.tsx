@@ -106,14 +106,17 @@ export function ContinualImprovement101() {
       </div>
 
       <Tabs defaultValue="opportunities">
-        <TabsList className="grid w-full grid-cols-1 md:grid-cols-3 mb-4 h-auto p-1 gap-1">
-          <TabsTrigger value="opportunities" className="py-2 text-xs sm:text-sm">
+        <TabsList className="flex flex-wrap justify-start w-full mb-4 h-auto p-1 gap-1">
+          <TabsTrigger
+            value="opportunities"
+            className="py-2 text-xs sm:text-sm flex-1 min-w-[150px]"
+          >
             Oportunidades de Melhoria
           </TabsTrigger>
-          <TabsTrigger value="impact" className="py-2 text-xs sm:text-sm">
+          <TabsTrigger value="impact" className="py-2 text-xs sm:text-sm flex-1 min-w-[150px]">
             Análise de Impacto Sistêmico
           </TabsTrigger>
-          <TabsTrigger value="tracking" className="py-2 text-xs sm:text-sm">
+          <TabsTrigger value="tracking" className="py-2 text-xs sm:text-sm flex-1 min-w-[150px]">
             Acompanhamento (Workflow)
           </TabsTrigger>
         </TabsList>

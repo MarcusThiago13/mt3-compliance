@@ -111,10 +111,10 @@ export function UniversalClause({ clause }: { clause: IsoClause }) {
   const handleExportDossier = async () => {
     try {
       const res = await complianceService.generateDossier(clause.id)
-      toast({ title: 'Dossier PDF/A Gerado', description: res.message })
+      toast({ title: 'Dossiê PDF/A Gerado', description: res.message })
       window.open(res.url, '_blank')
     } catch (e: any) {
-      toast({ title: 'Erro ao gerar Dossier', description: e.message, variant: 'destructive' })
+      toast({ title: 'Erro ao gerar Dossiê', description: e.message, variant: 'destructive' })
     }
   }
 
@@ -245,7 +245,7 @@ export function UniversalClause({ clause }: { clause: IsoClause }) {
             <div className="flex items-center space-x-2 mr-2">
               <Switch id="use-sonnet" checked={useSonnet} onCheckedChange={setUseSonnet} />
               <Label htmlFor="use-sonnet" className="text-xs text-muted-foreground cursor-pointer">
-                Usar Sonnet
+                Gerar com IA
               </Label>
             </div>
             <Button
@@ -262,7 +262,7 @@ export function UniversalClause({ clause }: { clause: IsoClause }) {
               variant="outline"
               className="border-primary text-primary hover:bg-primary/5"
             >
-              <FileText className="mr-2 h-4 w-4" /> Dossier PDF/A
+              <FileText className="mr-2 h-4 w-4" /> Dossiê PDF/A
             </Button>
           </div>
         </div>

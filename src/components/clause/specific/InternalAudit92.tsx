@@ -100,17 +100,17 @@ export function InternalAudit92() {
       </div>
 
       <Tabs defaultValue="plan">
-        <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 mb-4 h-auto p-1 gap-1">
-          <TabsTrigger value="plan" className="py-2 text-xs sm:text-sm">
+        <TabsList className="flex flex-wrap justify-start w-full mb-4 h-auto p-1 gap-1">
+          <TabsTrigger value="plan" className="py-2 text-xs sm:text-sm flex-1 min-w-[120px]">
             Planejamento
           </TabsTrigger>
-          <TabsTrigger value="team" className="py-2 text-xs sm:text-sm">
+          <TabsTrigger value="team" className="py-2 text-xs sm:text-sm flex-1 min-w-[120px]">
             Independência (Equipe)
           </TabsTrigger>
-          <TabsTrigger value="execution" className="py-2 text-xs sm:text-sm">
+          <TabsTrigger value="execution" className="py-2 text-xs sm:text-sm flex-1 min-w-[120px]">
             Execução & Achados
           </TabsTrigger>
-          <TabsTrigger value="followup" className="py-2 text-xs sm:text-sm">
+          <TabsTrigger value="followup" className="py-2 text-xs sm:text-sm flex-1 min-w-[120px]">
             Acompanhamento
           </TabsTrigger>
         </TabsList>
