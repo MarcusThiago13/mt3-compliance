@@ -17,6 +17,7 @@ import Tenants from './pages/Tenants'
 import TenantUsers from './pages/TenantUsers'
 import AdminUsers from './pages/AdminUsers'
 import AdminAIUsage from './pages/AdminAIUsage'
+import AdminTemplates from './pages/AdminTemplates'
 import Onboarding from './pages/Onboarding'
 import ClauseView from './pages/ClauseView'
 import Intelligence from './pages/Intelligence'
@@ -28,6 +29,7 @@ import PublicReportStatus from './pages/PublicReportStatus'
 import DueDiligence from './pages/DueDiligence'
 import PublicFormCollection from './pages/PublicFormCollection'
 import CollectionLinks from './pages/CollectionLinks'
+import CommunicationsLog from './pages/CommunicationsLog'
 
 const AuthGuard = ({ children }: { children: React.ReactNode }) => {
   const { user, loading, signIn } = useAuth()
@@ -101,6 +103,7 @@ const App = () => (
               <Route path="/tenants" element={<Tenants />} />
               <Route path="/admin/users" element={<AdminUsers />} />
               <Route path="/admin/ai-usage" element={<AdminAIUsage />} />
+              <Route path="/admin/templates" element={<AdminTemplates />} />
               <Route path="/collection-links" element={<CollectionLinks />} />
               <Route path="/onboarding" element={<Onboarding />} />
               <Route path="/submit/:requestId" element={<SubmitEvidence />} />
@@ -114,6 +117,7 @@ const App = () => (
                 <Route path="dossier" element={<Dossier />} />
                 <Route path="inbox" element={<EvidenceInbox />} />
                 <Route path="due-diligence" element={<DueDiligence />} />
+                <Route path="communications" element={<CommunicationsLog />} />
               </Route>
             </Route>
             <Route path="*" element={<NotFound />} />

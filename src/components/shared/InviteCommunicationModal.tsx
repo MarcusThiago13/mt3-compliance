@@ -26,6 +26,7 @@ export interface InviteCommunicationModalProps {
   inviteLink: string
   isExistingUser?: boolean
   defaultTab?: 'email' | 'whatsapp'
+  tenantId?: string
 }
 
 export function InviteCommunicationModal({
@@ -38,6 +39,7 @@ export function InviteCommunicationModal({
   inviteLink,
   isExistingUser,
   defaultTab = 'email',
+  tenantId,
 }: InviteCommunicationModalProps) {
   const [subject, setSubject] = useState('')
   const [body, setBody] = useState('')
@@ -76,7 +78,7 @@ export function InviteCommunicationModal({
     }
     setIsSending(true)
     try {
-      await emailService.sendEmail(userEmail, subject, body)
+      await emailService.sendEmail(userEmail, subject, body, tenantId)
       toast({ title: 'Sucesso', description: 'Convite enviado com sucesso através do sistema.' })
       onOpenChange(false)
     } catch (e: any) {

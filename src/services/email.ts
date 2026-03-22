@@ -1,7 +1,7 @@
 import { supabase } from '@/lib/supabase/client'
 
 export const emailService = {
-  async sendEmail(to: string, subject: string, body: string) {
+  async sendEmail(to: string, subject: string, body: string, tenantId?: string) {
     // Wrap the plain text body in a professional HTML template
     const formattedBody = body.replace(/\n/g, '<br/>')
     const html = `
@@ -24,7 +24,7 @@ export const emailService = {
     `
 
     const { data, error } = await supabase.functions.invoke('send-email', {
-      body: { to, subject, html },
+      body: { to, subject, html, log_body: body, tenant_id: tenantId },
     })
 
     if (error) throw new Error(error.message)

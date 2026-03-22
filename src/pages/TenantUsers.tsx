@@ -588,6 +588,7 @@ export default function TenantUsers() {
           inviteLink={inviteData.inviteLink}
           isExistingUser={inviteData.isExistingUser}
           defaultTab={inviteData.defaultTab}
+          tenantId={tenantId}
         />
       )}
 
@@ -596,6 +597,7 @@ export default function TenantUsers() {
           isOpen={genericEmailModalOpen}
           onOpenChange={setGenericEmailModalOpen}
           defaultTo={genericEmailData.email}
+          tenantId={tenantId}
         />
       )}
     </div>

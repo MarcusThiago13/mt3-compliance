@@ -12,6 +12,8 @@ import {
   Users,
   Link as LinkIcon,
   Mail,
+  FileText,
+  History,
 } from 'lucide-react'
 import { supabase } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
@@ -179,7 +181,12 @@ export default function Tenants() {
         </div>
         <div className="flex flex-wrap gap-2 w-full sm:w-auto">
           <Button variant="outline" onClick={() => setIsEmailModalOpen(true)}>
-            <Mail className="mr-2 h-4 w-4" /> Comunicações
+            <Mail className="mr-2 h-4 w-4" /> E-mail Avulso
+          </Button>
+          <Button variant="outline" asChild>
+            <Link to="/admin/templates">
+              <FileText className="mr-2 h-4 w-4" /> Templates
+            </Link>
           </Button>
           <Button variant="outline" asChild>
             <Link to="/collection-links">
@@ -294,6 +301,10 @@ export default function Tenants() {
                           </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => navigate(`/${t.id}/onboarding`)}>
                             <Edit className="mr-2 h-4 w-4" /> Editar Perfil
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem onClick={() => navigate(`/${t.id}/communications`)}>
+                            <History className="mr-2 h-4 w-4" /> Histórico de E-mails
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
                           <DropdownMenuItem onClick={() => handleToggleStatus(t)}>
