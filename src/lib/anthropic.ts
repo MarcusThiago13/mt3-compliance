@@ -18,7 +18,6 @@ async function logAiUsage(
   try {
     let tenantId = providedTenantId
 
-    // Fallback: tentar inferir o tenantId da URL atual se não fornecido
     if (!tenantId && typeof window !== 'undefined') {
       const match = window.location.pathname.match(
         /^\/([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/i,
@@ -93,7 +92,6 @@ export async function callAnthropicMessage(
 
     const data = await response.json()
 
-    // Log usage
     if (data.usage) {
       logAiUsage(model, data.usage.input_tokens || 0, data.usage.output_tokens || 0, tenantId)
     }
@@ -110,11 +108,6 @@ export async function createBatchRequest(
   useSonnet: boolean = false,
   tenantId?: string,
 ): Promise<string> {
-  const model = useSonnet ? SONNET_MODEL : DEFAULT_MODEL
-  const apiKey = import.meta.env.VITE_ANTHROPIC_API_KEY
-
-  // The original function fired a background request and then awaited a normal one.
-  // We'll keep the await behavior which does the actual return and logs usage.
   const res = await callAnthropicMessage(prompt, 4096, useSonnet, tenantId)
   return res
 }
@@ -124,6 +117,9 @@ export async function callAnthropicChat(
   history: { role: 'user' | 'assistant'; content: string }[],
   tenantName: string,
   tenantId?: string,
+  attachment?:
+    | { type: 'image'; mediaType: string; data: string }
+    | { type: 'document'; text: string },
 ): Promise<{ role: 'assistant'; content: string; references?: string[] }> {
   const apiKey = import.meta.env.VITE_ANTHROPIC_API_KEY
 
@@ -132,13 +128,35 @@ export async function callAnthropicChat(
   }
 
   try {
-    const systemPrompt = `Você é um Especialista em Compliance da organização ${tenantName}. Responda às dúvidas dos colaboradores com base nas boas práticas de compliance, políticas internas da base de conhecimento (RAG), ISO 37301 e Decreto 11.129/22. Seja direto e didático. Se for relevante, simule referências bibliográficas ao final do texto no formato [Ref: Documento XYZ].`
+    const systemPrompt = `Você é um Especialista em Compliance da organização ${tenantName}. Responda às dúvidas dos colaboradores com base nas boas práticas de compliance, políticas internas da base de conhecimento (RAG), ISO 37301 e Decreto 11.129/22. Seja direto e didático. Analise documentos ou imagens fornecidas pelo usuário considerando o contexto de integridade corporativa. Se for relevante, simule referências bibliográficas ao final do texto no formato [Ref: Documento XYZ].`
 
     const apiMessages = history
       .filter((h, idx) => !(idx === 0 && h.role === 'assistant'))
       .map((h) => ({ role: h.role, content: h.content }))
 
-    apiMessages.push({ role: 'user', content: message })
+    let userContent: any = message
+
+    if (attachment) {
+      userContent = []
+      if (attachment.type === 'image') {
+        userContent.push({
+          type: 'image',
+          source: {
+            type: 'base64',
+            media_type: attachment.mediaType,
+            data: attachment.data,
+          },
+        })
+      } else if (attachment.type === 'document') {
+        userContent.push({
+          type: 'text',
+          text: `[Conteúdo do Documento Anexo]\n${attachment.text}\n[Fim do Documento]\n\n`,
+        })
+      }
+      userContent.push({ type: 'text', text: message })
+    }
+
+    apiMessages.push({ role: 'user', content: userContent })
 
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',

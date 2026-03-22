@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { MessageCircle, Send, Bot, User, Loader2, FileText } from 'lucide-react'
+import { MessageCircle, Send, Bot, User, Loader2, FileText, Paperclip, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import {
@@ -11,41 +11,104 @@ import {
 } from '@/components/ui/sheet'
 import { callAnthropicChat } from '@/lib/anthropic'
 import { useAppStore } from '@/stores/main'
+import { uploadDocument, getDocumentUrl } from '@/lib/upload'
+import { extractTextFromFile } from '@/lib/document-parser'
+
+type ChatMessage = {
+  role: 'user' | 'assistant'
+  content: string
+  references?: string[]
+  attachmentUrl?: string
+  attachmentName?: string
+}
 
 export function ComplianceChat() {
   const [isOpen, setIsOpen] = useState(false)
-  const [messages, setMessages] = useState<
-    { role: 'user' | 'assistant'; content: string; references?: string[] }[]
-  >([
+  const [messages, setMessages] = useState<ChatMessage[]>([
     {
       role: 'assistant',
       content:
-        'Olá! Sou o Especialista em Compliance virtual. Fui treinado com a base de conhecimento da sua organização. Posso tirar dúvidas sobre o Código de Conduta, políticas internas e procedimentos. Como posso ajudar?',
+        'Olá! Sou o Especialista em Compliance virtual. Posso tirar dúvidas sobre o Código de Conduta e políticas internas. Você também pode anexar documentos ou imagens para eu analisar.',
     },
   ])
   const [input, setInput] = useState('')
   const [isLoading, setIsLoading] = useState(false)
+  const [selectedFile, setSelectedFile] = useState<File | null>(null)
+
   const scrollRef = useRef<HTMLDivElement>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
   const { activeTenant } = useAppStore()
 
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight
     }
-  }, [messages, isLoading, isOpen])
+  }, [messages, isLoading, isOpen, selectedFile])
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) setSelectedFile(file)
+  }
+
+  const fileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader()
+      reader.readAsDataURL(file)
+      reader.onload = () => resolve((reader.result as string).split(',')[1])
+      reader.onerror = (error) => reject(error)
+    })
+  }
 
   const handleSend = async () => {
-    if (!input.trim()) return
-    const userMsg = input.trim()
+    if (!input.trim() && !selectedFile) return
+
+    const userMsg = input.trim() || 'Analise este anexo.'
     setInput('')
-    setMessages((prev) => [...prev, { role: 'user', content: userMsg }])
     setIsLoading(true)
 
+    let attachmentPayload: any = undefined
+    let attachmentUrl: string | undefined = undefined
+    let attachmentName: string | undefined = undefined
+
+    const fileToProcess = selectedFile
+    setSelectedFile(null)
+    if (fileInputRef.current) fileInputRef.current.value = ''
+
+    if (fileToProcess && activeTenant) {
+      attachmentName = fileToProcess.name
+      const { path } = await uploadDocument(fileToProcess, activeTenant.id)
+
+      if (path) {
+        const url = await getDocumentUrl(path)
+        if (url) attachmentUrl = url
+
+        if (fileToProcess.type.startsWith('image/')) {
+          const base64 = await fileToBase64(fileToProcess)
+          let mediaType = fileToProcess.type
+          if (!['image/jpeg', 'image/png', 'image/gif', 'image/webp'].includes(mediaType)) {
+            mediaType = 'image/jpeg'
+          }
+          attachmentPayload = { type: 'image', mediaType, data: base64 }
+        } else {
+          const text = await extractTextFromFile(fileToProcess)
+          attachmentPayload = { type: 'document', text }
+        }
+      }
+    }
+
+    setMessages((prev) => [
+      ...prev,
+      { role: 'user', content: userMsg, attachmentUrl, attachmentName },
+    ])
+
     try {
+      const historyTexts = messages.map((m) => ({ role: m.role, content: m.content }))
       const response = await callAnthropicChat(
         userMsg,
-        messages,
+        historyTexts,
         activeTenant?.name || 'a organização',
+        activeTenant?.id,
+        attachmentPayload,
       )
       setMessages((prev) => [...prev, response])
     } catch (error) {
@@ -58,7 +121,6 @@ export function ComplianceChat() {
     }
   }
 
-  // Só exibe o chat se houver um tenant ativo (ambiente da organização)
   if (!activeTenant) return null
 
   return (
@@ -81,8 +143,8 @@ export function ComplianceChat() {
               Chat do Especialista
             </SheetTitle>
             <SheetDescription className="text-xs">
-              IA de consulta (RAG) integrada à base de conhecimento da{' '}
-              <strong>{activeTenant.name}</strong>.
+              IA multimodal integrada à base de conhecimento de <strong>{activeTenant.name}</strong>
+              .
             </SheetDescription>
           </SheetHeader>
 
@@ -99,7 +161,9 @@ export function ComplianceChat() {
                 )}
 
                 <div
-                  className={`flex flex-col max-w-[85%] ${msg.role === 'user' ? 'items-end' : 'items-start'}`}
+                  className={`flex flex-col max-w-[85%] ${
+                    msg.role === 'user' ? 'items-end' : 'items-start'
+                  }`}
                 >
                   <div
                     className={`p-3.5 rounded-2xl text-sm shadow-sm ${
@@ -108,6 +172,24 @@ export function ComplianceChat() {
                         : 'bg-white border border-border/60 rounded-tl-sm text-foreground'
                     }`}
                   >
+                    {msg.attachmentUrl && (
+                      <div className="mb-2">
+                        {msg.attachmentName?.match(/\.(jpeg|jpg|gif|png|webp)$/i) ? (
+                          <img
+                            src={msg.attachmentUrl}
+                            alt="Anexo"
+                            className="max-w-[200px] max-h-[200px] object-cover rounded-md border border-primary-foreground/20"
+                          />
+                        ) : (
+                          <div className="flex items-center gap-2 bg-primary-foreground/10 p-2 rounded-md border border-primary-foreground/20">
+                            <FileText className="w-4 h-4 shrink-0" />
+                            <span className="truncate text-xs max-w-[150px]">
+                              {msg.attachmentName}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    )}
                     {msg.content}
                   </div>
 
@@ -144,7 +226,7 @@ export function ComplianceChat() {
                 <div className="p-3.5 rounded-2xl bg-white border border-border/60 rounded-tl-sm flex items-center gap-3 shadow-sm">
                   <Loader2 className="h-4 w-4 animate-spin text-primary" />
                   <span className="text-xs text-muted-foreground font-medium">
-                    Analisando base de documentos...
+                    Analisando dados...
                   </span>
                 </div>
               </div>
@@ -152,6 +234,24 @@ export function ComplianceChat() {
           </div>
 
           <div className="p-4 border-t bg-white">
+            {selectedFile && (
+              <div className="mb-3 inline-flex items-center gap-2 bg-slate-100 p-2.5 rounded-lg text-xs border border-border shadow-sm">
+                <Paperclip className="w-4 h-4 text-slate-500 shrink-0" />
+                <span className="truncate max-w-[200px] text-slate-700 font-medium">
+                  {selectedFile.name}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSelectedFile(null)
+                    if (fileInputRef.current) fileInputRef.current.value = ''
+                  }}
+                  className="text-slate-400 hover:text-red-500 transition-colors ml-2"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            )}
             <form
               onSubmit={(e) => {
                 e.preventDefault()
@@ -159,17 +259,35 @@ export function ComplianceChat() {
               }}
               className="flex gap-2 relative"
             >
+              <input
+                type="file"
+                ref={fileInputRef}
+                className="hidden"
+                onChange={handleFileChange}
+                accept=".pdf,.doc,.docx,.png,.jpg,.jpeg"
+              />
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="absolute left-1 top-1 bottom-1 h-10 w-10 text-slate-400 hover:text-primary z-10"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isLoading}
+                title="Anexar arquivo ou imagem"
+              >
+                <Paperclip className="h-5 w-5" />
+              </Button>
               <Input
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                placeholder="Pergunte sobre políticas, brindes..."
-                className="flex-1 pr-12 h-12 rounded-xl bg-slate-50 focus-visible:ring-primary/20"
+                placeholder="Pergunte ou anexe um arquivo..."
+                className="flex-1 pl-12 pr-12 h-12 rounded-xl bg-slate-50 focus-visible:ring-primary/20"
                 disabled={isLoading}
               />
               <Button
                 type="submit"
                 size="icon"
-                disabled={!input.trim() || isLoading}
+                disabled={(!input.trim() && !selectedFile) || isLoading}
                 className="absolute right-1 top-1 bottom-1 h-10 w-10 rounded-lg shadow-sm"
               >
                 <Send className="h-4 w-4" />
@@ -177,7 +295,7 @@ export function ComplianceChat() {
             </form>
             <div className="text-center mt-2">
               <span className="text-[10px] text-muted-foreground">
-                O Chat IA pode cometer erros. Consulte sempre a documentação oficial da organização.
+                O Chat IA pode cometer erros. Consulte a documentação oficial.
               </span>
             </div>
           </div>
