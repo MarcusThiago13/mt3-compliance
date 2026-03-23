@@ -1,6 +1,20 @@
 import { supabase } from '@/lib/supabase/client'
+import { logError } from '@/lib/logger'
 
-export const getUsers = async (tenantId?: string) => {
+const cache = new Map<string, { data: any; timestamp: number }>()
+const CACHE_TTL = 3 * 60 * 1000 // 3 minutes
+
+export const clearAdminCache = (keyPattern?: string) => {
+  if (keyPattern) {
+    for (const key of cache.keys()) {
+      if (key.includes(keyPattern)) cache.delete(key)
+    }
+  } else {
+    cache.clear()
+  }
+}
+
+const fetchUsersAPI = async (tenantId?: string) => {
   const { data, error } = await supabase.functions.invoke('admin-users', {
     method: 'POST',
     body: { action: 'get_users', tenant_id: tenantId },
@@ -17,7 +31,31 @@ export const getUsers = async (tenantId?: string) => {
   return data?.users || []
 }
 
-export const getInvitations = async (tenantId?: string) => {
+export const getUsers = async (tenantId?: string, forceRefresh = false) => {
+  const cacheKey = `users_${tenantId || 'global'}`
+
+  if (!forceRefresh && cache.has(cacheKey)) {
+    const cached = cache.get(cacheKey)!
+    if (Date.now() - cached.timestamp < CACHE_TTL) {
+      // Revalidação em background (SWR)
+      fetchUsersAPI(tenantId)
+        .then((data) => cache.set(cacheKey, { data, timestamp: Date.now() }))
+        .catch((e) => logError(e.message, e.stack, { context: 'background_revalidate_users' }))
+      return cached.data
+    }
+  }
+
+  try {
+    const data = await fetchUsersAPI(tenantId)
+    cache.set(cacheKey, { data, timestamp: Date.now() })
+    return data
+  } catch (err: any) {
+    await logError(err.message, err.stack, { action: 'get_users', tenantId })
+    throw err
+  }
+}
+
+const fetchInvitationsAPI = async (tenantId?: string) => {
   let query = supabase
     .from('invitations' as any)
     .select('*, tenant:tenants(id, name)')
@@ -32,6 +70,30 @@ export const getInvitations = async (tenantId?: string) => {
   return data || []
 }
 
+export const getInvitations = async (tenantId?: string, forceRefresh = false) => {
+  const cacheKey = `invites_${tenantId || 'global'}`
+
+  if (!forceRefresh && cache.has(cacheKey)) {
+    const cached = cache.get(cacheKey)!
+    if (Date.now() - cached.timestamp < CACHE_TTL) {
+      // Revalidação em background (SWR)
+      fetchInvitationsAPI(tenantId)
+        .then((data) => cache.set(cacheKey, { data, timestamp: Date.now() }))
+        .catch((e) => logError(e.message, e.stack, { context: 'background_revalidate_invites' }))
+      return cached.data
+    }
+  }
+
+  try {
+    const data = await fetchInvitationsAPI(tenantId)
+    cache.set(cacheKey, { data, timestamp: Date.now() })
+    return data
+  } catch (err: any) {
+    await logError(err.message, err.stack, { action: 'get_invitations', tenantId })
+    throw err
+  }
+}
+
 export const createInvitation = async (
   rawEmail: string,
   name: string,
@@ -40,50 +102,63 @@ export const createInvitation = async (
   role: string = 'viewer',
   classification: string = 'Usuário Colaborador',
 ) => {
-  const email = rawEmail.trim().toLowerCase()
+  try {
+    const email = rawEmail.trim().toLowerCase()
 
-  const { data: existing } = await supabase
-    .from('invitations' as any)
-    .select('id')
-    .eq('email', email)
-    .eq('tenant_id', tenant_id)
-    .maybeSingle()
+    const { data: existing } = await supabase
+      .from('invitations' as any)
+      .select('id')
+      .eq('email', email)
+      .eq('tenant_id', tenant_id)
+      .maybeSingle()
 
-  if (existing) {
-    const { data, error } = await supabase
-      .from('invitations' as any)
-      .update({ name, phone, status: 'pending', role, classification })
-      .eq('id', existing.id)
-      .select()
-      .single()
-    if (error) throw new Error(error.message)
-    return data
-  } else {
-    const { data, error } = await supabase
-      .from('invitations' as any)
-      .insert([{ email, name, tenant_id, phone, status: 'pending', role, classification }])
-      .select()
-      .single()
-    if (error) throw new Error(error.message)
-    return data
+    let result
+    if (existing) {
+      const { data, error } = await supabase
+        .from('invitations' as any)
+        .update({ name, phone, status: 'pending', role, classification })
+        .eq('id', existing.id)
+        .select()
+        .single()
+      if (error) throw new Error(error.message)
+      result = data
+    } else {
+      const { data, error } = await supabase
+        .from('invitations' as any)
+        .insert([{ email, name, tenant_id, phone, status: 'pending', role, classification }])
+        .select()
+        .single()
+      if (error) throw new Error(error.message)
+      result = data
+    }
+    clearAdminCache()
+    return result
+  } catch (err: any) {
+    await logError(err.message, err.stack, { action: 'create_invitation', tenant_id, rawEmail })
+    throw err
   }
 }
 
 export const sendInvitation = async (invitation_id: string, type: 'email' | 'link') => {
-  const { data, error } = await supabase.functions.invoke('admin-invite', {
-    method: 'POST',
-    body: { invitation_id, type, redirectUrl: window.location.origin },
-  })
+  try {
+    const { data, error } = await supabase.functions.invoke('admin-invite', {
+      method: 'POST',
+      body: { invitation_id, type, redirectUrl: window.location.origin },
+    })
 
-  if (error) {
-    throw new Error(error.message || 'Erro de comunicação com o servidor ao enviar convite.')
+    if (error) {
+      throw new Error(error.message || 'Erro de comunicação com o servidor ao enviar convite.')
+    }
+
+    if (data?.error) {
+      throw new Error(data.error)
+    }
+    clearAdminCache()
+    return data
+  } catch (err: any) {
+    await logError(err.message, err.stack, { action: 'send_invitation', invitation_id })
+    throw err
   }
-
-  if (data?.error) {
-    throw new Error(data.error)
-  }
-
-  return data
 }
 
 export const updateUser = async (
@@ -91,54 +166,84 @@ export const updateUser = async (
   target_tenant_id: string,
   updates: any,
 ) => {
-  const { data, error } = await supabase.functions.invoke('admin-users', {
-    method: 'POST',
-    body: { action: 'update_user', target_user_id, target_tenant_id, updates },
-  })
+  try {
+    const { data, error } = await supabase.functions.invoke('admin-users', {
+      method: 'POST',
+      body: { action: 'update_user', target_user_id, target_tenant_id, updates },
+    })
 
-  if (error) {
-    throw new Error(error.message || 'Erro de comunicação com o servidor ao atualizar usuário.')
+    if (error) {
+      throw new Error(error.message || 'Erro de comunicação com o servidor ao atualizar usuário.')
+    }
+
+    if (data?.error) {
+      throw new Error(data.error)
+    }
+    clearAdminCache()
+    return data
+  } catch (err: any) {
+    await logError(err.message, err.stack, {
+      action: 'update_user',
+      target_user_id,
+      target_tenant_id,
+    })
+    throw err
   }
-
-  if (data?.error) {
-    throw new Error(data.error)
-  }
-
-  return data
 }
 
 export const removeUser = async (target_user_id: string, target_tenant_id: string) => {
-  const { data, error } = await supabase.functions.invoke('admin-users', {
-    method: 'POST',
-    body: { action: 'remove_user', target_user_id, target_tenant_id },
-  })
+  try {
+    const { data, error } = await supabase.functions.invoke('admin-users', {
+      method: 'POST',
+      body: { action: 'remove_user', target_user_id, target_tenant_id },
+    })
 
-  if (error) {
-    throw new Error(error.message || 'Erro de comunicação com o servidor ao remover usuário.')
+    if (error) {
+      throw new Error(error.message || 'Erro de comunicação com o servidor ao remover usuário.')
+    }
+
+    if (data?.error) {
+      throw new Error(data.error)
+    }
+    clearAdminCache()
+    return data
+  } catch (err: any) {
+    await logError(err.message, err.stack, {
+      action: 'remove_user',
+      target_user_id,
+      target_tenant_id,
+    })
+    throw err
   }
-
-  if (data?.error) {
-    throw new Error(data.error)
-  }
-
-  return data
 }
 
 export const updateInvitation = async (invitation_id: string, updates: any) => {
-  const { data, error } = await supabase
-    .from('invitations' as any)
-    .update(updates)
-    .eq('id', invitation_id)
-    .select()
-    .single()
-  if (error) throw new Error(error.message)
-  return data
+  try {
+    const { data, error } = await supabase
+      .from('invitations' as any)
+      .update(updates)
+      .eq('id', invitation_id)
+      .select()
+      .single()
+    if (error) throw new Error(error.message)
+    clearAdminCache()
+    return data
+  } catch (err: any) {
+    await logError(err.message, err.stack, { action: 'update_invitation', invitation_id })
+    throw err
+  }
 }
 
 export const removeInvitation = async (invitation_id: string) => {
-  const { error } = await supabase
-    .from('invitations' as any)
-    .delete()
-    .eq('id', invitation_id)
-  if (error) throw new Error(error.message)
+  try {
+    const { error } = await supabase
+      .from('invitations' as any)
+      .delete()
+      .eq('id', invitation_id)
+    if (error) throw new Error(error.message)
+    clearAdminCache()
+  } catch (err: any) {
+    await logError(err.message, err.stack, { action: 'remove_invitation', invitation_id })
+    throw err
+  }
 }

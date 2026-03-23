@@ -12,6 +12,7 @@ import { ShieldCheck } from 'lucide-react'
 import Index from './pages/Index'
 import NotFound from './pages/NotFound'
 import Layout from './components/Layout'
+import ErrorBoundary from './components/shared/ErrorBoundary'
 import TenantContext from './components/layout/TenantContext'
 import Tenants from './pages/Tenants'
 import TenantUsers from './pages/TenantUsers'
@@ -109,7 +110,9 @@ const App = () => (
             <Route
               element={
                 <AuthGuard>
-                  <Layout />
+                  <ErrorBoundary>
+                    <Layout />
+                  </ErrorBoundary>
                 </AuthGuard>
               }
             >
