@@ -32,6 +32,8 @@ import CollectionLinks from './pages/CollectionLinks'
 import CommunicationsLog from './pages/CommunicationsLog'
 import TenantDocuments from './pages/TenantDocuments'
 import DocumentEditor from './pages/DocumentEditor'
+import RegularidadeInstitucional from './pages/osc/RegularidadeInstitucional'
+import Cebas from './pages/osc/Cebas'
 
 const AuthGuard = ({ children }: { children: React.ReactNode }) => {
   const { user, loading, signIn } = useAuth()
@@ -122,6 +124,10 @@ const App = () => (
                 <Route path="templates" element={<TenantTemplates />} />
                 <Route path="documents" element={<TenantDocuments />} />
                 <Route path="documents/:docId" element={<DocumentEditor />} />
+
+                {/* OSC Routes */}
+                <Route path="osc/regularidade" element={<RegularidadeInstitucional />} />
+                <Route path="osc/cebas" element={<Cebas />} />
               </Route>
             </Route>
             <Route path="*" element={<NotFound />} />

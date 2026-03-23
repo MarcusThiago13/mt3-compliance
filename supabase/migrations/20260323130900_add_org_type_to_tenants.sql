@@ -1,0 +1,3 @@
+ALTER TABLE public.tenants 
+ADD COLUMN IF NOT EXISTS org_type TEXT DEFAULT 'empresa',
+ADD COLUMN IF NOT EXISTS org_subtype TEXT;

@@ -4,6 +4,9 @@ export interface Tenant {
   id: string
   name: string
   cnpj: string
+  org_type?: string
+  org_subtype?: string
+  status?: string
 }
 
 interface AppState {

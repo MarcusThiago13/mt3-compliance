@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef, useCallback } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { Check, ChevronRight, Loader2, Save, AlertCircle } from 'lucide-react'
+import { Check, Loader2, Save, AlertCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { toast } from '@/hooks/use-toast'
@@ -86,15 +86,20 @@ export default function Onboarding() {
           .eq('id', paramId)
           .single()
         if (data && !error) {
+          const tenantRecord = data as any
           setTenantData({
-            step_1: data.step_1 || {},
-            step_2: data.step_2 || {},
-            step_3: data.step_3 || {},
-            step_4: data.step_4 || [],
-            step_5: data.step_5 || {},
-            step_6: data.step_6 || {},
+            step_1: {
+              ...(tenantRecord.step_1 || {}),
+              org_type: tenantRecord.org_type,
+              org_subtype: tenantRecord.org_subtype,
+            },
+            step_2: tenantRecord.step_2 || {},
+            step_3: tenantRecord.step_3 || {},
+            step_4: tenantRecord.step_4 || [],
+            step_5: tenantRecord.step_5 || {},
+            step_6: tenantRecord.step_6 || {},
           })
-          setTenantId(data.id)
+          setTenantId(tenantRecord.id)
         }
         setIsProcessing(false)
         setTimeout(() => {
@@ -120,20 +125,22 @@ export default function Onboarding() {
             name: dataToSave.step_1.razao_social,
             cnpj: dataToSave.step_1.cnpj || '',
             status: 'draft',
+            org_type: dataToSave.step_1.org_type || 'empresa',
+            org_subtype: dataToSave.step_1.org_subtype || null,
             step_1: dataToSave.step_1,
             step_2: dataToSave.step_2,
             step_3: dataToSave.step_3,
             step_4: dataToSave.step_4,
             step_5: dataToSave.step_5,
             step_6: dataToSave.step_6,
-          })
+          } as any)
           .select('id')
           .single()
 
         if (error) throw error
         if (data) {
-          setTenantId(data.id)
-          return data.id
+          setTenantId((data as any).id)
+          return (data as any).id
         }
       } else {
         await supabase
@@ -141,13 +148,15 @@ export default function Onboarding() {
           .update({
             name: dataToSave.step_1.razao_social || 'Draft',
             cnpj: dataToSave.step_1.cnpj || '',
+            org_type: dataToSave.step_1.org_type || 'empresa',
+            org_subtype: dataToSave.step_1.org_subtype || null,
             step_1: dataToSave.step_1,
             step_2: dataToSave.step_2,
             step_3: dataToSave.step_3,
             step_4: dataToSave.step_4,
             step_5: dataToSave.step_5,
             step_6: dataToSave.step_6,
-          })
+          } as any)
           .eq('id', currentId)
       }
       setSaveStatus('saved')
@@ -203,12 +212,15 @@ export default function Onboarding() {
         .eq('id', finalTenantId)
         .single()
 
-      if (tenant?.status === 'draft') {
-        await supabase.from('tenants').update({ status: 'active' }).eq('id', finalTenantId)
+      if ((tenant as any)?.status === 'draft') {
+        await supabase
+          .from('tenants')
+          .update({ status: 'active' } as any)
+          .eq('id', finalTenantId)
         const reportContent = `### Relatório de Perfil de Integridade (ISO 37301 Module 4.1)\n\n**Razão Social:** ${tenantData.step_1.razao_social}\n**CNPJ:** ${tenantData.step_1.cnpj}\n**Status:** Ativo\n\nEste relatório foi gerado automaticamente a partir dos dados consolidados no processo de onboarding.`
         await supabase
           .from('profile_reports')
-          .insert({ tenant_id: finalTenantId, content: reportContent })
+          .insert({ tenant_id: finalTenantId, content: reportContent } as any)
         toast({ title: 'Onboarding Concluído', description: 'Ambiente isolado gerado.' })
       } else {
         toast({ title: 'Atualização Concluída', description: 'Dados da organização atualizados.' })

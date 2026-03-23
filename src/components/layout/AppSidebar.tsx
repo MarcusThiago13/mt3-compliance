@@ -29,6 +29,8 @@ import {
   BrainCircuit,
   History,
   Library,
+  Landmark,
+  FileBadge,
 } from 'lucide-react'
 import { getParentClauses, getClausesByParent } from '@/lib/iso-data'
 import { useAppStore } from '@/stores/main'
@@ -176,6 +178,46 @@ export function AppSidebar() {
                 </SidebarMenu>
               </SidebarGroupContent>
             </SidebarGroup>
+
+            {activeTenant?.org_type === 'osc' && (
+              <SidebarGroup>
+                <SidebarGroupLabel className="text-purple-600 font-semibold">
+                  Trilha OSC - MROSC
+                </SidebarGroupLabel>
+                <SidebarGroupContent>
+                  <SidebarMenu>
+                    <SidebarMenuItem>
+                      <SidebarMenuButton
+                        asChild
+                        isActive={location.pathname.includes('/osc/regularidade')}
+                      >
+                        <Link
+                          to={`${tid}/osc/regularidade`}
+                          className="text-purple-800 hover:text-purple-900"
+                        >
+                          <Landmark />
+                          <span>Regularidade Institucional</span>
+                        </Link>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                    <SidebarMenuItem>
+                      <SidebarMenuButton
+                        asChild
+                        isActive={location.pathname.includes('/osc/cebas')}
+                      >
+                        <Link
+                          to={`${tid}/osc/cebas`}
+                          className="text-purple-800 hover:text-purple-900"
+                        >
+                          <FileBadge />
+                          <span>Módulo CEBAS</span>
+                        </Link>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  </SidebarMenu>
+                </SidebarGroupContent>
+              </SidebarGroup>
+            )}
 
             <SidebarGroup>
               <SidebarGroupLabel>ISO 37301:2021</SidebarGroupLabel>

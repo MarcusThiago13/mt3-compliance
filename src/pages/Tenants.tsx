@@ -55,6 +55,13 @@ import {
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { toast } from '@/hooks/use-toast'
 import { useAppStore } from '@/stores/main'
 import { useAuth } from '@/hooks/use-auth'
@@ -76,6 +83,8 @@ export default function Tenants() {
   const [isNewTenantOpen, setIsNewTenantOpen] = useState(false)
   const [newTenantName, setNewTenantName] = useState('')
   const [newTenantCnpj, setNewTenantCnpj] = useState('')
+  const [newTenantOrgType, setNewTenantOrgType] = useState('empresa')
+  const [newTenantOrgSubtype, setNewTenantOrgSubtype] = useState('')
   const [isCreating, setIsCreating] = useState(false)
 
   const [isEmailModalOpen, setIsEmailModalOpen] = useState(false)
@@ -100,7 +109,7 @@ export default function Tenants() {
     const newStatus = tenant.status === 'active' ? 'inactive' : 'active'
     const { error } = await supabase
       .from('tenants')
-      .update({ status: newStatus })
+      .update({ status: newStatus } as any)
       .eq('id', tenant.id)
     if (error) {
       toast({
@@ -139,9 +148,13 @@ export default function Tenants() {
       return
     }
     setIsCreating(true)
-    const { error } = await supabase
-      .from('tenants')
-      .insert({ name: newTenantName, cnpj: newTenantCnpj, status: 'active' })
+    const { error } = await supabase.from('tenants').insert({
+      name: newTenantName,
+      cnpj: newTenantCnpj,
+      status: 'active',
+      org_type: newTenantOrgType,
+      org_subtype: newTenantOrgSubtype || null,
+    } as any)
 
     if (error) {
       toast({
@@ -154,6 +167,8 @@ export default function Tenants() {
       setIsNewTenantOpen(false)
       setNewTenantName('')
       setNewTenantCnpj('')
+      setNewTenantOrgType('empresa')
+      setNewTenantOrgSubtype('')
       fetchTenants()
     }
     setIsCreating(false)
@@ -192,7 +207,7 @@ export default function Tenants() {
                 <Plus className="mr-2 h-4 w-4" /> Novo Cliente
               </Button>
             </DialogTrigger>
-            <DialogContent>
+            <DialogContent className="max-w-xl">
               <DialogHeader>
                 <DialogTitle>Cadastrar Nova Organização</DialogTitle>
                 <DialogDescription>
@@ -201,21 +216,60 @@ export default function Tenants() {
                 </DialogDescription>
               </DialogHeader>
               <div className="space-y-4 py-4">
-                <div className="space-y-2">
-                  <Label>Nome da Organização *</Label>
-                  <Input
-                    value={newTenantName}
-                    onChange={(e) => setNewTenantName(e.target.value)}
-                    placeholder="Ex: Acme Corp"
-                  />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Nome da Organização *</Label>
+                    <Input
+                      value={newTenantName}
+                      onChange={(e) => setNewTenantName(e.target.value)}
+                      placeholder="Ex: Acme Corp"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>CNPJ</Label>
+                    <Input
+                      value={newTenantCnpj}
+                      onChange={(e) => setNewTenantCnpj(e.target.value)}
+                      placeholder="00.000.000/0001-00"
+                    />
+                  </div>
                 </div>
-                <div className="space-y-2">
-                  <Label>CNPJ</Label>
-                  <Input
-                    value={newTenantCnpj}
-                    onChange={(e) => setNewTenantCnpj(e.target.value)}
-                    placeholder="00.000.000/0001-00"
-                  />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border-t pt-4">
+                  <div className="space-y-2">
+                    <Label>Tipo de Organização *</Label>
+                    <Select
+                      value={newTenantOrgType}
+                      onValueChange={(v) => {
+                        setNewTenantOrgType(v)
+                        if (v === 'empresa') setNewTenantOrgSubtype('')
+                      }}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="empresa">Empresa Privada</SelectItem>
+                        <SelectItem value="osc">Organização da Soc. Civil (OSC)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  {newTenantOrgType === 'osc' && (
+                    <div className="space-y-2 animate-in fade-in">
+                      <Label>Subtipo Organizacional</Label>
+                      <Select value={newTenantOrgSubtype} onValueChange={setNewTenantOrgSubtype}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="educacional">Educacional</SelectItem>
+                          <SelectItem value="assistencia_social">Assistência Social</SelectItem>
+                          <SelectItem value="saude">Saúde</SelectItem>
+                          <SelectItem value="multissetorial">Multissetorial</SelectItem>
+                          <SelectItem value="geral">Geral</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
                 </div>
               </div>
               <DialogFooter>
@@ -256,6 +310,7 @@ export default function Tenants() {
                 <TableRow>
                   <TableHead>Organização</TableHead>
                   <TableHead>CNPJ</TableHead>
+                  <TableHead>Tipo</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead className="text-right">Ações</TableHead>
                 </TableRow>
@@ -271,6 +326,30 @@ export default function Tenants() {
                     </TableCell>
                     <TableCell className="text-muted-foreground font-mono">
                       {t.cnpj || '-'}
+                    </TableCell>
+                    <TableCell>
+                      {t.org_type === 'osc' ? (
+                        <div>
+                          <Badge
+                            variant="outline"
+                            className="bg-purple-50 text-purple-700 border-purple-200"
+                          >
+                            OSC
+                          </Badge>
+                          {t.org_subtype && (
+                            <div className="text-[10px] text-muted-foreground mt-1 capitalize">
+                              {t.org_subtype.replace('_', ' ')}
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <Badge
+                          variant="outline"
+                          className="bg-blue-50 text-blue-700 border-blue-200"
+                        >
+                          Empresa
+                        </Badge>
+                      )}
                     </TableCell>
                     <TableCell>
                       {t.status === 'active' ? (

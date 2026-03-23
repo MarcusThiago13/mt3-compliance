@@ -2,13 +2,62 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Switch } from '@/components/ui/switch'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { maskCNPJ, maskCurrency } from '@/lib/formatters'
 
 export function Step1({ data, updateData }: { data: any; updateData: (d: any) => void }) {
   const setField = (k: string, v: any) => updateData({ ...data, [k]: v })
 
   return (
-    <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4">
+    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border p-4 rounded-md bg-muted/10">
+        <div className="space-y-2">
+          <Label>Tipo de Organização *</Label>
+          <Select
+            value={data.org_type || 'empresa'}
+            onValueChange={(v) => {
+              setField('org_type', v)
+              if (v === 'empresa') setField('org_subtype', null)
+            }}
+          >
+            <SelectTrigger className="bg-background">
+              <SelectValue placeholder="Selecione o tipo..." />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="empresa">Empresa privada com fins lucrativos</SelectItem>
+              <SelectItem value="osc">Organização da Sociedade Civil – OSC</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        {data.org_type === 'osc' && (
+          <div className="space-y-2 animate-in fade-in">
+            <Label>Subtipo ou Foco Organizacional</Label>
+            <Select
+              value={data.org_subtype || ''}
+              onValueChange={(v) => setField('org_subtype', v)}
+            >
+              <SelectTrigger className="bg-background">
+                <SelectValue placeholder="Selecione o segmento..." />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="educacional">OSC Educacional</SelectItem>
+                <SelectItem value="assistencia_social">OSC de Assistência Social</SelectItem>
+                <SelectItem value="saude">OSC da Saúde</SelectItem>
+                <SelectItem value="multissetorial">OSC Multissetorial</SelectItem>
+                <SelectItem value="geral">OSC em Geral</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        )}
+      </div>
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label>Razão Social *</Label>
@@ -56,11 +105,11 @@ export function Step1({ data, updateData }: { data: any; updateData: (d: any) =>
           />
         </div>
         <div className="space-y-2">
-          <Label>Setores de Mercado</Label>
+          <Label>Setores de Mercado / Atuação</Label>
           <Input
             value={data.market_sectors || ''}
             onChange={(e) => setField('market_sectors', e.target.value)}
-            placeholder="Ex: Financeiro, Construção Civil"
+            placeholder="Ex: Educação, Tecnologia, etc."
           />
         </div>
       </div>
@@ -82,28 +131,31 @@ export function Step1({ data, updateData }: { data: any; updateData: (d: any) =>
           />
         </div>
       </div>
-      <div className="space-y-4 border p-4 rounded-md">
-        <div className="flex items-center space-x-2">
-          <Switch
-            checked={data.is_publicly_traded || false}
-            onCheckedChange={(v) => setField('is_publicly_traded', v)}
-            id="publicly-traded"
-          />
-          <Label htmlFor="publicly-traded" className="cursor-pointer">
-            Empresa de Capital Aberto?
-          </Label>
-        </div>
-        {data.is_publicly_traded && (
-          <div className="space-y-2 pt-2 animate-in fade-in">
-            <Label>Bolsa de Valores / Ambiente de Negociação *</Label>
-            <Input
-              value={data.stock_exchange || ''}
-              onChange={(e) => setField('stock_exchange', e.target.value)}
-              placeholder="Ex: B3, NYSE"
+
+      {data.org_type !== 'osc' && (
+        <div className="space-y-4 border p-4 rounded-md">
+          <div className="flex items-center space-x-2">
+            <Switch
+              checked={data.is_publicly_traded || false}
+              onCheckedChange={(v) => setField('is_publicly_traded', v)}
+              id="publicly-traded"
             />
+            <Label htmlFor="publicly-traded" className="cursor-pointer">
+              Empresa de Capital Aberto?
+            </Label>
           </div>
-        )}
-      </div>
+          {data.is_publicly_traded && (
+            <div className="space-y-2 pt-2 animate-in fade-in">
+              <Label>Bolsa de Valores / Ambiente de Negociação *</Label>
+              <Input
+                value={data.stock_exchange || ''}
+                onChange={(e) => setField('stock_exchange', e.target.value)}
+                placeholder="Ex: B3, NYSE"
+              />
+            </div>
+          )}
+        </div>
+      )}
     </div>
   )
 }
