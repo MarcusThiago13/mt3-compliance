@@ -37,9 +37,18 @@ export default function RelatoriosPrestacaoTab({ partnership }: any) {
   const formatCurrency = (val: number) =>
     new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val)
 
-  const totalEligible = lines
-    .filter((l) => l.classification === 'Despesa Elegível')
-    .reduce((acc, curr) => acc + Number(curr.amount), 0)
+  const formatDateUTC = (dateStr: string) => {
+    if (!dateStr) return '-'
+    return new Date(dateStr).toLocaleDateString('pt-BR', { timeZone: 'UTC' })
+  }
+
+  const eligibleLines = lines.filter((l) => l.classification === 'Despesa Elegível')
+  const totalEligible = eligibleLines.reduce((acc, curr) => acc + Number(curr.amount), 0)
+  const totalGross = eligibleLines.reduce(
+    (acc, curr) => acc + Number(curr.gross_value || curr.amount),
+    0,
+  )
+
   const totalIncomes = lines
     .filter(
       (l) =>
@@ -47,6 +56,7 @@ export default function RelatoriosPrestacaoTab({ partnership }: any) {
         l.classification === 'Rendimento de Aplicação',
     )
     .reduce((acc, curr) => acc + Number(curr.amount), 0)
+
   const pendingRestitutions = lines
     .filter((l) => l.status === 'Aguardando Restituição')
     .reduce((acc, curr) => acc + Number(curr.amount), 0)
@@ -57,7 +67,7 @@ export default function RelatoriosPrestacaoTab({ partnership }: any) {
         <Card className="border-blue-100 shadow-sm bg-blue-50/30">
           <CardContent className="p-5">
             <p className="text-sm font-semibold text-blue-800 uppercase tracking-wider mb-1">
-              Total Entradas (B4)
+              Total Entradas na Conta
             </p>
             <h3 className="text-2xl font-bold text-blue-900">{formatCurrency(totalIncomes)}</h3>
           </CardContent>
@@ -65,7 +75,7 @@ export default function RelatoriosPrestacaoTab({ partnership }: any) {
         <Card className="border-emerald-100 shadow-sm bg-emerald-50/30">
           <CardContent className="p-5">
             <p className="text-sm font-semibold text-emerald-800 uppercase tracking-wider mb-1">
-              Despesas Elegíveis
+              Despesas Conciliadas
             </p>
             <h3 className="text-2xl font-bold text-emerald-900">{formatCurrency(totalEligible)}</h3>
           </CardContent>
@@ -82,7 +92,7 @@ export default function RelatoriosPrestacaoTab({ partnership }: any) {
               <p
                 className={`text-sm font-semibold uppercase tracking-wider mb-1 ${pendingRestitutions > 0 ? 'text-red-800' : 'text-slate-600'}`}
               >
-                Pendências Restituição
+                Pendências Recomposição
               </p>
               <h3
                 className={`text-2xl font-bold ${pendingRestitutions > 0 ? 'text-red-900' : 'text-slate-800'}`}
@@ -107,11 +117,11 @@ export default function RelatoriosPrestacaoTab({ partnership }: any) {
               Despesas (DID)
             </CardTitle>
             <CardDescription>
-              Gerado automaticamente com base na conciliação bancária.
+              Relatório estruturado nos padrões exigidos pela Administração Pública.
             </CardDescription>
           </div>
           <Button variant="outline" className="border-blue-200 text-blue-700 hover:bg-blue-50">
-            <Download className="h-4 w-4 mr-2" /> Exportar Relatório
+            <Download className="h-4 w-4 mr-2" /> Exportar Planilha Oficial
           </Button>
         </CardHeader>
         <CardContent className="p-0">
@@ -121,45 +131,60 @@ export default function RelatoriosPrestacaoTab({ partnership }: any) {
             </div>
           ) : (
             <div className="overflow-x-auto border-t">
-              <Table>
+              <Table className="whitespace-nowrap">
                 <TableHeader className="bg-slate-50">
                   <TableRow>
-                    <TableHead>Data Pgto</TableHead>
+                    <TableHead>Data Pagamento</TableHead>
                     <TableHead>Categoria</TableHead>
-                    <TableHead>Fornecedor / Doc</TableHead>
-                    <TableHead>Nº NF</TableHead>
-                    <TableHead className="text-right">Valor</TableHead>
+                    <TableHead>CNPJ/CPF</TableHead>
+                    <TableHead>Nome Fornecedor</TableHead>
+                    <TableHead>Número NF</TableHead>
+                    <TableHead>Data Emissão</TableHead>
+                    <TableHead className="text-right">Valor Bruto</TableHead>
+                    <TableHead className="text-right bg-slate-100">Valor Pago</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {lines
-                    .filter((l) => l.classification === 'Despesa Elegível')
-                    .map((t) => (
-                      <TableRow key={t.id} className="text-sm">
-                        <TableCell>
-                          {new Date(t.transaction_date).toLocaleDateString('pt-BR')}
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant="outline" className="font-mono bg-slate-50">
-                            {t.category_code}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="font-medium">
-                          {t.provider_name} <br />
-                          <span className="text-xs text-muted-foreground font-mono">
-                            {t.provider_document}
-                          </span>
-                        </TableCell>
-                        <TableCell>{t.invoice_number}</TableCell>
-                        <TableCell className="text-right font-semibold text-slate-700">
-                          {formatCurrency(t.amount)}
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  {totalEligible === 0 && (
+                  {eligibleLines.map((t) => (
+                    <TableRow key={t.id} className="text-xs">
+                      <TableCell>{formatDateUTC(t.transaction_date)}</TableCell>
+                      <TableCell>
+                        <Badge variant="outline" className="font-mono text-[10px] bg-white">
+                          {t.category_code}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="font-mono tracking-tighter text-slate-600">
+                        {t.provider_document || '-'}
+                      </TableCell>
+                      <TableCell className="font-medium text-slate-800">
+                        {t.provider_name || '-'}
+                      </TableCell>
+                      <TableCell>{t.invoice_number || '-'}</TableCell>
+                      <TableCell>{formatDateUTC(t.invoice_date)}</TableCell>
+                      <TableCell className="text-right font-mono text-slate-600">
+                        {formatCurrency(t.gross_value || t.amount)}
+                      </TableCell>
+                      <TableCell className="text-right font-bold text-slate-800 bg-slate-50/50">
+                        {formatCurrency(t.amount)}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                  {eligibleLines.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
-                        Nenhuma despesa elegível processada.
+                      <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+                        Nenhuma despesa elegível processada e conciliada no período.
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    <TableRow className="bg-slate-100 font-bold border-t-2">
+                      <TableCell colSpan={6} className="text-right text-slate-700">
+                        TOTAIS DO DEMONSTRATIVO:
+                      </TableCell>
+                      <TableCell className="text-right text-slate-800 font-mono">
+                        {formatCurrency(totalGross)}
+                      </TableCell>
+                      <TableCell className="text-right text-slate-900 font-mono">
+                        {formatCurrency(totalEligible)}
                       </TableCell>
                     </TableRow>
                   )}

@@ -12,12 +12,14 @@ import {
   ArrowRight,
   Landmark,
   FileSpreadsheet,
+  MessageSquareWarning,
 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 
 export default function PrestacaoContasTab({ partnership }: any) {
   const [accountability, setAccountability] = useState<any>(null)
   const [execution, setExecution] = useState<any>(null)
+  const [diligences, setDiligences] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
 
   const fetchData = async () => {
@@ -37,7 +39,15 @@ export default function PrestacaoContasTab({ partnership }: any) {
       .eq('partnership_id', partnership.id)
       .maybeSingle()
 
-    setExecution(execData)
+    if (execData) setExecution(execData)
+
+    const { data: dilData } = await supabase
+      .from('osc_accountability_diligences' as any)
+      .select('*')
+      .eq('partnership_id', partnership.id)
+
+    if (dilData) setDiligences(dilData)
+
     setLoading(false)
   }
 
@@ -46,25 +56,45 @@ export default function PrestacaoContasTab({ partnership }: any) {
   }, [partnership.id])
 
   const renderRiskMotor = () => {
-    if (!execution) return null
-
-    const physical = execution.physical_progress || 0
-    const financial = execution.financial_progress || 0
+    const physical = execution?.physical_progress || 0
+    const financial = execution?.financial_progress || 0
     const discrepancy = financial - physical
 
+    const openDiligences = diligences.filter(
+      (d) => d.status === 'Aberta' || d.status === 'Respondida',
+    )
+    const glosas = diligences.filter((d) => d.status === 'Glosa')
+
     const risks = []
+
+    if (glosas.length > 0) {
+      const totalGlosa = glosas.reduce((acc, curr) => acc + (Number(curr.glosa_amount) || 0), 0)
+      risks.push({
+        level: 'Crítico',
+        title: 'Glosas Aplicadas Identificadas',
+        desc: `Existem ${glosas.length} apontamento(s) com rejeição de despesa (Glosa) totalizando R$ ${totalGlosa.toFixed(2)}. Risco direto de devolução de recursos com recursos próprios.`,
+      })
+    }
+
+    if (openDiligences.length > 0) {
+      risks.push({
+        level: 'Alto',
+        title: 'Diligências do Ente em Aberto',
+        desc: `Há ${openDiligences.length} notificação(ões) do Ente Público aguardando saneamento na prestação de contas. Prazos devem ser monitorados.`,
+      })
+    }
 
     if (discrepancy > 20) {
       risks.push({
         level: 'Alto',
         title: 'Descompasso Físico-Financeiro Grave',
-        desc: `Execução financeira (${financial}%) está muito acima da execução física (${physical}%). Risco iminente de glosa e rejeição de contas.`,
+        desc: `Execução financeira (${financial}%) está muito acima da execução física (${physical}%). Risco iminente de glosa por falta de nexo de causalidade.`,
       })
     } else if (discrepancy > 10) {
       risks.push({
         level: 'Médio',
         title: 'Descompasso Físico-Financeiro Moderado',
-        desc: `Atenção: A utilização de recursos (${financial}%) está acima das metas atingidas (${physical}%). Necessário justificar desvios na prestação de contas.`,
+        desc: `Atenção: A utilização de recursos (${financial}%) está acima das metas atingidas (${physical}%). Necessário justificar desvios.`,
       })
     }
 
@@ -76,7 +106,7 @@ export default function PrestacaoContasTab({ partnership }: any) {
             <h4 className="font-semibold text-emerald-900">Nenhum Risco Estrutural Detectado</h4>
             <p className="text-sm text-emerald-700">
               A relação entre execução física ({physical}%) e financeira ({financial}%) está
-              equilibrada no motor de conformidade.
+              equilibrada e não há diligências pendentes ativas.
             </p>
           </div>
         </div>
@@ -87,22 +117,24 @@ export default function PrestacaoContasTab({ partnership }: any) {
       <div className="space-y-3">
         <h4 className="font-semibold text-slate-800 flex items-center">
           <AlertTriangle className="h-4 w-4 mr-2 text-amber-500" />
-          Motor de Nexo Causal (Físico x Financeiro)
+          Alertas de Conformidade e Prestação
         </h4>
         {risks.map((r, i) => (
           <div
             key={i}
-            className={`border rounded-lg p-4 flex items-start gap-3 ${r.level === 'Alto' ? 'bg-red-50 border-red-200' : 'bg-amber-50 border-amber-200'}`}
+            className={`border rounded-lg p-4 flex items-start gap-3 ${r.level === 'Crítico' || r.level === 'Alto' ? 'bg-red-50 border-red-200' : 'bg-amber-50 border-amber-200'}`}
           >
             <AlertTriangle
-              className={`h-5 w-5 mt-0.5 ${r.level === 'Alto' ? 'text-red-600' : 'text-amber-600'}`}
+              className={`h-5 w-5 mt-0.5 ${r.level === 'Crítico' || r.level === 'Alto' ? 'text-red-600' : 'text-amber-600'}`}
             />
             <div>
-              <h4 className={`font-bold ${r.level === 'Alto' ? 'text-red-900' : 'text-amber-900'}`}>
+              <h4
+                className={`font-bold ${r.level === 'Crítico' || r.level === 'Alto' ? 'text-red-900' : 'text-amber-900'}`}
+              >
                 {r.title}
               </h4>
               <p
-                className={`text-sm mt-1 ${r.level === 'Alto' ? 'text-red-800' : 'text-amber-800'}`}
+                className={`text-sm mt-1 ${r.level === 'Crítico' || r.level === 'Alto' ? 'text-red-800' : 'text-amber-800'}`}
               >
                 {r.desc}
               </p>
@@ -131,7 +163,8 @@ export default function PrestacaoContasTab({ partnership }: any) {
           </h3>
           <p className="text-sm text-amber-800 mt-1 max-w-2xl">
             Este painel consolida o status geral da prestação de contas desta parceria. O
-            detalhamento financeiro, conciliação e relatórios encontram-se no módulo específico.
+            detalhamento financeiro extrato-cêntrico, a conciliação e a resposta a glosas
+            encontram-se no módulo específico.
           </p>
         </div>
         <Button asChild className="bg-amber-600 hover:bg-amber-700 text-white shrink-0 shadow-sm">
@@ -168,14 +201,19 @@ export default function PrestacaoContasTab({ partnership }: any) {
                 <span className="text-sm font-medium text-slate-700">Prazo Legal (Envio):</span>
                 <span className="text-sm font-semibold text-slate-900">
                   {accountability?.deadline
-                    ? new Date(accountability.deadline).toLocaleDateString('pt-BR')
+                    ? new Date(accountability.deadline).toLocaleDateString('pt-BR', {
+                        timeZone: 'UTC',
+                      })
                     : 'Não definido'}
                 </span>
               </div>
               <div className="flex justify-between items-center p-3 bg-slate-50 rounded-md border">
-                <span className="text-sm font-medium text-slate-700">Tipo de Relatório:</span>
-                <span className="text-sm font-semibold text-slate-900">
-                  {accountability?.report_type || '-'}
+                <span className="text-sm font-medium text-slate-700">Decisão Final:</span>
+                <span
+                  className="text-sm font-semibold text-slate-900 truncate max-w-[200px]"
+                  title={accountability?.final_decision || '-'}
+                >
+                  {accountability?.final_decision || 'Aguardando'}
                 </span>
               </div>
             </CardContent>
@@ -190,40 +228,45 @@ export default function PrestacaoContasTab({ partnership }: any) {
                 Dados Estruturais (Exportados)
               </CardTitle>
               <CardDescription>
-                Informações desta Gestão de Parcerias que alimentam a Prestação de Contas.
+                A documentação desta parceria alimenta diretamente o fechamento financeiro.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
-              <div className="flex items-center gap-2 text-sm text-slate-700">
+              <div className="flex items-center gap-2 text-sm text-slate-700 bg-white p-2 rounded border shadow-sm">
                 <FileCheck className="h-4 w-4 text-emerald-500 shrink-0" />
                 <span>Plano de Trabalho, Metas e Indicadores (B3) vinculados.</span>
               </div>
-              <div className="flex items-center gap-2 text-sm text-slate-700">
+              <div className="flex items-center gap-2 text-sm text-slate-700 bg-white p-2 rounded border shadow-sm">
                 <FileCheck className="h-4 w-4 text-emerald-500 shrink-0" />
-                <span>Instrumento e Cronograma de Desembolso integrados.</span>
+                <span>Instrumento e Vigência Contratual integrados.</span>
               </div>
-              <div className="flex items-center gap-2 text-sm text-slate-700">
+              <div className="flex items-center gap-2 text-sm text-slate-700 bg-white p-2 rounded border shadow-sm">
                 <FileCheck className="h-4 w-4 text-emerald-500 shrink-0" />
-                <span>Relatórios de Execução do Objeto (B4) sincronizados.</span>
+                <span>Relatórios Físicos (B4) reportados como base do Nexo Causal.</span>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="border-amber-100 shadow-sm">
+          <Card className="border-amber-100 shadow-sm bg-gradient-to-br from-white to-amber-50/30">
             <CardContent className="p-5 flex items-center justify-between">
               <div>
                 <h4 className="font-bold text-slate-800 text-sm flex items-center mb-1">
                   <FileSpreadsheet className="h-4 w-4 mr-2 text-amber-600" />
-                  Operação Detalhada
+                  Demonstrativos e Extratos (DID)
                 </h4>
-                <p className="text-xs text-muted-foreground">
-                  Conciliação bancária, extratos e demonstrativos financeiros residem no módulo
+                <p className="text-xs text-muted-foreground mt-1 max-w-[220px]">
+                  Conciliação bancária linha a linha e mapeamento de despesas residem no painel
                   próprio.
                 </p>
               </div>
-              <Button variant="outline" size="sm" asChild className="shrink-0 ml-4">
+              <Button
+                variant="outline"
+                size="sm"
+                asChild
+                className="shrink-0 ml-4 bg-white border-amber-200 hover:bg-amber-50"
+              >
                 <Link to={`/${partnership.tenant_id}/osc/prestacao-contas/${partnership.id}`}>
-                  Abrir
+                  Acessar Painel
                 </Link>
               </Button>
             </CardContent>

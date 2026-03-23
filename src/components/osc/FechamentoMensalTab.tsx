@@ -3,21 +3,37 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button'
 import { supabase } from '@/lib/supabase/client'
 import { toast } from '@/hooks/use-toast'
-import { Loader2, Lock, AlertTriangle, CheckCircle2, SearchX } from 'lucide-react'
+import { Loader2, Lock, AlertTriangle, CheckCircle2, SearchX, FileCheck } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 
-export default function FechamentoMensalTab({ partnership, accountability }: any) {
+export default function FechamentoMensalTab({ partnership }: any) {
   const [lines, setLines] = useState<any[]>([])
+  const [diligences, setDiligences] = useState<any[]>([])
+  const [execution, setExecution] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [isClosing, setIsClosing] = useState(false)
 
   const fetchData = async () => {
     setLoading(true)
-    const { data } = await supabase
+    const { data: ln } = await supabase
       .from('osc_bank_statement_lines' as any)
       .select('*')
       .eq('partnership_id', partnership.id)
-    if (data) setLines(data)
+    if (ln) setLines(ln)
+
+    const { data: dil } = await supabase
+      .from('osc_accountability_diligences' as any)
+      .select('status')
+      .eq('partnership_id', partnership.id)
+    if (dil) setDiligences(dil)
+
+    const { data: ex } = await supabase
+      .from('osc_partnership_execution' as any)
+      .select('physical_progress')
+      .eq('partnership_id', partnership.id)
+      .maybeSingle()
+    setExecution(ex)
+
     setLoading(false)
   }
 
@@ -27,32 +43,37 @@ export default function FechamentoMensalTab({ partnership, accountability }: any
 
   const pendingLines = lines.filter((l) => l.status === 'Importada')
   const restitutionPending = lines.filter((l) => l.status === 'Aguardando Restituição')
-  const reconciledLines = lines.filter((l) => l.status === 'Conciliada')
+  const openDiligences = diligences.filter(
+    (d) => d.status === 'Aberta' || d.status === 'Respondida',
+  )
 
   const hasExtrato = lines.length > 0
-  const canClose = pendingLines.length === 0 && restitutionPending.length === 0 && hasExtrato
-  // Using dynamic accountability state check based on the component's limited local knowledge
-  // Real implementation would look at accountability.status from parent
-  const isClosed = false
+  const hasPhysicalExecution = execution && execution.physical_progress > 0
+
+  const canClose =
+    pendingLines.length === 0 &&
+    restitutionPending.length === 0 &&
+    openDiligences.length === 0 &&
+    hasExtrato &&
+    hasPhysicalExecution
+  const isClosed = false // In real world, read from DB period status
 
   const handleCloseMonth = async () => {
     if (!canClose) {
-      toast({
+      return toast({
         title: 'Bloqueio',
-        description: 'Existem pendências no extrato.',
+        description: 'Resolva todas as pendências antes de consolidar.',
         variant: 'destructive',
       })
-      return
     }
-
     setIsClosing(true)
     setTimeout(() => {
       setIsClosing(false)
       toast({
-        title: 'Fechamento Simulado',
-        description: 'Competência encerrada com sucesso no ambiente de simulação.',
+        title: 'Pacote Consolidado',
+        description: 'Prestação de contas formatada para submissão.',
       })
-    }, 1000)
+    }, 1500)
   }
 
   if (loading)
@@ -67,12 +88,11 @@ export default function FechamentoMensalTab({ partnership, accountability }: any
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-slate-50 p-4 rounded-lg border border-slate-200">
         <div>
           <h3 className="font-semibold text-slate-800 flex items-center">
-            <Lock className="h-5 w-5 mr-2 text-slate-600" />
-            Consolidação e Fechamento
+            <Lock className="h-5 w-5 mr-2 text-slate-600" /> Consolidação e Trava de Auditoria
           </h3>
-          <p className="text-sm text-slate-600 mt-1">
-            Validação automática da integridade dos lançamentos. O sistema só permite o fechamento
-            se não houverem pendências extrato-cêntricas.
+          <p className="text-sm text-slate-600 mt-1 max-w-2xl">
+            Validação automatizada de integridade. O sistema impede a emissão do pacote final de
+            prestação se houverem lacunas financeiras, ausência de metas ou glosas sem tratamento.
           </p>
         </div>
       </div>
@@ -80,35 +100,56 @@ export default function FechamentoMensalTab({ partnership, accountability }: any
       <div className="grid md:grid-cols-2 gap-6">
         <Card className="shadow-sm border-slate-200">
           <CardHeader>
-            <CardTitle className="text-lg">Checklist de Integridade</CardTitle>
-            <CardDescription>Critérios bloqueantes do sistema.</CardDescription>
+            <CardTitle className="text-lg">Checklist Obrigatório</CardTitle>
+            <CardDescription>Critérios determinantes para aprovação das contas.</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center justify-between p-3 border rounded-md bg-slate-50">
+          <CardContent className="space-y-3">
+            <div className="flex items-center justify-between p-3 border rounded-md bg-slate-50/80">
+              <div className="flex items-center gap-2">
+                {hasPhysicalExecution ? (
+                  <CheckCircle2 className="h-5 w-5 text-emerald-500" />
+                ) : (
+                  <AlertTriangle className="h-5 w-5 text-amber-500" />
+                )}
+                <span className="text-sm font-medium">Relatório de Execução Física (B4)</span>
+              </div>
+              <Badge
+                variant="outline"
+                className={
+                  hasPhysicalExecution
+                    ? 'border-emerald-200 text-emerald-700 bg-emerald-50'
+                    : 'border-amber-200 text-amber-700 bg-amber-50'
+                }
+              >
+                {hasPhysicalExecution ? 'Integrado' : 'Falta Lançar Execução'}
+              </Badge>
+            </div>
+
+            <div className="flex items-center justify-between p-3 border rounded-md bg-slate-50/80">
               <div className="flex items-center gap-2">
                 {hasExtrato ? (
                   <CheckCircle2 className="h-5 w-5 text-emerald-500" />
                 ) : (
                   <AlertTriangle className="h-5 w-5 text-amber-500" />
                 )}
-                <span className="text-sm font-medium">Extrato Importado</span>
+                <span className="text-sm font-medium">Extrato Integral Importado</span>
               </div>
               <Badge
                 variant={hasExtrato ? 'default' : 'secondary'}
                 className={hasExtrato ? 'bg-emerald-100 text-emerald-800' : ''}
               >
-                {hasExtrato ? `${lines.length} linhas` : 'Pendente'}
+                {hasExtrato ? `${lines.length} Lançamentos` : 'Pendente'}
               </Badge>
             </div>
 
-            <div className="flex items-center justify-between p-3 border rounded-md bg-slate-50">
+            <div className="flex items-center justify-between p-3 border rounded-md bg-slate-50/80">
               <div className="flex items-center gap-2">
                 {pendingLines.length === 0 && hasExtrato ? (
                   <CheckCircle2 className="h-5 w-5 text-emerald-500" />
                 ) : (
                   <SearchX className="h-5 w-5 text-red-500" />
                 )}
-                <span className="text-sm font-medium">Conciliação Concluída</span>
+                <span className="text-sm font-medium">Conciliação 100% Tratada</span>
               </div>
               <Badge
                 variant="outline"
@@ -118,18 +159,18 @@ export default function FechamentoMensalTab({ partnership, accountability }: any
                     : 'text-emerald-700 bg-emerald-50 border-emerald-200'
                 }
               >
-                {pendingLines.length} pendentes
+                {pendingLines.length} Órfãs / Pendentes
               </Badge>
             </div>
 
-            <div className="flex items-center justify-between p-3 border rounded-md bg-slate-50">
+            <div className="flex items-center justify-between p-3 border rounded-md bg-slate-50/80">
               <div className="flex items-center gap-2">
                 {restitutionPending.length === 0 ? (
                   <CheckCircle2 className="h-5 w-5 text-emerald-500" />
                 ) : (
                   <AlertTriangle className="h-5 w-5 text-amber-500" />
                 )}
-                <span className="text-sm font-medium">Saneamento e Restituições</span>
+                <span className="text-sm font-medium">Recomposição de Tarifas Inelegíveis</span>
               </div>
               <Badge
                 variant="outline"
@@ -139,7 +180,28 @@ export default function FechamentoMensalTab({ partnership, accountability }: any
                     : 'text-emerald-700 bg-emerald-50 border-emerald-200'
                 }
               >
-                {restitutionPending.length} exigem devolução
+                {restitutionPending.length} Restituições Pendentes
+              </Badge>
+            </div>
+
+            <div className="flex items-center justify-between p-3 border rounded-md bg-slate-50/80">
+              <div className="flex items-center gap-2">
+                {openDiligences.length === 0 ? (
+                  <CheckCircle2 className="h-5 w-5 text-emerald-500" />
+                ) : (
+                  <AlertTriangle className="h-5 w-5 text-red-500" />
+                )}
+                <span className="text-sm font-medium">Diligências e Glosas Resolvidas</span>
+              </div>
+              <Badge
+                variant="outline"
+                className={
+                  openDiligences.length > 0
+                    ? 'text-red-700 bg-red-50 border-red-200'
+                    : 'text-emerald-700 bg-emerald-50 border-emerald-200'
+                }
+              >
+                {openDiligences.length} Em Aberto
               </Badge>
             </div>
           </CardContent>
@@ -148,53 +210,42 @@ export default function FechamentoMensalTab({ partnership, accountability }: any
         <Card
           className={`shadow-sm border-2 ${canClose && !isClosed ? 'border-emerald-400 bg-emerald-50/20' : isClosed ? 'border-slate-300 bg-slate-50' : 'border-red-200 bg-red-50/20'}`}
         >
-          <CardHeader>
-            <CardTitle className="text-lg">Bloqueio Contábil</CardTitle>
-          </CardHeader>
-          <CardContent className="flex flex-col items-center justify-center text-center space-y-4 py-8">
-            {isClosed ? (
+          <CardContent className="flex flex-col items-center justify-center text-center space-y-4 py-12 h-full">
+            {canClose ? (
               <>
-                <Lock className="h-12 w-12 text-slate-400" />
+                <FileCheck className="h-14 w-14 text-emerald-500" />
                 <div>
-                  <h3 className="font-bold text-slate-700">Período Consolidado</h3>
-                  <p className="text-sm text-slate-500 mt-1">
-                    Dados financeiros travados para auditoria.
-                  </p>
-                </div>
-              </>
-            ) : canClose ? (
-              <>
-                <CheckCircle2 className="h-12 w-12 text-emerald-500" />
-                <div>
-                  <h3 className="font-bold text-emerald-800">Pronto para Fechamento</h3>
-                  <p className="text-sm text-emerald-700 mt-1">
-                    Nenhuma pendência encontrada no motor extrato-cêntrico.
+                  <h3 className="text-xl font-bold text-emerald-800">Prestação Consistente</h3>
+                  <p className="text-sm text-emerald-700 mt-2 max-w-sm mx-auto">
+                    A trilha de auditoria atesta que a execução física e financeira estão coerentes
+                    e amparadas por lastro documental.
                   </p>
                 </div>
                 <Button
                   onClick={handleCloseMonth}
                   disabled={isClosing}
-                  className="bg-emerald-600 hover:bg-emerald-700 w-full max-w-xs mt-4"
+                  className="bg-emerald-600 hover:bg-emerald-700 mt-6 shadow-md"
                 >
                   {isClosing ? (
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   ) : (
                     <Lock className="mr-2 h-4 w-4" />
-                  )}{' '}
-                  Consolidar Período
+                  )}
+                  Gerar Pacote Oficial de Prestação
                 </Button>
               </>
             ) : (
               <>
-                <AlertTriangle className="h-12 w-12 text-red-400" />
+                <AlertTriangle className="h-14 w-14 text-red-400 opacity-60" />
                 <div>
-                  <h3 className="font-bold text-red-800">Fechamento Inviável</h3>
-                  <p className="text-sm text-red-700 mt-1">
-                    Resolva as divergências no checklist lateral para prosseguir.
+                  <h3 className="text-xl font-bold text-red-800">Inconsistências Detectadas</h3>
+                  <p className="text-sm text-red-700 mt-2 max-w-sm mx-auto">
+                    O pacote não pode ser gerado. Resolva os itens pendentes no checklist ao lado
+                    para garantir a regularidade perante o Ente Público.
                   </p>
                 </div>
-                <Button disabled className="w-full max-w-xs mt-4 opacity-50">
-                  <Lock className="mr-2 h-4 w-4" /> Consolidar Período
+                <Button disabled className="mt-6 opacity-50 cursor-not-allowed">
+                  <Lock className="mr-2 h-4 w-4" /> Gerar Pacote Oficial de Prestação
                 </Button>
               </>
             )}

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { FileCheck, Search, Loader2, ArrowRight } from 'lucide-react'
+import { FileCheck, Search, Loader2, ArrowRight, Activity, ShieldAlert } from 'lucide-react'
 import { supabase } from '@/lib/supabase/client'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -38,6 +38,10 @@ export default function PrestacaoContasList() {
           status,
           deadline,
           report_type
+        ),
+        osc_accountability_diligences (
+          id,
+          status
         )
       `)
       .eq('tenant_id', tenantId)
@@ -83,13 +87,74 @@ export default function PrestacaoContasList() {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b pb-4">
         <div>
           <h1 className="text-3xl font-bold text-amber-800 flex items-center gap-3">
-            <FileCheck className="h-8 w-8" /> Prestação de Contas (MROSC)
+            <FileCheck className="h-8 w-8" /> Central de Prestação de Contas (MROSC)
           </h1>
-          <p className="text-muted-foreground mt-1">
-            Módulo financeiro detalhado. Gerencie conciliação bancária, notas fiscais, extratos e
-            demonstrativos de cada parceria.
+          <p className="text-muted-foreground mt-1 max-w-3xl">
+            Módulo financeiro especializado. Processe a conciliação linha a linha a partir do
+            extrato da conta específica, associe a execução física (B4), responda diligências e gere
+            o Demonstrativo Integral de Despesas (DID).
           </p>
         </div>
+      </div>
+
+      <div className="grid md:grid-cols-3 gap-4 mb-6">
+        <Card className="bg-amber-50/50 border-amber-100 shadow-sm">
+          <CardContent className="p-4 flex items-center gap-4">
+            <div className="p-3 bg-white rounded-full text-amber-600 shadow-sm">
+              <Activity className="h-6 w-6" />
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-amber-900">
+                {
+                  partnerships.filter(
+                    (p) => p.osc_partnership_accountability?.[0]?.status === 'Em Elaboração',
+                  ).length
+                }
+              </p>
+              <p className="text-sm font-medium text-amber-700">Prestações em Aberto</p>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-red-50/50 border-red-100 shadow-sm">
+          <CardContent className="p-4 flex items-center gap-4">
+            <div className="p-3 bg-white rounded-full text-red-600 shadow-sm">
+              <ShieldAlert className="h-6 w-6" />
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-red-900">
+                {
+                  partnerships.filter((p) =>
+                    p.osc_accountability_diligences?.some(
+                      (d: any) => d.status === 'Aberta' || d.status === 'Glosa',
+                    ),
+                  ).length
+                }
+              </p>
+              <p className="text-sm font-medium text-red-700">
+                Parcerias com Alertas (Diligência/Glosa)
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-emerald-50/50 border-emerald-100 shadow-sm">
+          <CardContent className="p-4 flex items-center gap-4">
+            <div className="p-3 bg-white rounded-full text-emerald-600 shadow-sm">
+              <FileCheck className="h-6 w-6" />
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-emerald-900">
+                {
+                  partnerships.filter(
+                    (p) => p.osc_partnership_accountability?.[0]?.status === 'Aprovada',
+                  ).length
+                }
+              </p>
+              <p className="text-sm font-medium text-emerald-700">Contas Aprovadas</p>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       <Card className="shadow-sm border-amber-100">
@@ -99,7 +164,7 @@ export default function PrestacaoContasList() {
             <Search className="h-4 w-4 text-muted-foreground" />
           </CardTitle>
           <CardDescription>
-            Acesse o detalhamento da prestação para realizar OCR de notas e fechamento mensal.
+            Selecione a parceria para iniciar a conciliação bancária ou analisar ressalvas.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -127,20 +192,29 @@ export default function PrestacaoContasList() {
                   <TableHead>Ente Público</TableHead>
                   <TableHead>Status da Parceria</TableHead>
                   <TableHead>Status da Prestação</TableHead>
-                  <TableHead>Prazo Legal</TableHead>
+                  <TableHead>Prazo Legal (Envio)</TableHead>
                   <TableHead className="text-right">Ação</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {partnerships.map((p) => {
                   const acc = p.osc_partnership_accountability?.[0]
+                  const hasAlerts = p.osc_accountability_diligences?.some(
+                    (d: any) => d.status === 'Aberta' || d.status === 'Glosa',
+                  )
+
                   return (
                     <TableRow
                       key={p.id}
                       className="hover:bg-amber-50/30 cursor-pointer transition-colors"
                       onClick={() => navigate(`/${tenantId}/osc/prestacao-contas/${p.id}`)}
                     >
-                      <TableCell className="font-semibold text-slate-800">{p.title}</TableCell>
+                      <TableCell className="font-semibold text-slate-800">
+                        <div className="flex items-center gap-2">
+                          {hasAlerts && <ShieldAlert className="h-4 w-4 text-red-500" />}
+                          {p.title}
+                        </div>
+                      </TableCell>
                       <TableCell>{p.public_entity}</TableCell>
                       <TableCell>
                         <Badge variant="outline" className="text-slate-600 bg-slate-50">
@@ -151,7 +225,9 @@ export default function PrestacaoContasList() {
                         {getAccountabilityStatusBadge(p.osc_partnership_accountability)}
                       </TableCell>
                       <TableCell className="text-sm text-muted-foreground">
-                        {acc?.deadline ? new Date(acc.deadline).toLocaleDateString('pt-BR') : '-'}
+                        {acc?.deadline
+                          ? new Date(acc.deadline).toLocaleDateString('pt-BR', { timeZone: 'UTC' })
+                          : '-'}
                       </TableCell>
                       <TableCell className="text-right">
                         <Button

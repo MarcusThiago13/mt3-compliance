@@ -17,7 +17,6 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
-  DialogDescription,
 } from '@/components/ui/dialog'
 import {
   Select,
@@ -29,20 +28,33 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { supabase } from '@/lib/supabase/client'
 import { toast } from '@/hooks/use-toast'
-import {
-  Loader2,
-  UploadCloud,
-  CheckCircle2,
-  AlertTriangle,
-  FileSpreadsheet,
-  ScanLine,
-} from 'lucide-react'
+import { Loader2, UploadCloud, FileSpreadsheet, ScanLine } from 'lucide-react'
 import OcrModal from './OcrModal'
 
-const CATEGORIAS_LICITACON = [
-  { code: '1.1', title: 'Vencimentos e vantagens' },
-  { code: '2.1', title: 'Material de Consumo' },
-  { code: '3.3', title: 'Serviços de Terceiros - PJ' },
+const CATEGORIAS_DESPESA = [
+  { code: '1.1', title: '1.1 - Vencimentos e vantagens' },
+  { code: '1.2', title: '1.2 - Obrigações Patronais' },
+  { code: '1.99', title: '1.99 - Outras despesas com pessoal' },
+  { code: '2.1', title: '2.1 - Material Farmacológico/Hospitalar' },
+  { code: '2.2', title: '2.2 - Material de Expediente' },
+  { code: '2.3', title: '2.3 - Material de Limpeza/Higiene' },
+  { code: '2.99', title: '2.99 - Outras despesas de Material' },
+  { code: '3.1', title: '3.1 - Serviços de Saúde (PF)' },
+  { code: '3.2', title: '3.2 - Apoio Administrativo/Operacional (PF)' },
+  { code: '3.3', title: '3.3 - Manutenção de Equipamentos/Bens (PF)' },
+  { code: '3.99', title: '3.99 - Outros Serviços Terceiros (PF)' },
+  { code: '4.1', title: '4.1 - Serviços Médico/Odonto/Lab (PJ)' },
+  { code: '4.2', title: '4.2 - Apoio Administrativo/Operacional (PJ)' },
+  { code: '4.3', title: '4.3 - Vigilância e Limpeza' },
+  { code: '4.4', title: '4.4 - Locação de Máquinas/Equipamentos' },
+  { code: '4.5', title: '4.5 - Manutenção de Equipamentos/Bens (PJ)' },
+  { code: '4.6', title: '4.6 - Serviços Bancários' },
+  { code: '4.7', title: '4.7 - Locação de Imóveis' },
+  { code: '4.99', title: '4.99 - Outros Serviços Terceiros (PJ)' },
+  { code: '5', title: '5 - Equipamentos e Material Permanente' },
+  { code: '6', title: '6 - Obras e Instalações' },
+  { code: '7', title: '7 - Custos Indiretos' },
+  { code: '8', title: '8 - Despesas Tributárias' },
 ]
 
 export default function ConciliacaoBancariaTab({ partnership }: any) {
@@ -60,7 +72,9 @@ export default function ConciliacaoBancariaTab({ partnership }: any) {
   const [providerName, setProviderName] = useState('')
   const [providerDoc, setProviderDoc] = useState('')
   const [invoiceNum, setInvoiceNum] = useState('')
+  const [invoiceDate, setInvoiceDate] = useState('')
   const [categoryCode, setCategoryCode] = useState('')
+  const [grossValue, setGrossValue] = useState(0)
 
   const fetchData = async () => {
     setLoading(true)
@@ -104,6 +118,14 @@ export default function ConciliacaoBancariaTab({ partnership }: any) {
         partnership_id: partnership.id,
         account_id: accountId,
         transaction_date: '2026-01-10',
+        description: 'PGTO TITULO 123456',
+        amount: 1500,
+        transaction_type: 'debit',
+      },
+      {
+        partnership_id: partnership.id,
+        account_id: accountId,
+        transaction_date: '2026-01-15',
         description: 'TARIFA BANCARIA',
         amount: 45.5,
         transaction_type: 'debit',
@@ -122,7 +144,9 @@ export default function ConciliacaoBancariaTab({ partnership }: any) {
     setProviderName(line.provider_name || '')
     setProviderDoc(line.provider_document || '')
     setInvoiceNum(line.invoice_number || '')
+    setInvoiceDate(line.invoice_date || '')
     setCategoryCode(line.category_code || '')
+    setGrossValue(line.gross_value || line.amount)
     setClassifyModalOpen(true)
   }
 
@@ -130,22 +154,26 @@ export default function ConciliacaoBancariaTab({ partnership }: any) {
     setIsSaving(true)
     const newStatus =
       classification === 'Tarifa / Juros (Não Elegível)' ? 'Aguardando Restituição' : 'Conciliada'
+
     const updates: any = { classification, status: newStatus, updated_at: new Date().toISOString() }
 
     if (classification === 'Despesa Elegível') {
       updates.provider_name = providerName
       updates.provider_document = providerDoc
       updates.invoice_number = invoiceNum
+      updates.invoice_date = invoiceDate
       updates.category_code = categoryCode
+      updates.gross_value = grossValue
     }
 
     const { error } = await supabase
       .from('osc_bank_statement_lines' as any)
       .update(updates)
       .eq('id', selectedLine.id)
+
     if (error) toast({ title: 'Erro', description: error.message, variant: 'destructive' })
     else {
-      toast({ title: 'Sucesso', description: 'Linha conciliada.' })
+      toast({ title: 'Sucesso', description: 'Lançamento classificado com sucesso.' })
       setClassifyModalOpen(false)
       fetchData()
     }
@@ -163,7 +191,8 @@ export default function ConciliacaoBancariaTab({ partnership }: any) {
             <FileSpreadsheet className="h-5 w-5 mr-2 text-slate-600" /> Motor Extrato-Cêntrico
           </h3>
           <p className="text-sm text-slate-600 mt-1 max-w-2xl">
-            Conciliação linha a linha. Toda movimentação deve ter lastro documental e justificativa.
+            A conciliação deve ser feita linha a linha com base no extrato bancário oficial. Todas
+            as saídas devem ter lastro documental e vínculo ao plano de trabalho (B3).
           </p>
         </div>
         <div className="flex gap-2">
@@ -198,7 +227,7 @@ export default function ConciliacaoBancariaTab({ partnership }: any) {
                 <TableHeader className="bg-slate-100">
                   <TableRow>
                     <TableHead>Data</TableHead>
-                    <TableHead>Histórico</TableHead>
+                    <TableHead>Histórico do Banco</TableHead>
                     <TableHead className="text-right">Saída</TableHead>
                     <TableHead className="text-right">Entrada</TableHead>
                     <TableHead>Status</TableHead>
@@ -209,7 +238,9 @@ export default function ConciliacaoBancariaTab({ partnership }: any) {
                   {lines.map((line) => (
                     <TableRow key={line.id} className="text-sm">
                       <TableCell>
-                        {new Date(line.transaction_date).toLocaleDateString('pt-BR')}
+                        {new Date(line.transaction_date).toLocaleDateString('pt-BR', {
+                          timeZone: 'UTC',
+                        })}
                       </TableCell>
                       <TableCell>{line.description}</TableCell>
                       <TableCell className="text-right text-red-600 font-mono">
@@ -220,7 +251,7 @@ export default function ConciliacaoBancariaTab({ partnership }: any) {
                       </TableCell>
                       <TableCell>
                         {line.status === 'Importada' ? (
-                          <Badge variant="secondary">Pendente</Badge>
+                          <Badge variant="secondary">Pendente de Tratamento</Badge>
                         ) : line.status === 'Aguardando Restituição' ? (
                           <Badge variant="destructive">Requer Devolução</Badge>
                         ) : (
@@ -231,7 +262,7 @@ export default function ConciliacaoBancariaTab({ partnership }: any) {
                       </TableCell>
                       <TableCell className="text-right">
                         <Button variant="outline" size="sm" onClick={() => openClassifyModal(line)}>
-                          Tratar
+                          Classificar
                         </Button>
                       </TableCell>
                     </TableRow>
@@ -244,16 +275,24 @@ export default function ConciliacaoBancariaTab({ partnership }: any) {
       </Card>
 
       <Dialog open={classifyModalOpen} onOpenChange={setClassifyModalOpen}>
-        <DialogContent>
+        <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>Classificar Lançamento</DialogTitle>
+            <DialogTitle>Conciliação e Lastro Documental</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-4">
+            <div className="p-3 bg-slate-50 border rounded flex justify-between items-center text-sm">
+              <span className="font-semibold text-slate-700">{selectedLine?.description}</span>
+              <span className="font-mono text-lg font-bold">
+                {selectedLine?.transaction_type === 'debit' ? '-' : '+'}
+                {formatCurrency(selectedLine?.amount || 0)}
+              </span>
+            </div>
+
             <div className="space-y-2">
-              <Label>Natureza *</Label>
+              <Label>Natureza da Movimentação *</Label>
               <Select value={classification} onValueChange={setClassification}>
                 <SelectTrigger>
-                  <SelectValue />
+                  <SelectValue placeholder="Selecione a classificação..." />
                 </SelectTrigger>
                 <SelectContent>
                   {selectedLine?.transaction_type === 'debit' ? (
@@ -262,14 +301,20 @@ export default function ConciliacaoBancariaTab({ partnership }: any) {
                         Despesa Elegível (Possui NF/Recibo)
                       </SelectItem>
                       <SelectItem value="Tarifa / Juros (Não Elegível)">
-                        Tarifa Bancária (Não Elegível)
+                        Tarifa / Multa (Não Elegível - Exige Recomposição)
+                      </SelectItem>
+                      <SelectItem value="Devolução de Saldo">
+                        Devolução de Saldo ao Ente Público
                       </SelectItem>
                     </>
                   ) : (
                     <>
                       <SelectItem value="Repasse do Ente Público">Repasse do Parceiro</SelectItem>
-                      <SelectItem value="Restituição da Matriz">
-                        Restituição da OSC (Devolução)
+                      <SelectItem value="Rendimento de Aplicação">
+                        Rendimento de Aplicação Financeira
+                      </SelectItem>
+                      <SelectItem value="Recomposição da Matriz">
+                        Recomposição da OSC (Devolução de tarifa)
                       </SelectItem>
                     </>
                   )}
@@ -278,15 +323,15 @@ export default function ConciliacaoBancariaTab({ partnership }: any) {
             </div>
 
             {classification === 'Despesa Elegível' && (
-              <div className="grid gap-4 pt-2 border-t">
+              <div className="grid gap-4 pt-4 border-t border-slate-100">
                 <div className="space-y-2">
-                  <Label>Categoria (Plano de Trabalho)</Label>
+                  <Label>Categoria de Despesa (DID)</Label>
                   <Select value={categoryCode} onValueChange={setCategoryCode}>
                     <SelectTrigger>
-                      <SelectValue />
+                      <SelectValue placeholder="Selecione a categoria conforme plano..." />
                     </SelectTrigger>
                     <SelectContent>
-                      {CATEGORIAS_LICITACON.map((c) => (
+                      {CATEGORIAS_DESPESA.map((c) => (
                         <SelectItem key={c.code} value={c.code}>
                           {c.title}
                         </SelectItem>
@@ -294,13 +339,51 @@ export default function ConciliacaoBancariaTab({ partnership }: any) {
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="space-y-2">
-                  <Label>Fornecedor / Favorecido</Label>
-                  <Input value={providerName} onChange={(e) => setProviderName(e.target.value)} />
-                </div>
-                <div className="space-y-2">
-                  <Label>Nº Documento (NF)</Label>
-                  <Input value={invoiceNum} onChange={(e) => setInvoiceNum(e.target.value)} />
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>CNPJ/CPF do Fornecedor</Label>
+                    <Input
+                      value={providerDoc}
+                      onChange={(e) => setProviderDoc(e.target.value.replace(/\D/g, ''))}
+                      placeholder="Somente números"
+                      maxLength={14}
+                    />
+                    <p className="text-[10px] text-muted-foreground">
+                      11 ou 14 dígitos sem pontuação
+                    </p>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Nome do Fornecedor / Prestador</Label>
+                    <Input value={providerName} onChange={(e) => setProviderName(e.target.value)} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Número da Nota Fiscal</Label>
+                    <Input value={invoiceNum} onChange={(e) => setInvoiceNum(e.target.value)} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Data de Emissão da NF</Label>
+                    <Input
+                      type="date"
+                      value={invoiceDate}
+                      onChange={(e) => setInvoiceDate(e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Valor Bruto da NF (R$)</Label>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      value={grossValue}
+                      onChange={(e) => setGrossValue(parseFloat(e.target.value))}
+                    />
+                    <p className="text-[10px] text-muted-foreground">
+                      Valor total antes de retenções
+                    </p>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Valor Efetivamente Pago (R$)</Label>
+                    <Input disabled value={selectedLine?.amount} className="bg-slate-50" />
+                  </div>
                 </div>
               </div>
             )}
@@ -310,7 +393,7 @@ export default function ConciliacaoBancariaTab({ partnership }: any) {
               Cancelar
             </Button>
             <Button onClick={handleSaveClassification} disabled={isSaving || !classification}>
-              Salvar
+              Salvar Conciliação
             </Button>
           </DialogFooter>
         </DialogContent>
