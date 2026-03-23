@@ -23,7 +23,7 @@ export function Step1({ data, updateData }: { data: any; updateData: (d: any) =>
             value={data.org_type || 'empresa'}
             onValueChange={(v) => {
               setField('org_type', v)
-              if (v === 'empresa') setField('org_subtype', null)
+              if (v === 'empresa' || v === 'poder_publico') setField('org_subtype', null)
             }}
           >
             <SelectTrigger className="bg-background">
@@ -32,6 +32,7 @@ export function Step1({ data, updateData }: { data: any; updateData: (d: any) =>
             <SelectContent>
               <SelectItem value="empresa">Empresa privada com fins lucrativos</SelectItem>
               <SelectItem value="osc">Organização da Sociedade Civil – OSC</SelectItem>
+              <SelectItem value="poder_publico">Órgão ou entidade do Poder Público</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -60,11 +61,11 @@ export function Step1({ data, updateData }: { data: any; updateData: (d: any) =>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label>Razão Social *</Label>
+          <Label>Razão Social / Nome Institucional *</Label>
           <Input
             value={data.razao_social || ''}
             onChange={(e) => setField('razao_social', e.target.value)}
-            placeholder="Ex: Acme Ltda"
+            placeholder="Ex: Acme Ltda / Prefeitura Municipal"
           />
         </div>
         <div className="space-y-2">
@@ -85,19 +86,25 @@ export function Step1({ data, updateData }: { data: any; updateData: (d: any) =>
           placeholder="Rua, Número, Bairro, Cidade - UF"
         />
       </div>
-      <div className="flex items-center space-x-2 border p-3 rounded-md">
-        <Switch
-          checked={data.is_me_epp || false}
-          onCheckedChange={(v) => setField('is_me_epp', v)}
-          id="me-epp"
-        />
-        <Label htmlFor="me-epp" className="cursor-pointer">
-          Classificada como Microempresa (ME) ou EPP (LC 123/2016)?
-        </Label>
-      </div>
+
+      {data.org_type === 'empresa' && (
+        <div className="flex items-center space-x-2 border p-3 rounded-md">
+          <Switch
+            checked={data.is_me_epp || false}
+            onCheckedChange={(v) => setField('is_me_epp', v)}
+            id="me-epp"
+          />
+          <Label htmlFor="me-epp" className="cursor-pointer">
+            Classificada como Microempresa (ME) ou EPP (LC 123/2016)?
+          </Label>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label>Faturamento Anual Bruto</Label>
+          <Label>
+            {data.org_type === 'poder_publico' ? 'Orçamento Anual' : 'Faturamento Anual Bruto'}
+          </Label>
           <Input
             value={data.gross_revenue || ''}
             onChange={(e) => setField('gross_revenue', maskCurrency(e.target.value))}
@@ -132,7 +139,7 @@ export function Step1({ data, updateData }: { data: any; updateData: (d: any) =>
         </div>
       </div>
 
-      {data.org_type !== 'osc' && (
+      {data.org_type === 'empresa' && (
         <div className="space-y-4 border p-4 rounded-md">
           <div className="flex items-center space-x-2">
             <Switch

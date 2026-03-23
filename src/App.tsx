@@ -29,6 +29,7 @@ import SubmitEvidence from './pages/SubmitEvidence'
 import PublicReport from './pages/PublicReport'
 import PublicReportStatus from './pages/PublicReportStatus'
 import DueDiligence from './pages/DueDiligence'
+import Trabalhista from './pages/Trabalhista'
 import PublicFormCollection from './pages/PublicFormCollection'
 import CollectionLinks from './pages/CollectionLinks'
 import CommunicationsLog from './pages/CommunicationsLog'
@@ -134,6 +135,7 @@ const App = () => (
                 <Route path="dossier" element={<Dossier />} />
                 <Route path="inbox" element={<EvidenceInbox />} />
                 <Route path="due-diligence" element={<DueDiligence />} />
+                <Route path="trabalhista" element={<Trabalhista />} />
                 <Route path="communications" element={<CommunicationsLog />} />
                 <Route path="templates" element={<TenantTemplates />} />
                 <Route path="documents" element={<TenantDocuments />} />
@@ -155,7 +157,6 @@ const App = () => (
             <Route path="*" element={<NotFound />} />
           </Routes>
 
-          {/* Assistente Onipresente Global */}
           <ComplianceChat />
         </TooltipProvider>
       </BrowserRouter>

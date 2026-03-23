@@ -219,7 +219,6 @@ export default function Tenants() {
         variant: 'destructive',
       })
     } else {
-      // Configurar acesso de administrador para o criador
       if (user?.id) {
         await supabase
           .from('user_tenants')
@@ -227,7 +226,6 @@ export default function Tenants() {
           .eq('tenant_id', newTenant.id)
           .eq('user_id', user.id)
       }
-      // Trilha de auditoria
       await supabase.from('audit_logs').insert({
         tenant_id: newTenant.id,
         clause_id: 'system',
@@ -388,7 +386,7 @@ export default function Tenants() {
                         value={newTenantOrgType}
                         onValueChange={(v) => {
                           setNewTenantOrgType(v)
-                          if (v === 'empresa') setNewTenantOrgSubtype('')
+                          if (v !== 'osc') setNewTenantOrgSubtype('')
                         }}
                       >
                         <SelectTrigger>
@@ -397,6 +395,9 @@ export default function Tenants() {
                         <SelectContent>
                           <SelectItem value="empresa">Empresa Privada</SelectItem>
                           <SelectItem value="osc">Organização da Soc. Civil (OSC)</SelectItem>
+                          <SelectItem value="poder_publico">
+                            Órgão ou Entidade do Poder Público
+                          </SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -429,7 +430,11 @@ export default function Tenants() {
                         <span className="font-medium">{newTenantName}</span>
                         <span className="text-muted-foreground">Tipo:</span>
                         <span className="font-medium">
-                          {newTenantOrgType === 'osc' ? 'OSC' : 'Empresa'}
+                          {newTenantOrgType === 'osc'
+                            ? 'OSC'
+                            : newTenantOrgType === 'poder_publico'
+                              ? 'Poder Público'
+                              : 'Empresa'}
                         </span>
                       </div>
                     </div>
@@ -528,6 +533,13 @@ export default function Tenants() {
                             </div>
                           )}
                         </div>
+                      ) : t.org_type === 'poder_publico' ? (
+                        <Badge
+                          variant="outline"
+                          className="bg-emerald-50 text-emerald-700 border-emerald-200"
+                        >
+                          Poder Público
+                        </Badge>
                       ) : (
                         <Badge
                           variant="outline"
@@ -627,7 +639,7 @@ export default function Tenants() {
                   value={editTenantOrgType}
                   onValueChange={(v) => {
                     setEditTenantOrgType(v)
-                    if (v === 'empresa') setEditTenantOrgSubtype('')
+                    if (v !== 'osc') setEditTenantOrgSubtype('')
                   }}
                 >
                   <SelectTrigger>
@@ -636,6 +648,9 @@ export default function Tenants() {
                   <SelectContent>
                     <SelectItem value="empresa">Empresa Privada</SelectItem>
                     <SelectItem value="osc">Organização da Soc. Civil (OSC)</SelectItem>
+                    <SelectItem value="poder_publico">
+                      Órgão ou Entidade do Poder Público
+                    </SelectItem>
                   </SelectContent>
                 </Select>
               </div>

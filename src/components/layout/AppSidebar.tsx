@@ -37,6 +37,7 @@ import {
   BookOpen,
   Accessibility,
   FileCheck,
+  Briefcase,
 } from 'lucide-react'
 import { getParentClauses, getClausesByParent } from '@/lib/iso-data'
 import { useAppStore } from '@/stores/main'
@@ -143,6 +144,17 @@ export function AppSidebar() {
                       <Link to={`${tid}/due-diligence`}>
                         <FileSearch />
                         <span>Due Diligence (KYS)</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton
+                      asChild
+                      isActive={location.pathname.includes('/trabalhista')}
+                    >
+                      <Link to={`${tid}/trabalhista`}>
+                        <Briefcase />
+                        <span>Compliance Trabalhista</span>
                       </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
