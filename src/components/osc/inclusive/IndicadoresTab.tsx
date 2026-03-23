@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { BarChart3, TrendingUp } from 'lucide-react'
 
-export default function IndicadoresTab({ tenantId }: { tenantId: string }) {
+export function IndicadoresTab({ tenantId }: { tenantId: string }) {
   return (
     <div className="space-y-6 animate-fade-in">
       <h3 className="text-lg font-bold text-slate-800 flex items-center">

@@ -2,7 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Badge } from '@/components/ui/badge'
 import { Users, GraduationCap, Clock } from 'lucide-react'
 
-export default function EquipeTab({ tenantId }: { tenantId: string }) {
+export function EquipeTab({ tenantId }: { tenantId: string }) {
   // Mock data for UI demonstration as there are no tables for team members in schema
   const team = [
     {

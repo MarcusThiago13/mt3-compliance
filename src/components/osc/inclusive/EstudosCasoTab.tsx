@@ -31,7 +31,7 @@ import { supabase } from '@/lib/supabase/client'
 import { toast } from '@/hooks/use-toast'
 import { Loader2, Plus, Users, Search, ClipboardList } from 'lucide-react'
 
-export default function EstudosCasoTab({ tenantId }: { tenantId: string }) {
+export function EstudosCasoTab({ tenantId }: { tenantId: string }) {
   const [cases, setCases] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [isModalOpen, setIsModalOpen] = useState(false)

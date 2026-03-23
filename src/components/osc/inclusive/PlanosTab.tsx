@@ -13,7 +13,7 @@ import { Badge } from '@/components/ui/badge'
 import { supabase } from '@/lib/supabase/client'
 import { Loader2, FileText, CheckCircle2, AlertCircle } from 'lucide-react'
 
-export default function PlanosTab({ tenantId }: { tenantId: string }) {
+export function PlanosTab({ tenantId }: { tenantId: string }) {
   const [plans, setPlans] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
 
