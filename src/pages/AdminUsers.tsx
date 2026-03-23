@@ -68,8 +68,10 @@ export default function AdminUsers() {
   const { user: currentUser } = useAuth()
   const isAdmin =
     currentUser?.email === 'admin@example.com' ||
+    currentUser?.email === 'marcusthiago.adv@gmail.com' ||
     currentUser?.app_metadata?.role === 'admin' ||
-    currentUser?.user_metadata?.is_admin
+    currentUser?.user_metadata?.is_admin === true ||
+    currentUser?.user_metadata?.is_admin === 'true'
 
   const [tenants, setTenants] = useState<any[]>([])
   const [selectedTenantId, setSelectedTenantId] = useState<string>('')
@@ -133,8 +135,14 @@ export default function AdminUsers() {
     setLoading(true)
     try {
       const [fetchedUsers, fetchedInvites] = await Promise.all([
-        getUsers(tenantId).catch(() => []),
-        getInvitations(tenantId).catch(() => []),
+        getUsers(tenantId).catch((err) => {
+          console.error("Erro ao buscar usuários (admin-users):", err);
+          return [];
+        }),
+        getInvitations(tenantId).catch((err) => {
+          console.error("Erro ao buscar convites:", err);
+          return [];
+        }),
       ])
 
       const combined = [
@@ -652,3 +660,4 @@ export default function AdminUsers() {
     </div>
   )
 }
+```
