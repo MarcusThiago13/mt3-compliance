@@ -7,14 +7,15 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Badge } from '@/components/ui/badge'
 import { toast } from '@/hooks/use-toast'
 
-import DadosGeraisTab from '@/components/osc/DadosGeraisTab'
-import ChamamentoTab from '@/components/osc/ChamamentoTab'
+import GestaoGeralTab from '@/components/osc/GestaoGeralTab'
+import HabilitacaoCelebracaoTab from '@/components/osc/HabilitacaoCelebracaoTab'
+import PlanoTrabalhoTab from '@/components/osc/PlanoTrabalhoTab'
 import ExecucaoTab from '@/components/osc/ExecucaoTab'
 import PrestacaoContasTab from '@/components/osc/PrestacaoContasTab'
 import TransparenciaTab from '@/components/osc/TransparenciaTab'
 import AtuacaoRedeTab from '@/components/osc/AtuacaoRedeTab'
 import EncerramentoTab from '@/components/osc/EncerramentoTab'
-import ArquivamentoTab from '@/components/osc/ArquivamentoTab'
+import HistoricoComplianceTab from '@/components/osc/HistoricoComplianceTab'
 
 export default function ParceriaDetalhes() {
   const { tenantId, id } = useParams<{ tenantId: string; id: string }>()
@@ -22,7 +23,7 @@ export default function ParceriaDetalhes() {
   const [partnership, setPartnership] = useState<any>(null)
   const [loading, setLoading] = useState(true)
 
-  const tab = searchParams.get('tab') || 'dados'
+  const tab = searchParams.get('tab') || 'gestao'
 
   const fetchPartnership = async () => {
     setLoading(true)
@@ -81,86 +82,69 @@ export default function ParceriaDetalhes() {
         </div>
       </div>
 
-      <Tabs value={tab} onValueChange={handleTabChange} className="w-full">
-        {/* Adjusted to handle the 10 blocks logic horizontally wrapping */}
-        <TabsList className="flex flex-wrap w-full h-auto p-1 bg-slate-100/80 rounded-lg justify-start gap-1">
-          <TabsTrigger
-            value="chamamento"
-            className="py-2 px-3 text-xs sm:text-sm data-[state=active]:bg-white data-[state=active]:shadow-sm"
-          >
-            Habilitação
-          </TabsTrigger>
-          <TabsTrigger
-            value="dados"
-            className="py-2 px-3 text-xs sm:text-sm data-[state=active]:bg-white data-[state=active]:shadow-sm"
-          >
-            Celebração
-          </TabsTrigger>
-          <TabsTrigger
-            value="execucao"
-            className="py-2 px-3 text-xs sm:text-sm data-[state=active]:bg-white data-[state=active]:shadow-sm"
-          >
-            Plano e Execução
-          </TabsTrigger>
-          <TabsTrigger
-            value="prestacao"
-            className="py-2 px-3 text-xs sm:text-sm data-[state=active]:bg-white data-[state=active]:shadow-sm"
-          >
-            Financeiro / Contas
-          </TabsTrigger>
-          <TabsTrigger
-            value="transparencia"
-            className="py-2 px-3 text-xs sm:text-sm data-[state=active]:bg-white data-[state=active]:shadow-sm"
-          >
-            Transparência
-          </TabsTrigger>
-          <TabsTrigger
-            value="rede"
-            className="py-2 px-3 text-xs sm:text-sm data-[state=active]:bg-white data-[state=active]:shadow-sm"
-          >
-            Rede
-          </TabsTrigger>
-          <TabsTrigger
-            value="encerramento"
-            className="py-2 px-3 text-xs sm:text-sm data-[state=active]:bg-white data-[state=active]:shadow-sm"
-          >
-            Encerramento
-          </TabsTrigger>
-          <TabsTrigger
-            value="arquivamento"
-            className="py-2 px-3 text-xs sm:text-sm data-[state=active]:bg-white data-[state=active]:shadow-sm"
-          >
-            Arquivamento
-          </TabsTrigger>
-        </TabsList>
+      <div className="w-full overflow-x-auto pb-2">
+        <Tabs value={tab} onValueChange={handleTabChange} className="w-full min-w-max">
+          <TabsList className="flex w-full h-auto p-1 bg-slate-100/80 rounded-lg justify-start gap-1">
+            <TabsTrigger value="gestao" className="py-2 px-3 text-xs sm:text-sm data-[state=active]:bg-white data-[state=active]:shadow-sm">
+              Gestão Geral (B5)
+            </TabsTrigger>
+            <TabsTrigger value="habilitacao" className="py-2 px-3 text-xs sm:text-sm data-[state=active]:bg-white data-[state=active]:shadow-sm">
+              Habilitação (B2)
+            </TabsTrigger>
+            <TabsTrigger value="plano" className="py-2 px-3 text-xs sm:text-sm data-[state=active]:bg-white data-[state=active]:shadow-sm">
+              Plano de Trabalho (B3)
+            </TabsTrigger>
+            <TabsTrigger value="execucao" className="py-2 px-3 text-xs sm:text-sm data-[state=active]:bg-white data-[state=active]:shadow-sm">
+              Execução (B4)
+            </TabsTrigger>
+            <TabsTrigger value="prestacao" className="py-2 px-3 text-xs sm:text-sm data-[state=active]:bg-white data-[state=active]:shadow-sm border-l-2 ml-1 border-amber-200">
+              Contas & Finanças
+            </TabsTrigger>
+            <TabsTrigger value="transparencia" className="py-2 px-3 text-xs sm:text-sm data-[state=active]:bg-white data-[state=active]:shadow-sm ml-1">
+              Transparência (B6)
+            </TabsTrigger>
+            <TabsTrigger value="rede" className="py-2 px-3 text-xs sm:text-sm data-[state=active]:bg-white data-[state=active]:shadow-sm">
+              Rede (B7)
+            </TabsTrigger>
+            <TabsTrigger value="encerramento" className="py-2 px-3 text-xs sm:text-sm data-[state=active]:bg-white data-[state=active]:shadow-sm">
+              Encerramento (B8/9)
+            </TabsTrigger>
+            <TabsTrigger value="historico" className="py-2 px-3 text-xs sm:text-sm data-[state=active]:bg-white data-[state=active]:shadow-sm">
+              Histórico (B10)
+            </TabsTrigger>
+          </TabsList>
 
-        <div className="mt-6">
-          <TabsContent value="dados" className="outline-none m-0">
-            <DadosGeraisTab partnership={partnership} onUpdate={fetchPartnership} />
-          </TabsContent>
-          <TabsContent value="chamamento" className="outline-none m-0">
-            <ChamamentoTab partnership={partnership} />
-          </TabsContent>
-          <TabsContent value="execucao" className="outline-none m-0">
-            <ExecucaoTab partnership={partnership} />
-          </TabsContent>
-          <TabsContent value="prestacao" className="outline-none m-0">
-            <PrestacaoContasTab partnership={partnership} />
-          </TabsContent>
-          <TabsContent value="transparencia" className="outline-none m-0">
-            <TransparenciaTab partnership={partnership} />
-          </TabsContent>
-          <TabsContent value="rede" className="outline-none m-0">
-            <AtuacaoRedeTab partnership={partnership} />
-          </TabsContent>
-          <TabsContent value="encerramento" className="outline-none m-0">
-            <EncerramentoTab partnership={partnership} />
-          </TabsContent>
-          <TabsContent value="arquivamento" className="outline-none m-0">
-            <ArquivamentoTab partnership={partnership} />
-          </TabsContent>
-        </div>
-      </Tabs>
+          <div className="mt-6">
+            <TabsContent value="gestao" className="outline-none m-0">
+              <GestaoGeralTab partnership={partnership} onUpdate={fetchPartnership} />
+            </TabsContent>
+            <TabsContent value="habilitacao" className="outline-none m-0">
+              <HabilitacaoCelebracaoTab partnership={partnership} />
+            </TabsContent>
+            <TabsContent value="plano" className="outline-none m-0">
+              <PlanoTrabalhoTab partnership={partnership} />
+            </TabsContent>
+            <TabsContent value="execucao" className="outline-none m-0">
+              <ExecucaoTab partnership={partnership} />
+            </TabsContent>
+            <TabsContent value="prestacao" className="outline-none m-0">
+              <PrestacaoContasTab partnership={partnership} />
+            </TabsContent>
+            <TabsContent value="transparencia" className="outline-none m-0">
+              <TransparenciaTab partnership={partnership} />
+            </TabsContent>
+            <TabsContent value="rede" className="outline-none m-0">
+              <AtuacaoRedeTab partnership={partnership} />
+            </TabsContent>
+            <TabsContent value="encerramento" className="outline-none m-0">
+              <EncerramentoTab partnership={partnership} />
+            </TabsContent>
+            <TabsContent value="historico" className="outline-none m-0">
+              <HistoricoComplianceTab partnership={partnership} />
+            </TabsContent>
+          </div>
+        </Tabs>
+      </div>
     </div>
   )
 }

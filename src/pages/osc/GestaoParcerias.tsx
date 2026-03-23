@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
-import { Handshake, Plus, Loader2, Search, ArrowRight } from 'lucide-react'
+import { Handshake, Plus, Loader2, Search, ArrowRight, Layers } from 'lucide-react'
 import { supabase } from '@/lib/supabase/client'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -84,7 +84,7 @@ export default function GestaoParcerias() {
         .single()
 
       if (error) throw error
-      toast({ title: 'Sucesso', description: 'Parceria criada com sucesso.' })
+      toast({ title: 'Sucesso', description: 'Parceria criada. Redirecionando para o módulo de gestão.' })
       setIsModalOpen(false)
       navigate(`/${tenantId}/osc/parcerias/${data.id}`)
     } catch (e: any) {
@@ -119,26 +119,65 @@ export default function GestaoParcerias() {
           <h1 className="text-3xl font-bold text-purple-800 flex items-center gap-3">
             <Handshake className="h-8 w-8" /> Gestão de Parcerias
           </h1>
-          <p className="text-muted-foreground mt-1">
-            Controle do ciclo de vida das parcerias (Planejamento, Chamamento, Execução e Prestação
-            de Contas).
+          <p className="text-muted-foreground mt-1 max-w-3xl">
+            Módulo central estruturante. Organize todo o ciclo de vida das parcerias, integrando a habilitação, execução, histórico institucional e prestação de contas num único eixo rastreável.
           </p>
         </div>
         <Button
           className="bg-purple-700 hover:bg-purple-800 text-white shadow-sm"
           onClick={() => setIsModalOpen(true)}
         >
-          <Plus className="mr-2 h-4 w-4" /> Nova Parceria
+          <Plus className="mr-2 h-4 w-4" /> Registrar Parceria
         </Button>
+      </div>
+
+      <div className="grid md:grid-cols-3 gap-4 mb-6">
+        <Card className="bg-purple-50/50 border-purple-100 shadow-sm">
+          <CardContent className="p-4 flex items-center gap-4">
+            <div className="p-3 bg-white rounded-full text-purple-600 shadow-sm">
+              <Layers className="h-6 w-6" />
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-purple-900">{parcerias.length}</p>
+              <p className="text-sm font-medium text-purple-700">Parcerias Registradas</p>
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="bg-emerald-50/50 border-emerald-100 shadow-sm">
+          <CardContent className="p-4 flex items-center gap-4">
+            <div className="p-3 bg-white rounded-full text-emerald-600 shadow-sm">
+              <Handshake className="h-6 w-6" />
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-emerald-900">
+                {parcerias.filter(p => p.status === 'Execução').length}
+              </p>
+              <p className="text-sm font-medium text-emerald-700">Em Execução</p>
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="bg-amber-50/50 border-amber-100 shadow-sm">
+          <CardContent className="p-4 flex items-center gap-4">
+            <div className="p-3 bg-white rounded-full text-amber-600 shadow-sm">
+              <Search className="h-6 w-6" />
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-amber-900">
+                {parcerias.filter(p => p.status === 'Prestação de Contas').length}
+              </p>
+              <p className="text-sm font-medium text-amber-700">Aguardando Aprovação de Contas</p>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       <Card className="shadow-sm border-purple-100">
         <CardHeader>
           <CardTitle className="text-lg flex items-center justify-between">
-            <span>Parcerias Cadastradas</span>
+            <span>Relação de Instrumentos Pactuados</span>
             <Search className="h-4 w-4 text-muted-foreground" />
           </CardTitle>
-          <CardDescription>Acompanhe e acesse o detalhamento de cada instrumento.</CardDescription>
+          <CardDescription>Acesse o detalhamento dos blocos gerenciais de cada parceria.</CardDescription>
         </CardHeader>
         <CardContent>
           {loading ? (
@@ -157,7 +196,7 @@ export default function GestaoParcerias() {
                   <TableHead>Título / Objeto</TableHead>
                   <TableHead>Ente Público</TableHead>
                   <TableHead>Instrumento</TableHead>
-                  <TableHead>Fase Atual</TableHead>
+                  <TableHead>Status (Blocos)</TableHead>
                   <TableHead className="text-right">Ação</TableHead>
                 </TableRow>
               </TableHeader>
@@ -174,7 +213,7 @@ export default function GestaoParcerias() {
                     <TableCell>{getStatusBadge(p.status)}</TableCell>
                     <TableCell className="text-right">
                       <Button variant="ghost" size="sm" className="text-purple-700">
-                        Acessar <ArrowRight className="ml-2 h-4 w-4" />
+                        Gerenciar <ArrowRight className="ml-2 h-4 w-4" />
                       </Button>
                     </TableCell>
                   </TableRow>
@@ -188,11 +227,11 @@ export default function GestaoParcerias() {
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Cadastrar Nova Parceria</DialogTitle>
+            <DialogTitle>Iniciar Registro de Nova Parceria</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label>Nome ou Objeto da Parceria *</Label>
+              <Label>Nome de Referência ou Objeto da Parceria *</Label>
               <Input
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
@@ -208,7 +247,7 @@ export default function GestaoParcerias() {
               />
             </div>
             <div className="space-y-2">
-              <Label>Tipo de Instrumento</Label>
+              <Label>Tipo de Instrumento Jurídico</Label>
               <Select value={instrument} onValueChange={setInstrument}>
                 <SelectTrigger>
                   <SelectValue />
@@ -232,7 +271,7 @@ export default function GestaoParcerias() {
               className="bg-purple-600 hover:bg-purple-700"
             >
               {isSaving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-              Salvar e Iniciar Planejamento
+              Criar e Avançar para Habilitação
             </Button>
           </DialogFooter>
         </DialogContent>
