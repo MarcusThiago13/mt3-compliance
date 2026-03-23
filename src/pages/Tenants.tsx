@@ -14,6 +14,7 @@ import {
   MessageCircle,
   FileText,
   History,
+  Settings,
 } from 'lucide-react'
 import { supabase } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
@@ -86,6 +87,14 @@ export default function Tenants() {
   const [newTenantOrgType, setNewTenantOrgType] = useState('empresa')
   const [newTenantOrgSubtype, setNewTenantOrgSubtype] = useState('')
   const [isCreating, setIsCreating] = useState(false)
+
+  const [isEditTenantOpen, setIsEditTenantOpen] = useState(false)
+  const [editingTenantId, setEditingTenantId] = useState<string | null>(null)
+  const [editTenantName, setEditTenantName] = useState('')
+  const [editTenantCnpj, setEditTenantCnpj] = useState('')
+  const [editTenantOrgType, setEditTenantOrgType] = useState('empresa')
+  const [editTenantOrgSubtype, setEditTenantOrgSubtype] = useState('')
+  const [isUpdating, setIsUpdating] = useState(false)
 
   const [isEmailModalOpen, setIsEmailModalOpen] = useState(false)
   const [emailTenantId, setEmailTenantId] = useState<string | undefined>(undefined)
@@ -172,6 +181,52 @@ export default function Tenants() {
       fetchTenants()
     }
     setIsCreating(false)
+  }
+
+  const openEditModal = (t: any) => {
+    setEditingTenantId(t.id)
+    setEditTenantName(t.name || '')
+    setEditTenantCnpj(t.cnpj || '')
+    setEditTenantOrgType(t.org_type || 'empresa')
+    setEditTenantOrgSubtype(t.org_subtype || '')
+    setIsEditTenantOpen(true)
+  }
+
+  const handleUpdateTenant = async () => {
+    if (!editTenantName) {
+      toast({
+        title: 'Atenção',
+        description: 'O nome da organização é obrigatório.',
+        variant: 'destructive',
+      })
+      return
+    }
+    setIsUpdating(true)
+    const { error } = await supabase
+      .from('tenants')
+      .update({
+        name: editTenantName,
+        cnpj: editTenantCnpj,
+        org_type: editTenantOrgType,
+        org_subtype: editTenantOrgSubtype || null,
+      } as any)
+      .eq('id', editingTenantId)
+
+    if (error) {
+      toast({
+        title: 'Erro',
+        description: 'Não foi possível atualizar a organização.',
+        variant: 'destructive',
+      })
+    } else {
+      toast({
+        title: 'Sucesso',
+        description: 'Configurações da organização atualizadas com sucesso.',
+      })
+      setIsEditTenantOpen(false)
+      fetchTenants()
+    }
+    setIsUpdating(false)
   }
 
   if (!isAdmin) {
@@ -371,8 +426,11 @@ export default function Tenants() {
                           <DropdownMenuItem onClick={() => navigate(`/${t.id}/users`)}>
                             <Users className="mr-2 h-4 w-4" /> Gerenciar Usuários
                           </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => openEditModal(t)}>
+                            <Settings className="mr-2 h-4 w-4" /> Configurações da Organização
+                          </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => navigate(`/${t.id}/onboarding`)}>
-                            <Edit className="mr-2 h-4 w-4" /> Editar Perfil
+                            <Edit className="mr-2 h-4 w-4" /> Formulários (Onboarding)
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
                           <DropdownMenuItem onClick={() => navigate(`/${t.id}/communications`)}>
@@ -411,6 +469,75 @@ export default function Tenants() {
           )}
         </CardContent>
       </Card>
+
+      <Dialog open={isEditTenantOpen} onOpenChange={setIsEditTenantOpen}>
+        <DialogContent className="max-w-xl">
+          <DialogHeader>
+            <DialogTitle>Configurações da Organização</DialogTitle>
+            <DialogDescription>
+              Ajuste o tipo, subtipo e dados principais deste cliente.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Nome da Organização *</Label>
+                <Input value={editTenantName} onChange={(e) => setEditTenantName(e.target.value)} />
+              </div>
+              <div className="space-y-2">
+                <Label>CNPJ</Label>
+                <Input value={editTenantCnpj} onChange={(e) => setEditTenantCnpj(e.target.value)} />
+              </div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border-t pt-4">
+              <div className="space-y-2">
+                <Label>Tipo de Organização *</Label>
+                <Select
+                  value={editTenantOrgType}
+                  onValueChange={(v) => {
+                    setEditTenantOrgType(v)
+                    if (v === 'empresa') setEditTenantOrgSubtype('')
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="empresa">Empresa Privada</SelectItem>
+                    <SelectItem value="osc">Organização da Soc. Civil (OSC)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              {editTenantOrgType === 'osc' && (
+                <div className="space-y-2 animate-in fade-in">
+                  <Label>Subtipo Organizacional</Label>
+                  <Select value={editTenantOrgSubtype} onValueChange={setEditTenantOrgSubtype}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="educacional">Educacional</SelectItem>
+                      <SelectItem value="assistencia_social">Assistência Social</SelectItem>
+                      <SelectItem value="saude">Saúde</SelectItem>
+                      <SelectItem value="multissetorial">Multissetorial</SelectItem>
+                      <SelectItem value="geral">Geral</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsEditTenantOpen(false)}>
+              Cancelar
+            </Button>
+            <Button onClick={handleUpdateTenant} disabled={isUpdating}>
+              {isUpdating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Salvar Alterações
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <AlertDialog open={!!tenantToDelete} onOpenChange={(o) => !o && setTenantToDelete(null)}>
         <AlertDialogContent>
