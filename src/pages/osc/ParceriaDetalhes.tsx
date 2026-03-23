@@ -10,6 +10,7 @@ import { toast } from '@/hooks/use-toast'
 import DadosGeraisTab from '@/components/osc/DadosGeraisTab'
 import ChamamentoTab from '@/components/osc/ChamamentoTab'
 import ExecucaoTab from '@/components/osc/ExecucaoTab'
+import PrestacaoContasTab from '@/components/osc/PrestacaoContasTab'
 
 export default function ParceriaDetalhes() {
   const { tenantId, id } = useParams<{ tenantId: string; id: string }>()
@@ -70,7 +71,7 @@ export default function ParceriaDetalhes() {
       </div>
 
       <Tabs defaultValue="dados" className="w-full">
-        <TabsList className="grid w-full grid-cols-1 sm:grid-cols-3 max-w-2xl h-auto p-1 bg-purple-50">
+        <TabsList className="grid w-full grid-cols-1 sm:grid-cols-4 max-w-4xl h-auto p-1 bg-purple-50">
           <TabsTrigger
             value="dados"
             className="py-2.5 data-[state=active]:bg-white data-[state=active]:text-purple-800"
@@ -89,6 +90,12 @@ export default function ParceriaDetalhes() {
           >
             Execução e Metas
           </TabsTrigger>
+          <TabsTrigger
+            value="prestacao"
+            className="py-2.5 data-[state=active]:bg-white data-[state=active]:text-purple-800"
+          >
+            Prestação de Contas
+          </TabsTrigger>
         </TabsList>
 
         <div className="mt-6">
@@ -100,6 +107,9 @@ export default function ParceriaDetalhes() {
           </TabsContent>
           <TabsContent value="execucao" className="outline-none m-0">
             <ExecucaoTab partnership={partnership} />
+          </TabsContent>
+          <TabsContent value="prestacao" className="outline-none m-0">
+            <PrestacaoContasTab partnership={partnership} />
           </TabsContent>
         </div>
       </Tabs>
