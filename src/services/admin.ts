@@ -5,9 +5,16 @@ export const getUsers = async (tenantId?: string) => {
     method: 'POST',
     body: { action: 'get_users', tenant_id: tenantId },
   })
-  if (error) throw error
-  if (data?.error) throw new Error(data.error)
-  return data.users || []
+
+  if (error) {
+    throw new Error(error.message || 'Erro de comunicação com o servidor ao buscar usuários.')
+  }
+
+  if (data?.error) {
+    throw new Error(data.error)
+  }
+
+  return data?.users || []
 }
 
 export const getInvitations = async (tenantId?: string) => {
@@ -21,7 +28,7 @@ export const getInvitations = async (tenantId?: string) => {
   }
 
   const { data, error } = await query
-  if (error) throw error
+  if (error) throw new Error(error.message)
   return data || []
 }
 
@@ -49,7 +56,7 @@ export const createInvitation = async (
       .eq('id', existing.id)
       .select()
       .single()
-    if (error) throw error
+    if (error) throw new Error(error.message)
     return data
   } else {
     const { data, error } = await supabase
@@ -57,7 +64,7 @@ export const createInvitation = async (
       .insert([{ email, name, tenant_id, phone, status: 'pending', role, classification }])
       .select()
       .single()
-    if (error) throw error
+    if (error) throw new Error(error.message)
     return data
   }
 }
@@ -67,8 +74,15 @@ export const sendInvitation = async (invitation_id: string, type: 'email' | 'lin
     method: 'POST',
     body: { invitation_id, type, redirectUrl: window.location.origin },
   })
-  if (error) throw error
-  if (data?.error) throw new Error(data.error)
+
+  if (error) {
+    throw new Error(error.message || 'Erro de comunicação com o servidor ao enviar convite.')
+  }
+
+  if (data?.error) {
+    throw new Error(data.error)
+  }
+
   return data
 }
 
@@ -81,8 +95,15 @@ export const updateUser = async (
     method: 'POST',
     body: { action: 'update_user', target_user_id, target_tenant_id, updates },
   })
-  if (error) throw error
-  if (data?.error) throw new Error(data.error)
+
+  if (error) {
+    throw new Error(error.message || 'Erro de comunicação com o servidor ao atualizar usuário.')
+  }
+
+  if (data?.error) {
+    throw new Error(data.error)
+  }
+
   return data
 }
 
@@ -91,8 +112,15 @@ export const removeUser = async (target_user_id: string, target_tenant_id: strin
     method: 'POST',
     body: { action: 'remove_user', target_user_id, target_tenant_id },
   })
-  if (error) throw error
-  if (data?.error) throw new Error(data.error)
+
+  if (error) {
+    throw new Error(error.message || 'Erro de comunicação com o servidor ao remover usuário.')
+  }
+
+  if (data?.error) {
+    throw new Error(data.error)
+  }
+
   return data
 }
 
@@ -103,7 +131,7 @@ export const updateInvitation = async (invitation_id: string, updates: any) => {
     .eq('id', invitation_id)
     .select()
     .single()
-  if (error) throw error
+  if (error) throw new Error(error.message)
   return data
 }
 
@@ -112,5 +140,5 @@ export const removeInvitation = async (invitation_id: string) => {
     .from('invitations' as any)
     .delete()
     .eq('id', invitation_id)
-  if (error) throw error
+  if (error) throw new Error(error.message)
 }

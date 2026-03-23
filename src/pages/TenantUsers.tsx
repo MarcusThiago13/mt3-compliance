@@ -71,8 +71,10 @@ export default function TenantUsers() {
 
   const isAdmin =
     currentUser?.email === 'admin@example.com' ||
+    currentUser?.email === 'marcusthiago.adv@gmail.com' ||
     currentUser?.app_metadata?.role === 'admin' ||
-    currentUser?.user_metadata?.is_admin
+    currentUser?.user_metadata?.is_admin === true ||
+    currentUser?.user_metadata?.is_admin === 'true'
 
   const [records, setRecords] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
@@ -107,8 +109,8 @@ export default function TenantUsers() {
     setLoading(true)
     try {
       const [fetchedUsers, fetchedInvites] = await Promise.all([
-        getUsers(tenantId).catch(() => []),
-        getInvitations(tenantId).catch(() => []),
+        getUsers(tenantId),
+        getInvitations(tenantId),
       ])
 
       const combined = [
@@ -133,7 +135,11 @@ export default function TenantUsers() {
 
       setRecords(combined)
     } catch (error: any) {
-      toast({ title: 'Erro', description: error.message, variant: 'destructive' })
+      toast({
+        title: 'Atenção',
+        description: error.message || 'Falha ao buscar usuários da organização.',
+        variant: 'destructive',
+      })
     } finally {
       setLoading(false)
     }

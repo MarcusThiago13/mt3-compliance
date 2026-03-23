@@ -72,10 +72,13 @@ export default function Tenants() {
   const navigate = useNavigate()
   const { setActiveTenant } = useAppStore()
   const { user } = useAuth()
+
   const isAdmin =
     user?.email === 'admin@example.com' ||
+    user?.email === 'marcusthiago.adv@gmail.com' ||
     user?.app_metadata?.role === 'admin' ||
-    user?.user_metadata?.is_admin
+    user?.user_metadata?.is_admin === true ||
+    user?.user_metadata?.is_admin === 'true'
 
   const [tenants, setTenants] = useState<any[]>([])
   const [loading, setLoading] = useState(true)

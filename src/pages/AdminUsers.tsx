@@ -135,14 +135,8 @@ export default function AdminUsers() {
     setLoading(true)
     try {
       const [fetchedUsers, fetchedInvites] = await Promise.all([
-        getUsers(tenantId).catch((err) => {
-          console.error('Erro ao buscar usuários (admin-users):', err)
-          return []
-        }),
-        getInvitations(tenantId).catch((err) => {
-          console.error('Erro ao buscar convites:', err)
-          return []
-        }),
+        getUsers(tenantId),
+        getInvitations(tenantId),
       ])
 
       const combined = [
@@ -167,7 +161,12 @@ export default function AdminUsers() {
 
       setRecords(combined)
     } catch (error: any) {
-      toast({ title: 'Erro', description: error.message, variant: 'destructive' })
+      // Show user-friendly error instead of unhandled promise rejection logs
+      toast({
+        title: 'Atenção',
+        description: error.message || 'Falha ao buscar usuários do sistema.',
+        variant: 'destructive',
+      })
     } finally {
       setLoading(false)
     }

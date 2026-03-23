@@ -16,7 +16,6 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart'
-import { Badge } from '@/components/ui/badge'
 
 const COST_HAIKU_IN = 0.25 / 1000000
 const COST_HAIKU_OUT = 1.25 / 1000000
@@ -34,8 +33,10 @@ export default function AdminAIUsage() {
   const { user } = useAuth()
   const isAdmin =
     user?.email === 'admin@example.com' ||
+    user?.email === 'marcusthiago.adv@gmail.com' ||
     user?.app_metadata?.role === 'admin' ||
-    user?.user_metadata?.is_admin
+    user?.user_metadata?.is_admin === true ||
+    user?.user_metadata?.is_admin === 'true'
 
   const [logs, setLogs] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
