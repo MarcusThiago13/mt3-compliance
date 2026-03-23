@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
   Select,
   SelectContent,
@@ -12,13 +13,28 @@ import {
 } from '@/components/ui/select'
 import { supabase } from '@/lib/supabase/client'
 import { toast } from '@/hooks/use-toast'
-import { Loader2, FileCheck, Play, AlertTriangle, ShieldCheck, Save } from 'lucide-react'
+import {
+  Loader2,
+  FileCheck,
+  Play,
+  AlertTriangle,
+  ShieldCheck,
+  Save,
+  Receipt,
+  MessageSquareWarning,
+  Landmark,
+} from 'lucide-react'
+
+import ReceitasRendimentosTab from './ReceitasRendimentosTab'
+import DemonstrativoDespesas from './DemonstrativoDespesas'
+import DiligenciasTab from './DiligenciasTab'
 
 export default function PrestacaoContasTab({ partnership }: any) {
   const [accountability, setAccountability] = useState<any>(null)
   const [execution, setExecution] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [activeTab, setActiveTab] = useState('overview')
 
   const [formData, setFormData] = useState({
     report_type: 'Anual',
@@ -32,7 +48,6 @@ export default function PrestacaoContasTab({ partnership }: any) {
   const fetchData = async () => {
     setLoading(true)
 
-    // Fetch accountability
     const { data: accData } = await supabase
       .from('osc_partnership_accountability' as any)
       .select('*')
@@ -51,7 +66,6 @@ export default function PrestacaoContasTab({ partnership }: any) {
       })
     }
 
-    // Fetch execution for risk motor
     const { data: execData } = await supabase
       .from('osc_partnership_execution' as any)
       .select('*')
@@ -59,7 +73,6 @@ export default function PrestacaoContasTab({ partnership }: any) {
       .maybeSingle()
 
     setExecution(execData)
-
     setLoading(false)
   }
 
@@ -91,11 +104,10 @@ export default function PrestacaoContasTab({ partnership }: any) {
       .eq('id', accountability.id)
 
     if (error) toast({ title: 'Erro', description: error.message, variant: 'destructive' })
-    else toast({ title: 'Sucesso', description: 'Dados da prestação de contas atualizados.' })
+    else toast({ title: 'Sucesso', description: 'Dados gerais atualizados.' })
     setSaving(false)
   }
 
-  // Motor de Risco Lógico
   const renderRiskMotor = () => {
     if (!execution) return null
 
@@ -132,10 +144,10 @@ export default function PrestacaoContasTab({ partnership }: any) {
         <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4 flex items-start gap-3">
           <ShieldCheck className="h-5 w-5 text-emerald-600 mt-0.5" />
           <div>
-            <h4 className="font-semibold text-emerald-900">Nenhum Risco Grave Detectado</h4>
+            <h4 className="font-semibold text-emerald-900">Nenhum Risco Estrutural Detectado</h4>
             <p className="text-sm text-emerald-700">
               A relação entre execução física ({physical}%) e financeira ({financial}%) está
-              equilibrada e não acionou alertas no motor de risco do MROSC.
+              equilibrada no motor de conformidade.
             </p>
           </div>
         </div>
@@ -146,7 +158,7 @@ export default function PrestacaoContasTab({ partnership }: any) {
       <div className="space-y-3">
         <h4 className="font-semibold text-slate-800 flex items-center">
           <AlertTriangle className="h-4 w-4 mr-2 text-amber-500" />
-          Motor de Risco: Inconsistências Detectadas
+          Motor de Conformidade (Nexo Causal)
         </h4>
         {risks.map((r, i) => (
           <div
@@ -186,16 +198,16 @@ export default function PrestacaoContasTab({ partnership }: any) {
         <CardContent className="space-y-4">
           <FileCheck className="h-12 w-12 text-amber-400 mx-auto" />
           <div>
-            <h3 className="text-lg font-bold text-amber-900">Prestação de Contas Não Iniciada</h3>
-            <p className="text-sm text-amber-700 max-w-sm mx-auto mt-2">
-              Inicie a estruturação da prestação de contas (parcial ou final) para acionar o motor
-              de risco de conformidade e inconsistências (MROSC).
+            <h3 className="text-lg font-bold text-amber-900">Prestação de Contas (MROSC)</h3>
+            <p className="text-sm text-amber-700 max-w-md mx-auto mt-2">
+              Inicie a estruturação da prestação de contas para habilitar o lançamento de despesas,
+              conciliação de extratos e o motor de prevenção de glosas.
             </p>
           </div>
           <Button
             onClick={handleStart}
             disabled={saving}
-            className="bg-amber-600 hover:bg-amber-700"
+            className="bg-amber-600 hover:bg-amber-700 mt-4"
           >
             {saving ? (
               <Loader2 className="h-4 w-4 mr-2 animate-spin" />
@@ -211,102 +223,148 @@ export default function PrestacaoContasTab({ partnership }: any) {
 
   return (
     <div className="space-y-6">
-      {renderRiskMotor()}
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <TabsList className="grid w-full grid-cols-1 md:grid-cols-4 max-w-4xl h-auto p-1 bg-slate-100">
+          <TabsTrigger
+            value="overview"
+            className="py-2.5 data-[state=active]:bg-white data-[state=active]:text-blue-800 data-[state=active]:shadow-sm"
+          >
+            <FileCheck className="w-4 h-4 mr-2" /> Visão Geral & Prazos
+          </TabsTrigger>
+          <TabsTrigger
+            value="receitas"
+            className="py-2.5 data-[state=active]:bg-white data-[state=active]:text-emerald-700 data-[state=active]:shadow-sm"
+          >
+            <Landmark className="w-4 h-4 mr-2" /> Receitas e Extrato
+          </TabsTrigger>
+          <TabsTrigger
+            value="despesas"
+            className="py-2.5 data-[state=active]:bg-white data-[state=active]:text-blue-800 data-[state=active]:shadow-sm"
+          >
+            <Receipt className="w-4 h-4 mr-2" /> Despesas (Licitacon)
+          </TabsTrigger>
+          <TabsTrigger
+            value="diligencias"
+            className="py-2.5 data-[state=active]:bg-white data-[state=active]:text-amber-700 data-[state=active]:shadow-sm"
+          >
+            <MessageSquareWarning className="w-4 h-4 mr-2" /> Diligências
+          </TabsTrigger>
+        </TabsList>
 
-      <Card className="shadow-sm border-amber-100">
-        <CardHeader>
-          <CardTitle className="text-lg text-amber-900">Gestão da Prestação de Contas</CardTitle>
-          <CardDescription>
-            Controle de prazos, diligências e status do relatório final.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <div className="grid md:grid-cols-2 gap-6">
-            <div className="space-y-2">
-              <Label>Tipo de Relatório</Label>
-              <Select
-                value={formData.report_type}
-                onValueChange={(v) => setFormData({ ...formData, report_type: v })}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Parcial">Parcial / Intermediária</SelectItem>
-                  <SelectItem value="Anual">Anual</SelectItem>
-                  <SelectItem value="Final">Final</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label>Status Atual</Label>
-              <Select
-                value={formData.status}
-                onValueChange={(v) => setFormData({ ...formData, status: v })}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Em Elaboração">Em Elaboração</SelectItem>
-                  <SelectItem value="Enviada">Enviada para Análise</SelectItem>
-                  <SelectItem value="Em Diligência">Em Diligência / Saneamento</SelectItem>
-                  <SelectItem value="Aprovada">Aprovada (Regular)</SelectItem>
-                  <SelectItem value="Aprovada com Ressalvas">Aprovada com Ressalvas</SelectItem>
-                  <SelectItem value="Rejeitada">Rejeitada (Irregular)</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label>Prazo Limite de Envio</Label>
-              <Input
-                type="date"
-                value={formData.deadline}
-                onChange={(e) => setFormData({ ...formData, deadline: e.target.value })}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>Data Efetiva de Envio</Label>
-              <Input
-                type="date"
-                value={formData.submission_date}
-                onChange={(e) => setFormData({ ...formData, submission_date: e.target.value })}
-              />
-            </div>
-            <div className="space-y-2 md:col-span-2">
-              <Label>Anotações de Diligências (Pendências e Saneamentos)</Label>
-              <Input
-                value={formData.diligence_notes}
-                onChange={(e) => setFormData({ ...formData, diligence_notes: e.target.value })}
-                placeholder="Registre solicitações do gestor público..."
-              />
-            </div>
-            <div className="space-y-2 md:col-span-2">
-              <Label>Decisão Final / Parecer Conclusivo</Label>
-              <Input
-                value={formData.final_decision}
-                onChange={(e) => setFormData({ ...formData, final_decision: e.target.value })}
-                placeholder="Ex: Contas julgadas regulares conforme Parecer nº 123/2026..."
-              />
-            </div>
-          </div>
+        <div className="mt-6">
+          <TabsContent value="overview" className="space-y-6 m-0 outline-none">
+            {renderRiskMotor()}
 
-          <div className="flex justify-end pt-4 border-t">
-            <Button
-              onClick={handleSave}
-              disabled={saving}
-              className="bg-amber-600 hover:bg-amber-700"
-            >
-              {saving ? (
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-              ) : (
-                <Save className="h-4 w-4 mr-2" />
-              )}
-              Salvar Dados da Prestação
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+            <Card className="shadow-sm border-slate-200">
+              <CardHeader>
+                <CardTitle className="text-lg text-slate-800">
+                  Status da Prestação de Contas
+                </CardTitle>
+                <CardDescription>
+                  Controle de prazos legais e decisão final administrativa.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="grid md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <Label>Tipo de Relatório</Label>
+                    <Select
+                      value={formData.report_type}
+                      onValueChange={(v) => setFormData({ ...formData, report_type: v })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Parcial">Parcial / Intermediária</SelectItem>
+                        <SelectItem value="Anual">Anual</SelectItem>
+                        <SelectItem value="Final">Final</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Status de Envio</Label>
+                    <Select
+                      value={formData.status}
+                      onValueChange={(v) => setFormData({ ...formData, status: v })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Em Elaboração">Em Elaboração (Interno)</SelectItem>
+                        <SelectItem value="Enviada">Enviada para Análise</SelectItem>
+                        <SelectItem value="Em Diligência">Em Diligência / Saneamento</SelectItem>
+                        <SelectItem value="Aprovada">Aprovada (Regular)</SelectItem>
+                        <SelectItem value="Aprovada com Ressalvas">
+                          Aprovada com Ressalvas
+                        </SelectItem>
+                        <SelectItem value="Rejeitada">Rejeitada (Irregular)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Prazo Limite Legal</Label>
+                    <Input
+                      type="date"
+                      value={formData.deadline}
+                      onChange={(e) => setFormData({ ...formData, deadline: e.target.value })}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Data de Envio/Protocolo</Label>
+                    <Input
+                      type="date"
+                      value={formData.submission_date}
+                      onChange={(e) =>
+                        setFormData({ ...formData, submission_date: e.target.value })
+                      }
+                    />
+                  </div>
+                  <div className="space-y-2 md:col-span-2">
+                    <Label>Decisão Final / Parecer Conclusivo</Label>
+                    <Input
+                      value={formData.final_decision}
+                      onChange={(e) => setFormData({ ...formData, final_decision: e.target.value })}
+                      placeholder="Ex: Contas julgadas regulares conforme Parecer nº 123..."
+                    />
+                  </div>
+                </div>
+
+                <div className="flex justify-end pt-4 border-t">
+                  <Button
+                    onClick={handleSave}
+                    disabled={saving}
+                    className="bg-slate-800 hover:bg-slate-900"
+                  >
+                    {saving ? (
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    ) : (
+                      <Save className="h-4 w-4 mr-2" />
+                    )}
+                    Salvar Visão Geral
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="receitas" className="m-0 outline-none">
+            <ReceitasRendimentosTab
+              partnership={partnership}
+              accountabilityId={accountability.id}
+            />
+          </TabsContent>
+
+          <TabsContent value="despesas" className="m-0 outline-none">
+            <DemonstrativoDespesas partnership={partnership} accountabilityId={accountability.id} />
+          </TabsContent>
+
+          <TabsContent value="diligencias" className="m-0 outline-none">
+            <DiligenciasTab partnership={partnership} accountabilityId={accountability.id} />
+          </TabsContent>
+        </div>
+      </Tabs>
     </div>
   )
 }
