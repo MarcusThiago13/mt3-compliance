@@ -63,9 +63,9 @@ const AuthGuard = ({ children }: { children: React.ReactNode }) => {
           <div className="flex flex-col items-center mb-6">
             <ShieldCheck className="h-10 w-10 text-primary mb-2" />
             <h2 className="text-2xl font-bold text-center">mt3 Compliance</h2>
-            <div className="text-sm text-muted-foreground text-center mt-1">
+            <p className="text-sm text-muted-foreground text-center mt-1">
               Faça login para acessar o SGC
-            </div>
+            </p>
           </div>
           <div className="space-y-4">
             <Input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" />
