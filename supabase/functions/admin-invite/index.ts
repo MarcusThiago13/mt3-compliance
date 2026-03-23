@@ -21,18 +21,13 @@ Deno.serve(async (req: Request) => {
 
     // Create secure client bound to user
     const supabaseClient = createClient(supabaseUrl, supabaseAnonKey, {
-      global: { headers: { Authorization: authHeader } },
+      global: { headers: { Authorization: authHeader } }
     })
 
-    const {
-      data: { user },
-      error: userError,
-    } = await supabaseClient.auth.getUser()
-
+    const { data: { user }, error: userError } = await supabaseClient.auth.getUser()
+    
     if (userError || !user) {
-      throw new Error(
-        `Não autorizado (Token inválido): ${userError?.message || 'Sessão não identificada'}`,
-      )
+      throw new Error(`Não autorizado (Token inválido): ${userError?.message || 'Sessão não identificada'}`)
     }
 
     const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey)
@@ -54,48 +49,35 @@ Deno.serve(async (req: Request) => {
 
     // Security Check: Enforce tenant isolation
     if (!isSuperAdmin) {
-      const { data: isMember } = await supabaseClient.rpc('is_tenant_member_uuid', {
-        check_tenant_id: invitation.tenant_id,
-      })
-      if (!isMember)
-        throw new Error(
-          'Acesso negado. Você não tem permissão para processar convites neste tenant.',
-        )
+      const { data: isMember } = await supabaseClient.rpc('is_tenant_member_uuid', { check_tenant_id: invitation.tenant_id })
+      if (!isMember) throw new Error('Acesso negado. Você não tem permissão para processar convites neste tenant.')
     }
 
     // 1. Check if user already exists
-    const { data: existingUserId } = await supabaseAdmin.rpc('get_user_id_by_email', {
-      user_email: invitation.email,
-    })
+    const { data: existingUserId } = await supabaseAdmin.rpc('get_user_id_by_email', { user_email: invitation.email });
 
     if (existingUserId) {
       // Bind existing user to tenant
-      const { error: utError } = await supabaseAdmin.from('user_tenants').upsert(
-        {
-          user_id: existingUserId,
-          tenant_id: invitation.tenant_id,
-          role: invitation.role || 'viewer',
-          classification: invitation.classification,
-          contact_phone: invitation.phone,
-        },
-        { onConflict: 'user_id,tenant_id' },
-      )
-
+      const { error: utError } = await supabaseAdmin.from('user_tenants').upsert({
+        user_id: existingUserId,
+        tenant_id: invitation.tenant_id,
+        role: invitation.role || 'viewer',
+        classification: invitation.classification,
+        contact_phone: invitation.phone
+      }, { onConflict: 'user_id,tenant_id' })
+      
       if (utError) throw new Error(`Erro ao vincular usuário existente: ${utError.message}`)
-
+      
       await supabaseAdmin.from('invitations').update({ status: 'accepted' }).eq('id', invitation_id)
 
-      return new Response(
-        JSON.stringify({
-          success: true,
-          link: redirectUrl,
-          message: 'Usuário já possuía cadastro e foi vinculado à organização automaticamente.',
-        }),
-        {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 200,
-        },
-      )
+      return new Response(JSON.stringify({ 
+        success: true, 
+        link: redirectUrl, 
+        message: 'Usuário já possuía cadastro e foi vinculado à organização automaticamente.' 
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 200,
+      })
     }
 
     // 2. Generate invite link for new user
@@ -105,16 +87,14 @@ Deno.serve(async (req: Request) => {
       data: { name: invitation.name },
       options: { redirectTo: redirectUrl || undefined },
     })
-
+    
     if (error) {
       if (error.status === 422 || error.message.includes('already registered')) {
-        throw new Error(
-          `O usuário com e-mail ${invitation.email} já está registrado, mas houve falha na verificação prévia.`,
-        )
+        throw new Error(`O usuário com e-mail ${invitation.email} já está registrado, mas houve falha na verificação prévia.`)
       }
       throw new Error(`Erro ao gerar link: ${error.message}`)
     }
-
+    
     let actionLink = data.properties?.action_link
     const newUserId = data.user?.id
 
@@ -132,16 +112,13 @@ Deno.serve(async (req: Request) => {
     }
 
     if (newUserId) {
-      const { error: utError } = await supabaseAdmin.from('user_tenants').upsert(
-        {
-          user_id: newUserId,
-          tenant_id: invitation.tenant_id,
-          role: invitation.role || 'viewer',
-          classification: invitation.classification,
-          contact_phone: invitation.phone,
-        },
-        { onConflict: 'user_id,tenant_id' },
-      )
+      const { error: utError } = await supabaseAdmin.from('user_tenants').upsert({
+        user_id: newUserId,
+        tenant_id: invitation.tenant_id,
+        role: invitation.role || 'viewer',
+        classification: invitation.classification,
+        contact_phone: invitation.phone
+      }, { onConflict: 'user_id,tenant_id' })
       if (utError) console.error('Error linking user:', utError)
     }
 
