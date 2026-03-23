@@ -31,13 +31,13 @@ import { supabase } from '@/lib/supabase/client'
 import { toast } from '@/hooks/use-toast'
 import {
   Loader2,
-  Plus,
   UploadCloud,
   CheckCircle2,
   AlertTriangle,
   FileSpreadsheet,
-  Search,
+  ScanLine,
 } from 'lucide-react'
+import OcrModal from './OcrModal'
 
 const CATEGORIAS_LICITACON = [
   { code: '1.1', title: 'Vencimentos e vantagens' },
@@ -53,6 +53,7 @@ export default function ConciliacaoBancariaTab({ partnership }: any) {
   const [accounts, setAccounts] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [isImporting, setIsImporting] = useState(false)
+  const [ocrModalOpen, setOcrModalOpen] = useState(false)
 
   const [classifyModalOpen, setClassifyModalOpen] = useState(false)
   const [selectedLine, setSelectedLine] = useState<any>(null)
@@ -163,7 +164,6 @@ export default function ConciliacaoBancariaTab({ partnership }: any) {
   const handleSaveClassification = async () => {
     setIsSaving(true)
     let newStatus = 'Conciliada'
-    let restStatus = null
 
     if (classification === 'Tarifa / Juros (Não Elegível)') {
       newStatus = 'Aguardando Restituição'
@@ -255,18 +255,28 @@ export default function ConciliacaoBancariaTab({ partnership }: any) {
             deve receber um tratamento e vinculação documental para gerar os demonstrativos finais.
           </p>
         </div>
-        <Button
-          onClick={handleSimulateImport}
-          disabled={isImporting}
-          className="bg-purple-700 hover:bg-purple-800 shadow-md shrink-0"
-        >
-          {isImporting ? (
-            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-          ) : (
-            <UploadCloud className="h-4 w-4 mr-2" />
-          )}
-          Importar Extrato (Simulação Jan/2026)
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          <Button
+            onClick={() => setOcrModalOpen(true)}
+            variant="outline"
+            className="border-purple-200 text-purple-700 hover:bg-purple-50 shadow-sm shrink-0"
+          >
+            <ScanLine className="h-4 w-4 mr-2" />
+            Leitura de Notas (OCR)
+          </Button>
+          <Button
+            onClick={handleSimulateImport}
+            disabled={isImporting}
+            className="bg-purple-700 hover:bg-purple-800 shadow-md shrink-0"
+          >
+            {isImporting ? (
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+            ) : (
+              <UploadCloud className="h-4 w-4 mr-2" />
+            )}
+            Importar Extrato
+          </Button>
+        </div>
       </div>
 
       <Card className="shadow-sm border-slate-200">
@@ -469,6 +479,13 @@ export default function ConciliacaoBancariaTab({ partnership }: any) {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <OcrModal
+        isOpen={ocrModalOpen}
+        onClose={() => setOcrModalOpen(false)}
+        lines={lines}
+        onSuccess={fetchData}
+      />
     </div>
   )
 }
