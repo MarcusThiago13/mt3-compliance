@@ -22,9 +22,14 @@ Deno.serve(async (req: Request) => {
 
     // Initialize authenticated client to check credentials
     const supabaseClient = createClient(supabaseUrl, supabaseAnonKey, {
-      global: { headers: { Authorization: authHeader } }
+      global: { headers: { Authorization: authHeader } },
     })
-    const { data: { user }, error: userError } = await supabaseClient.auth.getUser()
+
+    const token = authHeader.replace('Bearer ', '')
+    const {
+      data: { user },
+      error: userError,
+    } = await supabaseClient.auth.getUser(token)
     if (userError || !user) throw new Error('Não autorizado. Sessão inválida.')
 
     const { to, subject, html, log_body, tenant_id } = await req.json()
@@ -35,15 +40,17 @@ Deno.serve(async (req: Request) => {
 
     // Enforce Tenant Security
     if (tenant_id) {
-      const isSuperAdmin = 
-        user.email === 'admin@example.com' || 
-        user.email === 'marcusthiago.adv@gmail.com' || 
-        user.app_metadata?.role === 'admin' || 
-        user.user_metadata?.is_admin === true || 
+      const isSuperAdmin =
+        user.email === 'admin@example.com' ||
+        user.email === 'marcusthiago.adv@gmail.com' ||
+        user.app_metadata?.role === 'admin' ||
+        user.user_metadata?.is_admin === true ||
         user.user_metadata?.is_admin === 'true'
 
       if (!isSuperAdmin) {
-        const { data: isMember } = await supabaseClient.rpc('is_tenant_member_uuid', { check_tenant_id: tenant_id })
+        const { data: isMember } = await supabaseClient.rpc('is_tenant_member_uuid', {
+          check_tenant_id: tenant_id,
+        })
         if (!isMember) throw new Error('Acesso negado para enviar e-mails em nome deste tenant.')
       }
     }
@@ -52,14 +59,14 @@ Deno.serve(async (req: Request) => {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${resendApiKey}`
+        Authorization: `Bearer ${resendApiKey}`,
       },
       body: JSON.stringify({
         from: 'mt3 Compliance <onboarding@resend.dev>', // Update for production domain
         to: [to],
         subject: subject,
-        html: html
-      })
+        html: html,
+      }),
     })
 
     const data = await res.json()
@@ -76,7 +83,7 @@ Deno.serve(async (req: Request) => {
         subject: subject,
         body: log_body || html,
         status: 'sent',
-        external_id: data.id
+        external_id: data.id,
       })
     }
 
