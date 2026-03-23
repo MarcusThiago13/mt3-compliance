@@ -4,6 +4,7 @@
     "admin-users": 16,
     "generate-dossier": 5,
     "send-email": 5,
-    "resend-webhook": 1
+    "resend-webhook": 1,
+    "chat": 1
   }
 }
