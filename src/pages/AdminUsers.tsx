@@ -136,12 +136,12 @@ export default function AdminUsers() {
     try {
       const [fetchedUsers, fetchedInvites] = await Promise.all([
         getUsers(tenantId).catch((err) => {
-          console.error("Erro ao buscar usuários (admin-users):", err);
-          return [];
+          console.error('Erro ao buscar usuários (admin-users):', err)
+          return []
         }),
         getInvitations(tenantId).catch((err) => {
-          console.error("Erro ao buscar convites:", err);
-          return [];
+          console.error('Erro ao buscar convites:', err)
+          return []
         }),
       ])
 
@@ -660,4 +660,3 @@ export default function AdminUsers() {
     </div>
   )
 }
-```
