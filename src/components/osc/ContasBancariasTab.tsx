@@ -98,14 +98,13 @@ export default function ContasBancariasTab({ partnership }: any) {
         <div>
           <h3 className="font-semibold text-slate-800 flex items-center">
             <Landmark className="h-5 w-5 mr-2 text-blue-600" />
-            Contas Bancárias Vinculadas
+            Gestão Financeira e Contas Bancárias (Bloco 4)
           </h3>
           <p className="text-sm text-muted-foreground mt-1">
-            Cadastre a conta específica da parceria e, se aplicável, a conta matriz utilizada para
-            restituições e recomposições de tarifas.
+            Cadastre a conta específica (fonte primária da prestação) e a conta matriz (para restituições).
           </p>
         </div>
-        <Button onClick={() => setIsModalOpen(true)} className="bg-blue-600 hover:bg-blue-700">
+        <Button onClick={() => setIsModalOpen(true)} className="bg-blue-600 hover:bg-blue-700 shrink-0">
           <Plus className="h-4 w-4 mr-2" /> Adicionar Conta
         </Button>
       </div>

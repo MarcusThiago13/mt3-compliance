@@ -104,7 +104,7 @@ export default function ConciliacaoBancariaTab({ partnership }: any) {
         partnership_id: partnership.id,
         account_id: accountId,
         transaction_date: '2026-01-05',
-        description: 'TED REPASSE PREFEITURA',
+        description: 'TED REPASSE DO ENTE PÚBLICO',
         amount: 50000,
         transaction_type: 'credit',
         competence_month: '2026-01',
@@ -248,11 +248,11 @@ export default function ConciliacaoBancariaTab({ partnership }: any) {
         <div>
           <h3 className="font-bold text-purple-900 flex items-center text-lg">
             <FileSpreadsheet className="h-6 w-6 mr-2 text-purple-700" />
-            Conciliação Extrato-Cêntrica
+            Conciliação Extrato-Cêntrica (Bloco 4)
           </h3>
           <p className="text-sm text-purple-800 mt-1 max-w-2xl">
             A prestação financeira baseia-se integralmente no extrato. Toda linha bancária importada
-            deve receber um tratamento (elegível, tarifa, recomposição) para que o mês seja fechado.
+            deve receber um tratamento e vinculação documental para gerar os demonstrativos finais.
           </p>
         </div>
         <Button
@@ -381,7 +381,7 @@ export default function ConciliacaoBancariaTab({ partnership }: any) {
             {classification === 'Despesa Elegível' && (
               <div className="grid grid-cols-2 gap-4 animate-in fade-in slide-in-from-top-2 pt-2 border-t">
                 <div className="space-y-2">
-                  <Label>Categoria (Licitacon) *</Label>
+                  <Label>Categoria da Despesa *</Label>
                   <Select value={categoryCode} onValueChange={setCategoryCode}>
                     <SelectTrigger>
                       <SelectValue />
@@ -404,7 +404,7 @@ export default function ConciliacaoBancariaTab({ partnership }: any) {
                   <Input value={providerName} onChange={(e) => setProviderName(e.target.value)} />
                 </div>
                 <div className="space-y-2">
-                  <Label>Número da NF / Recibo</Label>
+                  <Label>Número do Documento (NF/Recibo)</Label>
                   <Input value={invoiceNum} onChange={(e) => setInvoiceNum(e.target.value)} />
                 </div>
               </div>

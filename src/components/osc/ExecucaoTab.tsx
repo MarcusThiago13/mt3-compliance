@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button'
 import { Slider } from '@/components/ui/slider'
 import { supabase } from '@/lib/supabase/client'
 import { toast } from '@/hooks/use-toast'
-import { Loader2, Activity, Play, Target, DollarSign } from 'lucide-react'
+import { Loader2, Activity, Play, Target, DollarSign, NotebookText } from 'lucide-react'
 
 export default function ExecucaoTab({ partnership }: any) {
   const [execution, setExecution] = useState<any>(null)
@@ -80,10 +80,9 @@ export default function ExecucaoTab({ partnership }: any) {
         <CardContent className="space-y-4">
           <Activity className="h-12 w-12 text-emerald-300 mx-auto" />
           <div>
-            <h3 className="text-lg font-bold text-emerald-900">Fase de Execução Não Iniciada</h3>
+            <h3 className="text-lg font-bold text-emerald-900">Plano de Trabalho e Execução Não Iniciados</h3>
             <p className="text-sm text-emerald-700 max-w-sm mx-auto mt-2">
-              Após a assinatura e celebração do termo, ative este módulo para iniciar a gestão de
-              alcance de metas físicas e acompanhamento financeiro.
+              Ative este módulo para registrar o plano aprovado e iniciar a gestão de alcance de metas físicas.
             </p>
           </div>
           <Button
@@ -96,7 +95,7 @@ export default function ExecucaoTab({ partnership }: any) {
             ) : (
               <Play className="h-4 w-4 mr-2" />
             )}
-            Iniciar Acompanhamento da Execução
+            Iniciar Módulo de Execução (Bloco 3)
           </Button>
         </CardContent>
       </Card>
@@ -108,19 +107,34 @@ export default function ExecucaoTab({ partnership }: any) {
       <CardHeader>
         <CardTitle className="text-lg text-emerald-900 flex items-center">
           <Activity className="h-5 w-5 mr-2 text-emerald-600" />
-          Monitoramento do Plano de Trabalho
+          Plano de Trabalho e Execução do Objeto (Bloco 3)
         </CardTitle>
         <CardDescription>
-          Mantenha atualizada a evolução para subsidiar a Prestação de Contas.
+          Mantenha a coerência entre o pactuado e o executado para subsidiar relatórios parciais e prestação de contas.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-8">
+        
+        <div className="bg-blue-50/50 border border-blue-100 rounded-lg p-4 flex items-start gap-3">
+          <NotebookText className="h-5 w-5 text-blue-600 mt-0.5" />
+          <div>
+            <h4 className="font-semibold text-blue-900">Metas e Resultados Pactuados</h4>
+            <p className="text-sm text-blue-800 mt-1">
+              O plano de trabalho é o instrumento central vinculante. Modificações na execução requerem termo aditivo 
+              ou registro no histórico de alterações (conforme ato regulamentar aplicável).
+            </p>
+            <Button variant="outline" size="sm" className="mt-3 text-blue-700 bg-white">
+              Acessar Metas do Plano
+            </Button>
+          </div>
+        </div>
+
         <div className="space-y-4 bg-muted/20 p-5 rounded-lg border">
           <div className="flex justify-between items-center">
-            <Label className="flex items-center text-base font-semibold text-slate-800">
+            <label className="flex items-center text-base font-semibold text-slate-800">
               <Target className="h-4 w-4 mr-2 text-blue-600" />
-              Execução Física (Metas Atingidas)
-            </Label>
+              Execução Física (Metas Atingidas e Evidenciadas)
+            </label>
             <span className="text-lg font-bold text-blue-700">{physical}%</span>
           </div>
           <Slider
@@ -131,17 +145,16 @@ export default function ExecucaoTab({ partnership }: any) {
             className="w-full"
           />
           <p className="text-xs text-muted-foreground">
-            Registre o volume de entregas sociais ou serviços prestados em relação ao previsto no
-            plano.
+            Registre o volume de entregas sociais ou serviços prestados em relação ao previsto no plano aprovado.
           </p>
         </div>
 
         <div className="space-y-4 bg-muted/20 p-5 rounded-lg border">
           <div className="flex justify-between items-center">
-            <Label className="flex items-center text-base font-semibold text-slate-800">
+            <label className="flex items-center text-base font-semibold text-slate-800">
               <DollarSign className="h-4 w-4 mr-2 text-emerald-600" />
-              Execução Financeira (Recursos Utilizados)
-            </Label>
+              Cronograma de Desembolso (Recursos Liberados)
+            </label>
             <span className="text-lg font-bold text-emerald-700">{financial}%</span>
           </div>
           <Slider
@@ -152,8 +165,7 @@ export default function ExecucaoTab({ partnership }: any) {
             className="w-full"
           />
           <p className="text-xs text-muted-foreground">
-            Proporção dos recursos já liquidados e pagos em conformidade com o cronograma de
-            desembolso.
+            Proporção de repasses já efetivados em conformidade com o cronograma pactuado.
           </p>
         </div>
 

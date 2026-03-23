@@ -90,17 +90,17 @@ export default function DiligenciasTab({ partnership }: any) {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center bg-muted/30 p-4 rounded-lg border border-dashed">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-muted/30 p-4 rounded-lg border border-dashed">
         <div>
           <h3 className="font-semibold text-slate-800 flex items-center">
             <MessageSquareWarning className="h-5 w-5 mr-2 text-amber-600" />
             Controle de Diligências e Notificações
           </h3>
           <p className="text-sm text-muted-foreground mt-1">
-            Rastreamento de apontamentos do ente público para evitar glosas e rejeição.
+            Rastreamento de apontamentos do ente público para evitar glosas, rejeição de contas ou penalidades.
           </p>
         </div>
-        <Button onClick={() => setIsModalOpen(true)} className="bg-amber-600 hover:bg-amber-700">
+        <Button onClick={() => setIsModalOpen(true)} className="bg-amber-600 hover:bg-amber-700 shrink-0">
           <Plus className="h-4 w-4 mr-2" /> Registrar Diligência
         </Button>
       </div>
@@ -124,15 +124,15 @@ export default function DiligenciasTab({ partnership }: any) {
         <div className="grid gap-4">
           {diligences.map((d) => (
             <Card key={d.id} className="shadow-sm border-l-4 border-l-amber-500">
-              <CardHeader className="pb-2 flex flex-row items-start justify-between space-y-0">
+              <CardHeader className="pb-2 flex flex-col sm:flex-row items-start justify-between space-y-2 sm:space-y-0">
                 <div>
                   <CardTitle className="text-base font-semibold">
-                    Notificação de Diligência
+                    Notificação de Diligência / Apontamento
                   </CardTitle>
-                  <CardDescription className="flex items-center mt-1">
+                  <CardDescription className="flex flex-wrap items-center mt-1">
                     <CalendarClock className="h-3.5 w-3.5 mr-1" />
-                    Recebida em: {new Date(d.notification_date).toLocaleDateString('pt-BR')} |
-                    Prazo:{' '}
+                    Recebida em: {new Date(d.notification_date).toLocaleDateString('pt-BR')} <span className="mx-2">|</span>
+                    Prazo Legal:{' '}
                     <strong className="ml-1 text-slate-800">
                       {d.deadline
                         ? new Date(d.deadline).toLocaleDateString('pt-BR')
@@ -149,7 +149,7 @@ export default function DiligenciasTab({ partnership }: any) {
                 {d.response_notes && (
                   <div className="bg-blue-50/50 p-3 rounded text-sm text-slate-700 border border-blue-100">
                     <span className="font-semibold text-blue-900 block mb-1">
-                      Anotações de Saneamento:
+                      Providências de Saneamento:
                     </span>
                     {d.response_notes}
                   </div>
@@ -195,7 +195,7 @@ export default function DiligenciasTab({ partnership }: any) {
                 rows={4}
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                placeholder="Descreva o que foi solicitado na diligência..."
+                placeholder="Descreva o que foi solicitado na diligência ou glosa..."
               />
             </div>
           </div>

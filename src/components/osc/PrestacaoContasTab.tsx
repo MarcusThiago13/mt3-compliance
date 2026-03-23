@@ -148,8 +148,7 @@ export default function PrestacaoContasTab({ partnership }: any) {
           <div>
             <h4 className="font-semibold text-emerald-900">Nenhum Risco Estrutural Detectado</h4>
             <p className="text-sm text-emerald-700">
-              A relação entre execução física ({physical}%) e financeira ({financial}%) está
-              equilibrada no motor de conformidade.
+              A relação entre execução física ({physical}%) e financeira ({financial}%) está equilibrada no motor de conformidade.
             </p>
           </div>
         </div>
@@ -174,9 +173,7 @@ export default function PrestacaoContasTab({ partnership }: any) {
               <h4 className={`font-bold ${r.level === 'Alto' ? 'text-red-900' : 'text-amber-900'}`}>
                 {r.title}
               </h4>
-              <p
-                className={`text-sm mt-1 ${r.level === 'Alto' ? 'text-red-800' : 'text-amber-800'}`}
-              >
+              <p className={`text-sm mt-1 ${r.level === 'Alto' ? 'text-red-800' : 'text-amber-800'}`}>
                 {r.desc}
               </p>
             </div>
@@ -200,10 +197,10 @@ export default function PrestacaoContasTab({ partnership }: any) {
         <CardContent className="space-y-4">
           <FileCheck className="h-12 w-12 text-amber-400 mx-auto" />
           <div>
-            <h3 className="text-lg font-bold text-amber-900">Prestação de Contas (MROSC)</h3>
+            <h3 className="text-lg font-bold text-amber-900">Prestação de Contas e Gestão Financeira</h3>
             <p className="text-sm text-amber-700 max-w-md mx-auto mt-2">
-              Inicie a estruturação da prestação de contas para habilitar a conciliação
-              extrato-cêntrica, controle de restituições e geração de demonstrativos.
+              Inicie a estruturação da prestação de contas (Blocos 4 e 6) habilitando a conciliação extrato-cêntrica, 
+              controle de restituições e geração de demonstrativos automáticos.
             </p>
           </div>
           <Button
@@ -216,7 +213,7 @@ export default function PrestacaoContasTab({ partnership }: any) {
             ) : (
               <Play className="h-4 w-4 mr-2" />
             )}
-            Iniciar Módulo de Prestação de Contas
+            Iniciar Módulo Integrado
           </Button>
         </CardContent>
       </Card>
@@ -226,36 +223,36 @@ export default function PrestacaoContasTab({ partnership }: any) {
   return (
     <div className="space-y-6">
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-1 md:grid-cols-5 h-auto p-1 bg-slate-100 rounded-lg">
+        <TabsList className="flex flex-wrap w-full h-auto p-1 bg-slate-100 rounded-lg justify-start gap-1">
           <TabsTrigger
             value="overview"
-            className="py-2.5 data-[state=active]:bg-white data-[state=active]:text-blue-800 data-[state=active]:shadow-sm text-xs sm:text-sm"
+            className="py-2 px-3 text-xs sm:text-sm data-[state=active]:bg-white data-[state=active]:text-blue-800 data-[state=active]:shadow-sm"
           >
             <FileCheck className="w-4 h-4 mr-1 sm:mr-2" /> Visão Geral
           </TabsTrigger>
           <TabsTrigger
             value="contas"
-            className="py-2.5 data-[state=active]:bg-white data-[state=active]:text-blue-800 data-[state=active]:shadow-sm text-xs sm:text-sm"
+            className="py-2 px-3 text-xs sm:text-sm data-[state=active]:bg-white data-[state=active]:text-blue-800 data-[state=active]:shadow-sm"
           >
-            <Landmark className="w-4 h-4 mr-1 sm:mr-2" /> Contas
+            <Landmark className="w-4 h-4 mr-1 sm:mr-2" /> Contas (B4)
           </TabsTrigger>
           <TabsTrigger
             value="conciliacao"
-            className="py-2.5 data-[state=active]:bg-white data-[state=active]:text-purple-700 data-[state=active]:shadow-sm text-xs sm:text-sm"
+            className="py-2 px-3 text-xs sm:text-sm data-[state=active]:bg-white data-[state=active]:text-purple-700 data-[state=active]:shadow-sm"
           >
             <FileSpreadsheet className="w-4 h-4 mr-1 sm:mr-2" /> Conciliação
           </TabsTrigger>
           <TabsTrigger
             value="relatorios"
-            className="py-2.5 data-[state=active]:bg-white data-[state=active]:text-emerald-700 data-[state=active]:shadow-sm text-xs sm:text-sm"
+            className="py-2 px-3 text-xs sm:text-sm data-[state=active]:bg-white data-[state=active]:text-emerald-700 data-[state=active]:shadow-sm"
           >
             <Receipt className="w-4 h-4 mr-1 sm:mr-2" /> Demonstrativos
           </TabsTrigger>
           <TabsTrigger
             value="diligencias"
-            className="py-2.5 data-[state=active]:bg-white data-[state=active]:text-amber-700 data-[state=active]:shadow-sm text-xs sm:text-sm"
+            className="py-2 px-3 text-xs sm:text-sm data-[state=active]:bg-white data-[state=active]:text-amber-700 data-[state=active]:shadow-sm"
           >
-            <MessageSquareWarning className="w-4 h-4 mr-1 sm:mr-2" /> Diligências
+            <MessageSquareWarning className="w-4 h-4 mr-1 sm:mr-2" /> Diligências (B6)
           </TabsTrigger>
         </TabsList>
 
@@ -266,16 +263,16 @@ export default function PrestacaoContasTab({ partnership }: any) {
             <Card className="shadow-sm border-slate-200">
               <CardHeader>
                 <CardTitle className="text-lg text-slate-800">
-                  Status da Prestação de Contas
+                  Status da Prestação de Contas (Bloco 6)
                 </CardTitle>
                 <CardDescription>
-                  Controle de prazos legais e decisão final administrativa.
+                  Controle de prazos e pareceres do ente parceiro.
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="grid md:grid-cols-2 gap-6">
                   <div className="space-y-2">
-                    <Label>Tipo de Relatório</Label>
+                    <Label>Tipo de Relatório (conforme regulamento)</Label>
                     <Select
                       value={formData.report_type}
                       onValueChange={(v) => setFormData({ ...formData, report_type: v })}
@@ -291,7 +288,7 @@ export default function PrestacaoContasTab({ partnership }: any) {
                     </Select>
                   </div>
                   <div className="space-y-2">
-                    <Label>Status de Envio</Label>
+                    <Label>Status de Envio na Plataforma do Ente</Label>
                     <Select
                       value={formData.status}
                       onValueChange={(v) => setFormData({ ...formData, status: v })}
@@ -312,7 +309,7 @@ export default function PrestacaoContasTab({ partnership }: any) {
                     </Select>
                   </div>
                   <div className="space-y-2">
-                    <Label>Prazo Limite Legal</Label>
+                    <Label>Prazo Limite Legal/Contratual</Label>
                     <Input
                       type="date"
                       value={formData.deadline}
@@ -320,7 +317,7 @@ export default function PrestacaoContasTab({ partnership }: any) {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label>Data de Envio/Protocolo</Label>
+                    <Label>Data de Protocolo Efetivo</Label>
                     <Input
                       type="date"
                       value={formData.submission_date}

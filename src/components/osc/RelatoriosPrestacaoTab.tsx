@@ -41,7 +41,7 @@ export default function RelatoriosPrestacaoTab({ partnership }: any) {
       'Categoria de Despesa',
       'CNPJ/CPF do Fornecedor / Prestador',
       'Nome do Fornecedor / Prestador',
-      'Número da Nota Fiscal',
+      'Número do Documento / NF',
       'Valor Pago',
       'Status da Conciliação',
     ]
@@ -64,7 +64,7 @@ export default function RelatoriosPrestacaoTab({ partnership }: any) {
     const url = URL.createObjectURL(blob)
     const link = document.createElement('a')
     link.setAttribute('href', url)
-    link.setAttribute('download', `Demonstrativo_Despesas_Parceria.csv`)
+    link.setAttribute('download', `Demonstrativo_Integral_Despesas.csv`)
     document.body.appendChild(link)
     link.click()
     document.body.removeChild(link)
@@ -143,7 +143,7 @@ export default function RelatoriosPrestacaoTab({ partnership }: any) {
               Demonstrativo Integral de Despesas (DID)
             </CardTitle>
             <CardDescription>
-              Gerado automaticamente com base nas linhas conciliadas e elegíveis do extrato.
+              Gerado automaticamente a partir das movimentações bancárias conciliadas e documentadas.
             </CardDescription>
           </div>
           <Button
@@ -152,7 +152,7 @@ export default function RelatoriosPrestacaoTab({ partnership }: any) {
             variant="outline"
             className="border-blue-200 text-blue-700 hover:bg-blue-50"
           >
-            <Download className="h-4 w-4 mr-2" /> Exportar CSV (Modelo Licitacon)
+            <Download className="h-4 w-4 mr-2" /> Exportar Planilha
           </Button>
         </CardHeader>
         <CardContent className="p-0">
@@ -167,8 +167,8 @@ export default function RelatoriosPrestacaoTab({ partnership }: any) {
                   <TableRow>
                     <TableHead>Data Pgto</TableHead>
                     <TableHead>Categoria</TableHead>
-                    <TableHead>Fornecedor</TableHead>
-                    <TableHead>Doc/NF</TableHead>
+                    <TableHead>Fornecedor / Doc</TableHead>
+                    <TableHead>Documento / NF</TableHead>
                     <TableHead className="text-right">Valor</TableHead>
                     <TableHead className="text-center">Status</TableHead>
                   </TableRow>
@@ -186,13 +186,15 @@ export default function RelatoriosPrestacaoTab({ partnership }: any) {
                             {t.category_code}
                           </Badge>
                         </TableCell>
-                        <TableCell className="font-medium">{t.provider_name}</TableCell>
+                        <TableCell className="font-medium">
+                          {t.provider_name} <br/> <span className="text-xs text-muted-foreground font-mono">{t.provider_document}</span>
+                        </TableCell>
                         <TableCell>{t.invoice_number}</TableCell>
                         <TableCell className="text-right font-semibold text-slate-700">
                           {formatCurrency(t.amount)}
                         </TableCell>
                         <TableCell className="text-center">
-                          <CheckCircle2 className="h-4 w-4 text-emerald-500 mx-auto" />
+                          <CheckCircle2 className="h-4 w-4 text-emerald-500 mx-auto" title="Conciliada" />
                         </TableCell>
                       </TableRow>
                     ))}
