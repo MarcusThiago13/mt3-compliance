@@ -2,7 +2,17 @@ import { supabase } from '@/lib/supabase/client'
 import { logError } from '@/lib/logger'
 
 const cache = new Map<string, { data: any; timestamp: number }>()
-const CACHE_TTL = 3 * 60 * 1000 // 3 minutes
+const CACHE_TTL = 2 * 60 * 1000 // 2 minutes TTL for quick real-time synchronization
+
+// Automated cache sweeper (Time-To-Live policy)
+setInterval(() => {
+  const now = Date.now()
+  for (const [key, value] of cache.entries()) {
+    if (now - value.timestamp > CACHE_TTL) {
+      cache.delete(key)
+    }
+  }
+}, 30000) // Runs every 30 seconds to enforce TTL automatically
 
 export const clearAdminCache = (keyPattern?: string) => {
   if (keyPattern) {

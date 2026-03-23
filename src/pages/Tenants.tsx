@@ -15,6 +15,10 @@ import {
   FileText,
   History,
   Settings,
+  Activity,
+  ShieldCheck,
+  Calendar,
+  User,
 } from 'lucide-react'
 import { supabase } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
@@ -85,6 +89,7 @@ export default function Tenants() {
   const [tenantToDelete, setTenantToDelete] = useState<any>(null)
 
   const [isNewTenantOpen, setIsNewTenantOpen] = useState(false)
+  const [createStep, setCreateStep] = useState(1)
   const [newTenantName, setNewTenantName] = useState('')
   const [newTenantCnpj, setNewTenantCnpj] = useState('')
   const [newTenantOrgType, setNewTenantOrgType] = useState('empresa')
@@ -102,6 +107,11 @@ export default function Tenants() {
   const [isEmailModalOpen, setIsEmailModalOpen] = useState(false)
   const [emailTenantId, setEmailTenantId] = useState<string | undefined>(undefined)
 
+  // Audit Logs State
+  const [isLogsOpen, setIsLogsOpen] = useState(false)
+  const [logs, setLogs] = useState<any[]>([])
+  const [loadingLogs, setLoadingLogs] = useState(false)
+
   const fetchTenants = async () => {
     setLoading(true)
     const { data } = await supabase
@@ -117,6 +127,18 @@ export default function Tenants() {
     if (isAdmin) fetchTenants()
   }, [isAdmin])
 
+  const openLogs = async () => {
+    setIsLogsOpen(true)
+    setLoadingLogs(true)
+    const { data } = await supabase
+      .from('audit_logs')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(50)
+    if (data) setLogs(data)
+    setLoadingLogs(false)
+  }
+
   const handleToggleStatus = async (tenant: any) => {
     const newStatus = tenant.status === 'active' ? 'inactive' : 'active'
     const { error } = await supabase
@@ -130,6 +152,12 @@ export default function Tenants() {
         variant: 'destructive',
       })
     } else {
+      await supabase.from('audit_logs').insert({
+        tenant_id: tenant.id,
+        clause_id: 'system',
+        action: `Status alterado para ${newStatus === 'active' ? 'Ativo' : 'Inativo'}.`,
+        user_email: user?.email || 'admin',
+      } as any)
       toast({
         title: 'Sucesso',
         description: `Status alterado para ${newStatus === 'active' ? 'Ativo' : 'Inativo'}.`,
@@ -144,14 +172,20 @@ export default function Tenants() {
     if (error) {
       toast({ title: 'Erro', description: 'Não foi possível excluir.', variant: 'destructive' })
     } else {
+      await supabase.from('audit_logs').insert({
+        tenant_id: 'default',
+        clause_id: 'system',
+        action: `Organização excluída: ${tenantToDelete.name}`,
+        user_email: user?.email || 'admin',
+      } as any)
       toast({ title: 'Sucesso', description: 'Excluído com sucesso.' })
       fetchTenants()
     }
     setTenantToDelete(null)
   }
 
-  const handleCreateTenant = async () => {
-    if (!newTenantName) {
+  const handleNextStep = () => {
+    if (createStep === 1 && !newTenantName) {
       toast({
         title: 'Atenção',
         description: 'O nome da organização é obrigatório.',
@@ -159,14 +193,24 @@ export default function Tenants() {
       })
       return
     }
+    setCreateStep((s) => s + 1)
+  }
+
+  const handlePrevStep = () => setCreateStep((s) => s - 1)
+
+  const handleCreateTenant = async () => {
     setIsCreating(true)
-    const { error } = await supabase.from('tenants').insert({
-      name: newTenantName,
-      cnpj: newTenantCnpj,
-      status: 'active',
-      org_type: newTenantOrgType,
-      org_subtype: newTenantOrgSubtype || null,
-    } as any)
+    const { data: newTenant, error } = await supabase
+      .from('tenants')
+      .insert({
+        name: newTenantName,
+        cnpj: newTenantCnpj,
+        status: 'active',
+        org_type: newTenantOrgType,
+        org_subtype: newTenantOrgSubtype || null,
+      } as any)
+      .select('id')
+      .single()
 
     if (error) {
       toast({
@@ -175,8 +219,25 @@ export default function Tenants() {
         variant: 'destructive',
       })
     } else {
+      // Configurar acesso de administrador para o criador
+      if (user?.id) {
+        await supabase
+          .from('user_tenants')
+          .update({ role: 'admin' })
+          .eq('tenant_id', newTenant.id)
+          .eq('user_id', user.id)
+      }
+      // Trilha de auditoria
+      await supabase.from('audit_logs').insert({
+        tenant_id: newTenant.id,
+        clause_id: 'system',
+        action: `Organização criada via assistente. Administrador configurado.`,
+        user_email: user?.email || 'admin',
+      } as any)
+
       toast({ title: 'Sucesso', description: 'Cliente criado e acesso vinculado com sucesso.' })
       setIsNewTenantOpen(false)
+      setCreateStep(1)
       setNewTenantName('')
       setNewTenantCnpj('')
       setNewTenantOrgType('empresa')
@@ -222,6 +283,13 @@ export default function Tenants() {
         variant: 'destructive',
       })
     } else {
+      await supabase.from('audit_logs').insert({
+        tenant_id: editingTenantId,
+        clause_id: 'system',
+        action: `Configurações da organização atualizadas.`,
+        user_email: user?.email || 'admin',
+      } as any)
+
       toast({
         title: 'Sucesso',
         description: 'Configurações da organização atualizadas com sucesso.',
@@ -254,12 +322,21 @@ export default function Tenants() {
           <p className="text-muted-foreground">Administração multi-tenant do sistema</p>
         </div>
         <div className="flex flex-wrap gap-2 w-full sm:w-auto">
+          <Button variant="outline" onClick={openLogs}>
+            <Activity className="mr-2 h-4 w-4" /> Atividade Recente
+          </Button>
           <Button variant="outline" asChild>
             <Link to="/collection-links">
               <LinkIcon className="mr-2 h-4 w-4" /> Links de Coleta
             </Link>
           </Button>
-          <Dialog open={isNewTenantOpen} onOpenChange={setIsNewTenantOpen}>
+          <Dialog
+            open={isNewTenantOpen}
+            onOpenChange={(o) => {
+              setIsNewTenantOpen(o)
+              if (!o) setCreateStep(1)
+            }}
+          >
             <DialogTrigger asChild>
               <Button>
                 <Plus className="mr-2 h-4 w-4" /> Novo Cliente
@@ -267,77 +344,128 @@ export default function Tenants() {
             </DialogTrigger>
             <DialogContent className="max-w-xl">
               <DialogHeader>
-                <DialogTitle>Cadastrar Nova Organização</DialogTitle>
+                <DialogTitle>
+                  {createStep === 1 && 'Passo 1: Identificação da Organização'}
+                  {createStep === 2 && 'Passo 2: Perfil e Classificação'}
+                  {createStep === 3 && 'Passo 3: Configuração de Acesso'}
+                </DialogTitle>
                 <DialogDescription>
-                  Crie um novo ambiente isolado. O administrador atual será vinculado
-                  automaticamente.
+                  {createStep === 1 && 'Informe os dados básicos do novo ambiente isolado.'}
+                  {createStep === 2 && 'Defina a natureza jurídica desta organização.'}
+                  {createStep === 3 &&
+                    'Revise as configurações. Você será definido como Administrador principal deste ambiente.'}
                 </DialogDescription>
               </DialogHeader>
-              <div className="space-y-4 py-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label>Nome da Organização *</Label>
-                    <Input
-                      value={newTenantName}
-                      onChange={(e) => setNewTenantName(e.target.value)}
-                      placeholder="Ex: Acme Corp"
-                    />
+
+              <div className="py-4">
+                {createStep === 1 && (
+                  <div className="space-y-4 animate-in fade-in slide-in-from-right-4">
+                    <div className="space-y-2">
+                      <Label>Nome da Organização *</Label>
+                      <Input
+                        value={newTenantName}
+                        onChange={(e) => setNewTenantName(e.target.value)}
+                        placeholder="Ex: Acme Corp"
+                        autoFocus
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>CNPJ</Label>
+                      <Input
+                        value={newTenantCnpj}
+                        onChange={(e) => setNewTenantCnpj(e.target.value)}
+                        placeholder="00.000.000/0001-00"
+                      />
+                    </div>
                   </div>
-                  <div className="space-y-2">
-                    <Label>CNPJ</Label>
-                    <Input
-                      value={newTenantCnpj}
-                      onChange={(e) => setNewTenantCnpj(e.target.value)}
-                      placeholder="00.000.000/0001-00"
-                    />
-                  </div>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border-t pt-4">
-                  <div className="space-y-2">
-                    <Label>Tipo de Organização *</Label>
-                    <Select
-                      value={newTenantOrgType}
-                      onValueChange={(v) => {
-                        setNewTenantOrgType(v)
-                        if (v === 'empresa') setNewTenantOrgSubtype('')
-                      }}
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="empresa">Empresa Privada</SelectItem>
-                        <SelectItem value="osc">Organização da Soc. Civil (OSC)</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  {newTenantOrgType === 'osc' && (
-                    <div className="space-y-2 animate-in fade-in">
-                      <Label>Subtipo Organizacional</Label>
-                      <Select value={newTenantOrgSubtype} onValueChange={setNewTenantOrgSubtype}>
+                )}
+
+                {createStep === 2 && (
+                  <div className="space-y-4 animate-in fade-in slide-in-from-right-4">
+                    <div className="space-y-2">
+                      <Label>Tipo de Organização *</Label>
+                      <Select
+                        value={newTenantOrgType}
+                        onValueChange={(v) => {
+                          setNewTenantOrgType(v)
+                          if (v === 'empresa') setNewTenantOrgSubtype('')
+                        }}
+                      >
                         <SelectTrigger>
-                          <SelectValue placeholder="Selecione..." />
+                          <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="educacional">Educacional</SelectItem>
-                          <SelectItem value="assistencia_social">Assistência Social</SelectItem>
-                          <SelectItem value="saude">Saúde</SelectItem>
-                          <SelectItem value="multissetorial">Multissetorial</SelectItem>
-                          <SelectItem value="geral">Geral</SelectItem>
+                          <SelectItem value="empresa">Empresa Privada</SelectItem>
+                          <SelectItem value="osc">Organização da Soc. Civil (OSC)</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
-                  )}
-                </div>
+                    {newTenantOrgType === 'osc' && (
+                      <div className="space-y-2 animate-in fade-in">
+                        <Label>Subtipo Organizacional</Label>
+                        <Select value={newTenantOrgSubtype} onValueChange={setNewTenantOrgSubtype}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecione..." />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="educacional">Educacional</SelectItem>
+                            <SelectItem value="assistencia_social">Assistência Social</SelectItem>
+                            <SelectItem value="saude">Saúde</SelectItem>
+                            <SelectItem value="multissetorial">Multissetorial</SelectItem>
+                            <SelectItem value="geral">Geral</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {createStep === 3 && (
+                  <div className="space-y-4 animate-in fade-in slide-in-from-right-4">
+                    <div className="bg-muted/30 p-4 rounded-lg border space-y-3">
+                      <h4 className="font-semibold text-sm">Resumo da Criação</h4>
+                      <div className="text-sm grid grid-cols-2 gap-2">
+                        <span className="text-muted-foreground">Nome:</span>
+                        <span className="font-medium">{newTenantName}</span>
+                        <span className="text-muted-foreground">Tipo:</span>
+                        <span className="font-medium">
+                          {newTenantOrgType === 'osc' ? 'OSC' : 'Empresa'}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="bg-primary/5 text-primary-700 p-4 rounded-lg border border-primary/20 flex items-start gap-3">
+                      <ShieldCheck className="w-5 h-5 mt-0.5 shrink-0" />
+                      <div className="text-sm">
+                        <p className="font-bold">Acesso Administrativo</p>
+                        <p className="opacity-90">
+                          O seu usuário <strong>({user?.email})</strong> será configurado
+                          automaticamente como administrador global deste novo ambiente.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
-              <DialogFooter>
-                <Button variant="outline" onClick={() => setIsNewTenantOpen(false)}>
-                  Cancelar
-                </Button>
-                <Button onClick={handleCreateTenant} disabled={isCreating}>
-                  {isCreating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  Salvar
-                </Button>
+
+              <DialogFooter className="flex justify-between w-full sm:justify-between items-center">
+                {createStep > 1 ? (
+                  <Button variant="outline" onClick={handlePrevStep} disabled={isCreating}>
+                    Voltar
+                  </Button>
+                ) : (
+                  <Button variant="outline" onClick={() => setIsNewTenantOpen(false)}>
+                    Cancelar
+                  </Button>
+                )}
+
+                {createStep < 3 ? (
+                  <Button onClick={handleNextStep}>Próximo Passo</Button>
+                ) : (
+                  <Button onClick={handleCreateTenant} disabled={isCreating}>
+                    {isCreating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    Criar Ambiente
+                  </Button>
+                )}
               </DialogFooter>
             </DialogContent>
           </Dialog>
@@ -537,6 +665,74 @@ export default function Tenants() {
             <Button onClick={handleUpdateTenant} disabled={isUpdating}>
               {isUpdating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Salvar Alterações
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Atividade Recente (Audit Logs) Modal */}
+      <Dialog open={isLogsOpen} onOpenChange={setIsLogsOpen}>
+        <DialogContent className="max-w-4xl max-h-[85vh] overflow-hidden flex flex-col">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Activity className="h-5 w-5 text-primary" /> Atividade Recente (Logs de Auditoria)
+            </DialogTitle>
+            <DialogDescription>
+              Acompanhe as ações administrativas, acessos e alterações de segurança em todos os
+              ambientes.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex-1 overflow-y-auto py-4">
+            {loadingLogs ? (
+              <div className="flex justify-center items-center py-12 text-muted-foreground">
+                <Loader2 className="h-8 w-8 animate-spin mr-2 text-primary" /> Carregando trilha de
+                auditoria...
+              </div>
+            ) : logs.length === 0 ? (
+              <div className="text-center py-12 text-muted-foreground">Nenhum log encontrado.</div>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Data</TableHead>
+                    <TableHead>Organização</TableHead>
+                    <TableHead>Usuário</TableHead>
+                    <TableHead>Ação</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {logs.map((log) => {
+                    const tName =
+                      tenants.find((t) => t.id === log.tenant_id)?.name ||
+                      (log.tenant_id === 'default' ? 'Sistema Global' : 'Desconhecida')
+                    return (
+                      <TableRow key={log.id}>
+                        <TableCell className="whitespace-nowrap text-xs text-muted-foreground">
+                          <div className="flex items-center gap-1">
+                            <Calendar className="h-3 w-3" />{' '}
+                            {new Date(log.created_at).toLocaleDateString()}
+                          </div>
+                          <div className="text-[10px] ml-4">
+                            {new Date(log.created_at).toLocaleTimeString()}
+                          </div>
+                        </TableCell>
+                        <TableCell className="font-medium text-xs">{tName}</TableCell>
+                        <TableCell className="text-xs">
+                          <div className="flex items-center gap-1">
+                            <User className="h-3 w-3" /> {log.user_email || 'Sistema'}
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-sm">{log.action}</TableCell>
+                      </TableRow>
+                    )
+                  })}
+                </TableBody>
+              </Table>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsLogsOpen(false)}>
+              Fechar
             </Button>
           </DialogFooter>
         </DialogContent>

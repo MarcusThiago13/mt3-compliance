@@ -1,7 +1,7 @@
 {
   "_versions": {
     "admin-invite": 13,
-    "admin-users": 15,
+    "admin-users": 16,
     "generate-dossier": 5,
     "send-email": 5,
     "resend-webhook": 1
