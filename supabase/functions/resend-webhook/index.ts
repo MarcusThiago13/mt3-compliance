@@ -10,7 +10,7 @@ Deno.serve(async (req: Request) => {
     const payload = await req.json()
     const type = payload.type
     const data = payload.data
-
+    
     if (!data || !data.email_id) {
       return new Response('Missing email_id', { status: 400 })
     }
