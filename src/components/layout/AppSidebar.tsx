@@ -36,6 +36,7 @@ import {
   Shield,
   BookOpen,
   Accessibility,
+  FileCheck,
 } from 'lucide-react'
 import { getParentClauses, getClausesByParent } from '@/lib/iso-data'
 import { useAppStore } from '@/stores/main'
@@ -208,7 +209,7 @@ export function AppSidebar() {
                     <SidebarMenuItem>
                       <SidebarMenuButton
                         asChild
-                        isActive={location.pathname.includes('/osc/parcerias')}
+                        isActive={location.pathname === `${tid}/osc/parcerias`}
                       >
                         <Link
                           to={`${tid}/osc/parcerias`}
@@ -216,6 +217,20 @@ export function AppSidebar() {
                         >
                           <Handshake />
                           <span>Gestão de Parcerias</span>
+                        </Link>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                    <SidebarMenuItem>
+                      <SidebarMenuButton
+                        asChild
+                        isActive={location.pathname.includes('/osc/prestacao-contas')}
+                      >
+                        <Link
+                          to={`${tid}/osc/prestacao-contas`}
+                          className="text-purple-800 hover:text-purple-900"
+                        >
+                          <FileCheck />
+                          <span>Prestação de Contas</span>
                         </Link>
                       </SidebarMenuButton>
                     </SidebarMenuItem>

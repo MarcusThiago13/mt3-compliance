@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useParams, Link } from 'react-router-dom'
+import { useParams, Link, useSearchParams } from 'react-router-dom'
 import { Handshake, ArrowLeft, Loader2 } from 'lucide-react'
 import { supabase } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
@@ -14,8 +14,11 @@ import PrestacaoContasTab from '@/components/osc/PrestacaoContasTab'
 
 export default function ParceriaDetalhes() {
   const { tenantId, id } = useParams<{ tenantId: string; id: string }>()
+  const [searchParams, setSearchParams] = useSearchParams()
   const [partnership, setPartnership] = useState<any>(null)
   const [loading, setLoading] = useState(true)
+
+  const tab = searchParams.get('tab') || 'dados'
 
   const fetchPartnership = async () => {
     setLoading(true)
@@ -33,6 +36,10 @@ export default function ParceriaDetalhes() {
   useEffect(() => {
     if (id) fetchPartnership()
   }, [id])
+
+  const handleTabChange = (value: string) => {
+    setSearchParams({ tab: value }, { replace: true })
+  }
 
   if (loading) {
     return (
@@ -70,7 +77,7 @@ export default function ParceriaDetalhes() {
         </div>
       </div>
 
-      <Tabs defaultValue="dados" className="w-full">
+      <Tabs value={tab} onValueChange={handleTabChange} className="w-full">
         <TabsList className="grid w-full grid-cols-1 sm:grid-cols-4 max-w-4xl h-auto p-1 bg-purple-50">
           <TabsTrigger
             value="dados"
