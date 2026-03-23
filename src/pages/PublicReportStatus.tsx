@@ -85,9 +85,9 @@ export default function PublicReportStatus() {
           <CardHeader className="text-center pb-2">
             <Lock className="h-12 w-12 text-primary mx-auto mb-4" />
             <CardTitle className="text-2xl text-slate-800">Sala Segura</CardTitle>
-            <p className="text-sm text-slate-500 mt-2">
+            <div className="text-sm text-slate-500 mt-2">
               Acompanhe seu relato e interaja de forma segura com a equipe de investigação.
-            </p>
+            </div>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleLogin} className="space-y-4">
@@ -134,10 +134,10 @@ export default function PublicReportStatus() {
           <CardContent className="p-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white rounded-lg">
             <div>
               <h2 className="text-lg font-bold text-slate-800">Status do Relato</h2>
-              <p className="text-sm text-slate-500">
+              <div className="text-sm text-slate-500">
                 Aberto em{' '}
                 {report?.created_at ? new Date(report.created_at).toLocaleDateString() : ''}
-              </p>
+              </div>
             </div>
             <Badge className="text-sm py-1 px-3 bg-slate-100 text-slate-800 uppercase tracking-wider">
               {report?.status.replace('_', ' ')}
@@ -153,10 +153,10 @@ export default function PublicReportStatus() {
           </CardHeader>
           <CardContent className="flex-1 p-4 overflow-y-auto space-y-4 bg-slate-50">
             {messages.length === 0 && (
-              <p className="text-center text-slate-400 mt-10">
+              <div className="text-center text-slate-400 mt-10">
                 Nenhuma mensagem registrada ainda. A equipe entrará em contato por aqui caso precise
                 de mais informações.
-              </p>
+              </div>
             )}
             {messages.map((m) => (
               <div
