@@ -35,6 +35,7 @@ import {
   Baby,
   Shield,
   BookOpen,
+  Accessibility,
 } from 'lucide-react'
 import { getParentClauses, getClausesByParent } from '@/lib/iso-data'
 import { useAppStore } from '@/stores/main'
@@ -283,6 +284,20 @@ export function AppSidebar() {
                         >
                           <Shield />
                           <span>LGPD Escolar</span>
+                        </Link>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                    <SidebarMenuItem>
+                      <SidebarMenuButton
+                        asChild
+                        isActive={location.pathname.includes('/osc/educacao-inclusiva')}
+                      >
+                        <Link
+                          to={`${tid}/osc/educacao-inclusiva`}
+                          className="text-blue-800 hover:text-blue-900"
+                        >
+                          <Accessibility />
+                          <span>Educação Inclusiva</span>
                         </Link>
                       </SidebarMenuButton>
                     </SidebarMenuItem>

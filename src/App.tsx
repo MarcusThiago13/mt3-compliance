@@ -41,6 +41,7 @@ import ParceriaDetalhes from './pages/osc/ParceriaDetalhes'
 import ConformidadeEducacional from './pages/osc/ConformidadeEducacional'
 import ProtecaoInfantil from './pages/osc/ProtecaoInfantil'
 import LGPDEscolar from './pages/osc/LGPDEscolar'
+import EducacaoInclusiva from './pages/osc/EducacaoInclusiva'
 
 const AuthGuard = ({ children }: { children: React.ReactNode }) => {
   const { user, loading, signIn } = useAuth()
@@ -140,6 +141,7 @@ const App = () => (
                 <Route path="osc/conformidade-educacional" element={<ConformidadeEducacional />} />
                 <Route path="osc/protecao-infantil" element={<ProtecaoInfantil />} />
                 <Route path="osc/lgpd-escolar" element={<LGPDEscolar />} />
+                <Route path="osc/educacao-inclusiva" element={<EducacaoInclusiva />} />
               </Route>
             </Route>
             <Route path="*" element={<NotFound />} />
