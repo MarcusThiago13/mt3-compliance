@@ -97,10 +97,14 @@ export default function DiligenciasTab({ partnership }: any) {
             Controle de Diligências e Notificações
           </h3>
           <p className="text-sm text-muted-foreground mt-1">
-            Rastreamento de apontamentos do ente público para evitar glosas, rejeição de contas ou penalidades.
+            Rastreamento de apontamentos do ente público para evitar glosas, rejeição de contas ou
+            penalidades.
           </p>
         </div>
-        <Button onClick={() => setIsModalOpen(true)} className="bg-amber-600 hover:bg-amber-700 shrink-0">
+        <Button
+          onClick={() => setIsModalOpen(true)}
+          className="bg-amber-600 hover:bg-amber-700 shrink-0"
+        >
           <Plus className="h-4 w-4 mr-2" /> Registrar Diligência
         </Button>
       </div>
@@ -131,7 +135,8 @@ export default function DiligenciasTab({ partnership }: any) {
                   </CardTitle>
                   <CardDescription className="flex flex-wrap items-center mt-1">
                     <CalendarClock className="h-3.5 w-3.5 mr-1" />
-                    Recebida em: {new Date(d.notification_date).toLocaleDateString('pt-BR')} <span className="mx-2">|</span>
+                    Recebida em: {new Date(d.notification_date).toLocaleDateString('pt-BR')}{' '}
+                    <span className="mx-2">|</span>
                     Prazo Legal:{' '}
                     <strong className="ml-1 text-slate-800">
                       {d.deadline

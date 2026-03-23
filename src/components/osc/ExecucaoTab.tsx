@@ -80,9 +80,12 @@ export default function ExecucaoTab({ partnership }: any) {
         <CardContent className="space-y-4">
           <Activity className="h-12 w-12 text-emerald-300 mx-auto" />
           <div>
-            <h3 className="text-lg font-bold text-emerald-900">Plano de Trabalho e Execução Não Iniciados</h3>
+            <h3 className="text-lg font-bold text-emerald-900">
+              Plano de Trabalho e Execução Não Iniciados
+            </h3>
             <p className="text-sm text-emerald-700 max-w-sm mx-auto mt-2">
-              Ative este módulo para registrar o plano aprovado e iniciar a gestão de alcance de metas físicas.
+              Ative este módulo para registrar o plano aprovado e iniciar a gestão de alcance de
+              metas físicas.
             </p>
           </div>
           <Button
@@ -110,18 +113,19 @@ export default function ExecucaoTab({ partnership }: any) {
           Plano de Trabalho e Execução do Objeto (Bloco 3)
         </CardTitle>
         <CardDescription>
-          Mantenha a coerência entre o pactuado e o executado para subsidiar relatórios parciais e prestação de contas.
+          Mantenha a coerência entre o pactuado e o executado para subsidiar relatórios parciais e
+          prestação de contas.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-8">
-        
         <div className="bg-blue-50/50 border border-blue-100 rounded-lg p-4 flex items-start gap-3">
           <NotebookText className="h-5 w-5 text-blue-600 mt-0.5" />
           <div>
             <h4 className="font-semibold text-blue-900">Metas e Resultados Pactuados</h4>
             <p className="text-sm text-blue-800 mt-1">
-              O plano de trabalho é o instrumento central vinculante. Modificações na execução requerem termo aditivo 
-              ou registro no histórico de alterações (conforme ato regulamentar aplicável).
+              O plano de trabalho é o instrumento central vinculante. Modificações na execução
+              requerem termo aditivo ou registro no histórico de alterações (conforme ato
+              regulamentar aplicável).
             </p>
             <Button variant="outline" size="sm" className="mt-3 text-blue-700 bg-white">
               Acessar Metas do Plano
@@ -145,7 +149,8 @@ export default function ExecucaoTab({ partnership }: any) {
             className="w-full"
           />
           <p className="text-xs text-muted-foreground">
-            Registre o volume de entregas sociais ou serviços prestados em relação ao previsto no plano aprovado.
+            Registre o volume de entregas sociais ou serviços prestados em relação ao previsto no
+            plano aprovado.
           </p>
         </div>
 

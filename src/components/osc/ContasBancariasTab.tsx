@@ -101,10 +101,14 @@ export default function ContasBancariasTab({ partnership }: any) {
             Gestão Financeira e Contas Bancárias (Bloco 4)
           </h3>
           <p className="text-sm text-muted-foreground mt-1">
-            Cadastre a conta específica (fonte primária da prestação) e a conta matriz (para restituições).
+            Cadastre a conta específica (fonte primária da prestação) e a conta matriz (para
+            restituições).
           </p>
         </div>
-        <Button onClick={() => setIsModalOpen(true)} className="bg-blue-600 hover:bg-blue-700 shrink-0">
+        <Button
+          onClick={() => setIsModalOpen(true)}
+          className="bg-blue-600 hover:bg-blue-700 shrink-0"
+        >
           <Plus className="h-4 w-4 mr-2" /> Adicionar Conta
         </Button>
       </div>

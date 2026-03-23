@@ -27,8 +27,8 @@ export default function EncerramentoTab({ partnership }: any) {
             Bens Remanescentes e Encerramento (Bloco 8)
           </h3>
           <p className="text-sm text-amber-800 mt-1 max-w-2xl">
-            Controle de destinação final de bens patrimoniais, tratamento de saldos remanescentes 
-            e emissão do termo de encerramento, garantindo conformidade com o instrumento pactuado.
+            Controle de destinação final de bens patrimoniais, tratamento de saldos remanescentes e
+            emissão do termo de encerramento, garantindo conformidade com o instrumento pactuado.
           </p>
         </div>
       </div>
@@ -50,12 +50,19 @@ export default function EncerramentoTab({ partnership }: any) {
             ) : (
               <div className="space-y-3">
                 {assets.map((asset) => (
-                  <div key={asset.id} className="flex justify-between items-center p-3 border rounded-md">
+                  <div
+                    key={asset.id}
+                    className="flex justify-between items-center p-3 border rounded-md"
+                  >
                     <div>
                       <p className="font-medium text-sm">{asset.description}</p>
-                      <p className="text-xs text-muted-foreground">Destinação: {asset.destination || 'Pendente'}</p>
+                      <p className="text-xs text-muted-foreground">
+                        Destinação: {asset.destination || 'Pendente'}
+                      </p>
                     </div>
-                    <Button variant="ghost" size="sm">Tratar</Button>
+                    <Button variant="ghost" size="sm">
+                      Tratar
+                    </Button>
                   </div>
                 ))}
               </div>
@@ -82,7 +89,7 @@ export default function EncerramentoTab({ partnership }: any) {
                 <span className="text-3xl font-bold text-slate-800">R$ 0,00</span>
               </div>
               <p className="text-xs text-muted-foreground text-center">
-                Todo saldo remanescente, incluindo rendimentos de aplicação financeira, deve ser 
+                Todo saldo remanescente, incluindo rendimentos de aplicação financeira, deve ser
                 obrigatoriamente devolvido ao ente parceiro para o encerramento formal.
               </p>
               <Button variant="secondary" className="w-full">

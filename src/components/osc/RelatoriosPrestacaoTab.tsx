@@ -143,7 +143,8 @@ export default function RelatoriosPrestacaoTab({ partnership }: any) {
               Demonstrativo Integral de Despesas (DID)
             </CardTitle>
             <CardDescription>
-              Gerado automaticamente a partir das movimentações bancárias conciliadas e documentadas.
+              Gerado automaticamente a partir das movimentações bancárias conciliadas e
+              documentadas.
             </CardDescription>
           </div>
           <Button
@@ -187,14 +188,20 @@ export default function RelatoriosPrestacaoTab({ partnership }: any) {
                           </Badge>
                         </TableCell>
                         <TableCell className="font-medium">
-                          {t.provider_name} <br/> <span className="text-xs text-muted-foreground font-mono">{t.provider_document}</span>
+                          {t.provider_name} <br />{' '}
+                          <span className="text-xs text-muted-foreground font-mono">
+                            {t.provider_document}
+                          </span>
                         </TableCell>
                         <TableCell>{t.invoice_number}</TableCell>
                         <TableCell className="text-right font-semibold text-slate-700">
                           {formatCurrency(t.amount)}
                         </TableCell>
                         <TableCell className="text-center">
-                          <CheckCircle2 className="h-4 w-4 text-emerald-500 mx-auto" title="Conciliada" />
+                          <CheckCircle2
+                            className="h-4 w-4 text-emerald-500 mx-auto"
+                            title="Conciliada"
+                          />
                         </TableCell>
                       </TableRow>
                     ))}

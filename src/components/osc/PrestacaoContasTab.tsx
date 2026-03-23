@@ -24,12 +24,14 @@ import {
   MessageSquareWarning,
   Landmark,
   FileSpreadsheet,
+  Lock,
 } from 'lucide-react'
 
 import DiligenciasTab from './DiligenciasTab'
 import ContasBancariasTab from './ContasBancariasTab'
 import ConciliacaoBancariaTab from './ConciliacaoBancariaTab'
 import RelatoriosPrestacaoTab from './RelatoriosPrestacaoTab'
+import FechamentoMensalTab from './FechamentoMensalTab'
 
 export default function PrestacaoContasTab({ partnership }: any) {
   const [accountability, setAccountability] = useState<any>(null)
@@ -148,7 +150,8 @@ export default function PrestacaoContasTab({ partnership }: any) {
           <div>
             <h4 className="font-semibold text-emerald-900">Nenhum Risco Estrutural Detectado</h4>
             <p className="text-sm text-emerald-700">
-              A relação entre execução física ({physical}%) e financeira ({financial}%) está equilibrada no motor de conformidade.
+              A relação entre execução física ({physical}%) e financeira ({financial}%) está
+              equilibrada no motor de conformidade.
             </p>
           </div>
         </div>
@@ -173,7 +176,9 @@ export default function PrestacaoContasTab({ partnership }: any) {
               <h4 className={`font-bold ${r.level === 'Alto' ? 'text-red-900' : 'text-amber-900'}`}>
                 {r.title}
               </h4>
-              <p className={`text-sm mt-1 ${r.level === 'Alto' ? 'text-red-800' : 'text-amber-800'}`}>
+              <p
+                className={`text-sm mt-1 ${r.level === 'Alto' ? 'text-red-800' : 'text-amber-800'}`}
+              >
                 {r.desc}
               </p>
             </div>
@@ -197,10 +202,12 @@ export default function PrestacaoContasTab({ partnership }: any) {
         <CardContent className="space-y-4">
           <FileCheck className="h-12 w-12 text-amber-400 mx-auto" />
           <div>
-            <h3 className="text-lg font-bold text-amber-900">Prestação de Contas e Gestão Financeira</h3>
+            <h3 className="text-lg font-bold text-amber-900">
+              Prestação de Contas e Gestão Financeira
+            </h3>
             <p className="text-sm text-amber-700 max-w-md mx-auto mt-2">
-              Inicie a estruturação da prestação de contas (Blocos 4 e 6) habilitando a conciliação extrato-cêntrica, 
-              controle de restituições e geração de demonstrativos automáticos.
+              Inicie a estruturação da prestação de contas (Blocos 4 e 6) habilitando a conciliação
+              extrato-cêntrica, controle de restituições e geração de demonstrativos automáticos.
             </p>
           </div>
           <Button
@@ -254,6 +261,12 @@ export default function PrestacaoContasTab({ partnership }: any) {
           >
             <MessageSquareWarning className="w-4 h-4 mr-1 sm:mr-2" /> Diligências (B6)
           </TabsTrigger>
+          <TabsTrigger
+            value="fechamento"
+            className="py-2 px-3 text-xs sm:text-sm data-[state=active]:bg-slate-800 data-[state=active]:text-white data-[state=active]:shadow-sm ml-auto"
+          >
+            <Lock className="w-4 h-4 mr-1 sm:mr-2" /> Fechamento
+          </TabsTrigger>
         </TabsList>
 
         <div className="mt-6">
@@ -265,9 +278,7 @@ export default function PrestacaoContasTab({ partnership }: any) {
                 <CardTitle className="text-lg text-slate-800">
                   Status da Prestação de Contas (Bloco 6)
                 </CardTitle>
-                <CardDescription>
-                  Controle de prazos e pareceres do ente parceiro.
-                </CardDescription>
+                <CardDescription>Controle de prazos e pareceres do ente parceiro.</CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="grid md:grid-cols-2 gap-6">
@@ -368,6 +379,10 @@ export default function PrestacaoContasTab({ partnership }: any) {
 
           <TabsContent value="diligencias" className="m-0 outline-none">
             <DiligenciasTab partnership={partnership} accountabilityId={accountability.id} />
+          </TabsContent>
+
+          <TabsContent value="fechamento" className="m-0 outline-none">
+            <FechamentoMensalTab partnership={partnership} accountability={accountability} />
           </TabsContent>
         </div>
       </Tabs>

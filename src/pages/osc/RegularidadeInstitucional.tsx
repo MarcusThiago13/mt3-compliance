@@ -1,5 +1,13 @@
 import { useParams } from 'react-router-dom'
-import { Landmark, CheckCircle2, Circle, Upload, FileText, AlertTriangle, ShieldX } from 'lucide-react'
+import {
+  Landmark,
+  CheckCircle2,
+  Circle,
+  Upload,
+  FileText,
+  AlertTriangle,
+  ShieldX,
+} from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import {
@@ -8,23 +16,49 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion'
+import { Badge } from '@/components/ui/badge'
 
 const BLOCKS = [
   {
     id: 'a',
     title: 'A. Existência e Regularidade Institucional (Bloco 1)',
     items: [
-      { id: 'a1', name: 'Ato constitutivo registrado e atualizado', status: 'valid', date: 'Vigente' },
-      { id: 'a2', name: 'Estatuto social vigente (aderente ao art. 33 da Lei 13.019)', status: 'valid', date: 'Vigente' },
-      { id: 'a3', name: 'Comprovante de Inscrição e Situação Cadastral (CNPJ)', status: 'valid', date: 'Ativo' },
-      { id: 'a4', name: 'Comprovação de tempo de existência institucional', status: 'valid', date: 'Cumprido' },
+      {
+        id: 'a1',
+        name: 'Ato constitutivo registrado e atualizado',
+        status: 'valid',
+        date: 'Vigente',
+      },
+      {
+        id: 'a2',
+        name: 'Estatuto social vigente (aderente ao art. 33 da Lei 13.019)',
+        status: 'valid',
+        date: 'Vigente',
+      },
+      {
+        id: 'a3',
+        name: 'Comprovante de Inscrição e Situação Cadastral (CNPJ)',
+        status: 'valid',
+        date: 'Ativo',
+      },
+      {
+        id: 'a4',
+        name: 'Comprovação de tempo de existência institucional',
+        status: 'valid',
+        date: 'Cumprido',
+      },
     ],
   },
   {
     id: 'b',
     title: 'B. Governança e Representação',
     items: [
-      { id: 'b1', name: 'Ata de eleição da diretoria atual registrada', status: 'valid', date: 'Até 12/2026' },
+      {
+        id: 'b1',
+        name: 'Ata de eleição da diretoria atual registrada',
+        status: 'valid',
+        date: 'Até 12/2026',
+      },
       {
         id: 'b2',
         name: 'Relação nominal atualizada dos dirigentes',
@@ -83,11 +117,21 @@ const BLOCKS = [
     id: 'e',
     title: 'E. Sanções, Impedimentos e Histórico (Bloco 9)',
     items: [
-      { id: 'e1', name: 'CEIS (Empresas Inidôneas e Suspensas)', status: 'valid', date: 'Nada Consta' },
+      {
+        id: 'e1',
+        name: 'CEIS (Empresas Inidôneas e Suspensas)',
+        status: 'valid',
+        date: 'Nada Consta',
+      },
       { id: 'e2', name: 'CNEP (Entidades Punidas)', status: 'valid', date: 'Nada Consta' },
-      { id: 'e3', name: 'Histórico de Contas Rejeitadas no Ente Parceiro', status: 'valid', date: 'Regular' },
+      {
+        id: 'e3',
+        name: 'Histórico de Contas Rejeitadas no Ente Parceiro',
+        status: 'valid',
+        date: 'Regular',
+      },
     ],
-  }
+  },
 ]
 
 export default function RegularidadeInstitucional() {
@@ -106,6 +150,14 @@ export default function RegularidadeInstitucional() {
     }
   }
 
+  // Calculating readiness score for UI representation
+  const totalItems = BLOCKS.reduce((acc, block) => acc + block.items.length, 0)
+  const validItems = BLOCKS.reduce(
+    (acc, block) => acc + block.items.filter((i) => i.status === 'valid').length,
+    0,
+  )
+  const readinessPercentage = Math.round((validItems / totalItems) * 100)
+
   return (
     <div className="space-y-6 animate-fade-in-up pb-12">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b pb-4">
@@ -114,8 +166,8 @@ export default function RegularidadeInstitucional() {
             <Landmark className="h-8 w-8" /> Regularidade Institucional
           </h1>
           <p className="text-muted-foreground mt-1 max-w-3xl">
-            Gestão consolidada da documentação exigida (Bloco 1) e controle do histórico de conformidade, 
-            sanções e impedimentos da organização (Bloco 9).
+            Gestão consolidada da documentação exigida (Bloco 1) e controle do histórico de
+            conformidade, sanções e impedimentos da organização (Bloco 9).
           </p>
         </div>
         <Button className="bg-purple-700 hover:bg-purple-800 text-white shadow-sm">
@@ -127,34 +179,56 @@ export default function RegularidadeInstitucional() {
         <Card className="md:col-span-1 shadow-sm border-purple-100 h-fit sticky top-6">
           <CardHeader>
             <CardTitle className="text-lg">Prontidão para Parcerias</CardTitle>
-            <CardDescription>Status geral da OSC para novos certames</CardDescription>
+            <CardDescription>Status geral da OSC para novos certames e celebrações</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             <div>
               <div className="flex justify-between text-sm font-medium mb-2">
-                <span>Conformidade</span>
-                <span className="text-purple-700">70%</span>
+                <span>Conformidade Documental</span>
+                <span
+                  className={
+                    readinessPercentage < 100
+                      ? 'text-red-600 font-bold'
+                      : 'text-emerald-600 font-bold'
+                  }
+                >
+                  {readinessPercentage}%
+                </span>
               </div>
               <div className="w-full bg-muted rounded-full h-2.5">
                 <div
-                  className="bg-purple-600 h-2.5 rounded-full transition-all duration-700"
-                  style={{ width: '70%' }}
+                  className={`h-2.5 rounded-full transition-all duration-700 ${readinessPercentage < 100 ? 'bg-amber-500' : 'bg-emerald-500'}`}
+                  style={{ width: `${readinessPercentage}%` }}
                 ></div>
               </div>
             </div>
+
+            {readinessPercentage < 100 && (
+              <div className="bg-red-50 border border-red-200 rounded-lg p-4 animate-in fade-in">
+                <div className="flex items-center gap-2 text-red-800 font-bold mb-2">
+                  <ShieldX className="h-5 w-5" />
+                  <span>Celebração Bloqueada</span>
+                </div>
+                <p className="text-xs text-red-700">
+                  O sistema detectou pendências críticas em certidões ou estatutos. A OSC está
+                  inabilitada para firmar novos Termos de Fomento ou Colaboração até o saneamento
+                  completo.
+                </p>
+              </div>
+            )}
 
             <div className="space-y-3">
               <div className="flex justify-between items-center text-sm border-b pb-2">
                 <span className="flex items-center text-emerald-700">
                   <CheckCircle2 className="w-4 h-4 mr-2" /> Validados / Ativos
                 </span>
-                <span className="font-bold">14</span>
+                <span className="font-bold">{validItems}</span>
               </div>
               <div className="flex justify-between items-center text-sm border-b pb-2">
                 <span className="flex items-center text-amber-600">
                   <AlertTriangle className="w-4 h-4 mr-2" /> Atenção / A Vencer
                 </span>
-                <span className="font-bold">1</span>
+                <span className="font-bold">2</span>
               </div>
               <div className="flex justify-between items-center text-sm pb-2">
                 <span className="flex items-center text-muted-foreground">
@@ -169,13 +243,15 @@ export default function RegularidadeInstitucional() {
                 <AlertTriangle className="w-4 h-4 mr-2" /> Ação Necessária
               </h4>
               <p className="text-xs text-amber-700 mt-1">
-                A Certidão do FGTS está expirada. A regularidade plena é impeditiva para novos repasses.
+                A Certidão do FGTS está expirada. A regularidade fiscal plena é requisito
+                condicionante para liberação de repasses.
               </p>
             </div>
-            
+
             <div className="p-4 bg-emerald-50 rounded-lg border border-emerald-200">
               <h4 className="font-semibold text-emerald-800 text-sm flex items-center">
-                <ShieldX className="w-4 h-4 mr-2 text-emerald-600" /> Histórico Institucional Limpo
+                <CheckCircle2 className="w-4 h-4 mr-2 text-emerald-600" /> Histórico Institucional
+                Limpo
               </h4>
               <p className="text-xs text-emerald-700 mt-1">
                 Sem registros de penalidades ou impedimentos vigentes (CEIS/CNEP).
@@ -202,12 +278,19 @@ export default function RegularidadeInstitucional() {
                     {block.items.map((item) => (
                       <div
                         key={item.id}
-                        className="flex flex-col sm:flex-row sm:items-center justify-between p-3 gap-3 hover:bg-muted/30 transition-colors"
+                        className={`flex flex-col sm:flex-row sm:items-center justify-between p-3 gap-3 hover:bg-muted/30 transition-colors ${item.status === 'missing' ? 'bg-red-50/30' : ''}`}
                       >
                         <div className="flex items-center gap-3">
                           {getStatusIcon(item.status)}
                           <div>
-                            <p className="font-medium text-sm text-foreground">{item.name}</p>
+                            <p className="font-medium text-sm text-foreground flex items-center gap-2">
+                              {item.name}
+                              {item.status === 'missing' && (
+                                <Badge variant="destructive" className="text-[10px]">
+                                  Bloqueante
+                                </Badge>
+                              )}
+                            </p>
                             <p className="text-xs text-muted-foreground">Status: {item.date}</p>
                           </div>
                         </div>
