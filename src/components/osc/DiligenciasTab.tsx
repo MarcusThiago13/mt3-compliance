@@ -16,7 +16,7 @@ import { supabase } from '@/lib/supabase/client'
 import { toast } from '@/hooks/use-toast'
 import { Loader2, Plus, MessageSquareWarning, CalendarClock, CheckCircle } from 'lucide-react'
 
-export default function DiligenciasTab({ partnership }: any) {
+export default function DiligenciasTab({ partnership, accountabilityId }: any) {
   const [diligences, setDiligences] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [isModalOpen, setIsModalOpen] = useState(false)
@@ -94,16 +94,15 @@ export default function DiligenciasTab({ partnership }: any) {
         <div>
           <h3 className="font-semibold text-slate-800 flex items-center">
             <MessageSquareWarning className="h-5 w-5 mr-2 text-amber-600" />
-            Controle de Diligências e Notificações
+            Controle de Diligências e Pareceres
           </h3>
           <p className="text-sm text-muted-foreground mt-1">
-            Rastreamento de apontamentos do ente público para evitar glosas, rejeição de contas ou
-            penalidades.
+            Rastreamento de apontamentos do ente público para evitar glosas ou rejeição de contas.
           </p>
         </div>
         <Button
           onClick={() => setIsModalOpen(true)}
-          className="bg-amber-600 hover:bg-amber-700 shrink-0"
+          className="bg-amber-600 hover:bg-amber-700 shrink-0 text-white"
         >
           <Plus className="h-4 w-4 mr-2" /> Registrar Diligência
         </Button>
@@ -119,8 +118,7 @@ export default function DiligenciasTab({ partnership }: any) {
             <CheckCircle className="h-12 w-12 text-emerald-400 mb-3" />
             <h3 className="text-lg font-bold text-slate-800">Nenhuma diligência registrada</h3>
             <p className="text-muted-foreground text-sm max-w-md mt-1">
-              A prestação de contas desta parceria não possui apontamentos ou requisições de
-              documentos pendentes pelo ente público no momento.
+              A prestação de contas desta parceria não possui apontamentos pendentes.
             </p>
           </CardContent>
         </Card>
@@ -131,7 +129,7 @@ export default function DiligenciasTab({ partnership }: any) {
               <CardHeader className="pb-2 flex flex-col sm:flex-row items-start justify-between space-y-2 sm:space-y-0">
                 <div>
                   <CardTitle className="text-base font-semibold">
-                    Notificação de Diligência / Apontamento
+                    Notificação de Diligência
                   </CardTitle>
                   <CardDescription className="flex flex-wrap items-center mt-1">
                     <CalendarClock className="h-3.5 w-3.5 mr-1" />
@@ -173,7 +171,7 @@ export default function DiligenciasTab({ partnership }: any) {
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Nova Diligência Recebida</DialogTitle>
+            <DialogTitle>Nova Diligência</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="grid grid-cols-2 gap-4">
@@ -200,7 +198,6 @@ export default function DiligenciasTab({ partnership }: any) {
                 rows={4}
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                placeholder="Descreva o que foi solicitado na diligência ou glosa..."
               />
             </div>
           </div>
@@ -211,7 +208,7 @@ export default function DiligenciasTab({ partnership }: any) {
             <Button
               onClick={handleSave}
               disabled={isSaving}
-              className="bg-amber-600 hover:bg-amber-700"
+              className="bg-amber-600 hover:bg-amber-700 text-white"
             >
               {isSaving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />} Salvar
             </Button>

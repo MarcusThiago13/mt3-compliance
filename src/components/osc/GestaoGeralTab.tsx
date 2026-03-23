@@ -1,8 +1,9 @@
 import { useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Button } from '@/components/ui/button'
+import { Textarea } from '@/components/ui/textarea'
 import {
   Select,
   SelectContent,
@@ -12,182 +13,174 @@ import {
 } from '@/components/ui/select'
 import { supabase } from '@/lib/supabase/client'
 import { toast } from '@/hooks/use-toast'
-import { Loader2, Save, Map, CalendarClock } from 'lucide-react'
+import { Loader2, Save, Info } from 'lucide-react'
 
 export default function GestaoGeralTab({ partnership, onUpdate }: any) {
-  const [saving, setSaving] = useState(false)
-  const [data, setData] = useState({
+  const [loading, setLoading] = useState(false)
+  const [formData, setFormData] = useState({
     title: partnership.title || '',
     public_entity: partnership.public_entity || '',
     instrument_type: partnership.instrument_type || '',
-    status: partnership.status || 'Planejamento',
-    value: partnership.value || 0,
+    instrument_number: partnership.instrument_number || '',
+    process_number: partnership.process_number || '',
     start_date: partnership.start_date || '',
     end_date: partnership.end_date || '',
+    value: partnership.value || 0,
+    object_description: partnership.object_description || '',
+    status: partnership.status || 'Planejamento',
   })
 
   const handleSave = async () => {
-    setSaving(true)
+    setLoading(true)
     const { error } = await supabase
       .from('osc_partnerships' as any)
-      .update(data)
+      .update(formData)
       .eq('id', partnership.id)
 
-    if (error) {
-      toast({ title: 'Erro', description: error.message, variant: 'destructive' })
-    } else {
-      toast({ title: 'Sucesso', description: 'Dados gerais da parceria atualizados.' })
-      onUpdate()
+    if (error) toast({ title: 'Erro', description: error.message, variant: 'destructive' })
+    else {
+      toast({ title: 'Sucesso', description: 'Dados gerais atualizados.' })
+      if (onUpdate) onUpdate()
     }
-    setSaving(false)
+    setLoading(false)
   }
 
   return (
     <div className="space-y-6 animate-fade-in">
-      <div className="bg-blue-50/50 border border-blue-100 rounded-lg p-4 flex items-start gap-3">
-        <Map className="h-5 w-5 text-blue-600 mt-0.5" />
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-slate-50 p-4 rounded-lg border">
         <div>
-          <h4 className="font-semibold text-blue-900">Gestão Geral da Parceria (Bloco 5)</h4>
-          <p className="text-sm text-blue-800 mt-1">
-            Este é o núcleo gerencial. Ele concentra o instrumento jurídico, as vigências e o cronograma macro.
-            Mantenha-o atualizado para garantir o alinhamento com a Prestação de Contas e Transparência.
+          <h3 className="font-semibold text-slate-800 flex items-center">
+            <Info className="h-5 w-5 mr-2 text-slate-500" />
+            Dados Institucionais da Parceria (Bloco 5)
+          </h3>
+          <p className="text-sm text-slate-600 mt-1 max-w-2xl">
+            Centro de informações jurídicas e gerenciais do instrumento pactuado. As informações
+            aqui estruturam a prestação de contas.
           </p>
         </div>
       </div>
 
-      <div className="grid lg:grid-cols-3 gap-6">
-        <Card className="lg:col-span-2 shadow-sm border-slate-200">
-          <CardHeader>
-            <CardTitle className="text-lg">Dados do Instrumento</CardTitle>
-            <CardDescription>
-              Informações formais do Termo de Fomento, Colaboração ou Acordo.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
+      <Card className="shadow-sm">
+        <CardHeader>
+          <CardTitle className="text-lg">Informações do Instrumento</CardTitle>
+          <CardDescription>Mantenha os dados contratuais sempre atualizados.</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label>Objeto da Parceria</Label>
+              <Label>Objeto da Parceria / Título</Label>
               <Input
-                value={data.title}
-                onChange={(e) => setData({ ...data, title: e.target.value })}
+                value={formData.title}
+                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
               />
             </div>
-            <div className="grid md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Ente Público Parceiro</Label>
-                <Input
-                  value={data.public_entity}
-                  onChange={(e) => setData({ ...data, public_entity: e.target.value })}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Tipo de Instrumento</Label>
-                <Select
-                  value={data.instrument_type}
-                  onValueChange={(v) => setData({ ...data, instrument_type: v })}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Termo de Fomento">Termo de Fomento</SelectItem>
-                    <SelectItem value="Termo de Colaboração">Termo de Colaboração</SelectItem>
-                    <SelectItem value="Acordo de Cooperação">Acordo de Cooperação</SelectItem>
-                    <SelectItem value="Contrato de Gestão">Contrato de Gestão</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label>Fase / Status Atual</Label>
-                <Select value={data.status} onValueChange={(v) => setData({ ...data, status: v })}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Planejamento">Planejamento e Elaboração</SelectItem>
-                    <SelectItem value="Chamamento">Habilitação / Chamamento</SelectItem>
-                    <SelectItem value="Celebração">Aprovação e Celebração</SelectItem>
-                    <SelectItem value="Execução">Em Execução</SelectItem>
-                    <SelectItem value="Prestação de Contas">Em Prestação de Contas</SelectItem>
-                    <SelectItem value="Encerrado">Encerrado</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label>Valor Global Pactuado (R$)</Label>
-                <Input
-                  type="number"
-                  value={data.value}
-                  onChange={(e) => setData({ ...data, value: parseFloat(e.target.value) || 0 })}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Início da Vigência</Label>
-                <Input
-                  type="date"
-                  value={data.start_date}
-                  onChange={(e) => setData({ ...data, start_date: e.target.value })}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Fim da Vigência</Label>
-                <Input
-                  type="date"
-                  value={data.end_date}
-                  onChange={(e) => setData({ ...data, end_date: e.target.value })}
-                />
-              </div>
+            <div className="space-y-2">
+              <Label>Ente Público Parceiro</Label>
+              <Input
+                value={formData.public_entity}
+                onChange={(e) => setFormData({ ...formData, public_entity: e.target.value })}
+              />
             </div>
-
-            <div className="flex justify-end pt-4 border-t mt-6">
-              <Button
-                onClick={handleSave}
-                disabled={saving}
-                className="bg-blue-600 hover:bg-blue-700"
+            <div className="space-y-2">
+              <Label>Tipo de Instrumento</Label>
+              <Select
+                value={formData.instrument_type}
+                onValueChange={(v) => setFormData({ ...formData, instrument_type: v })}
               >
-                {saving ? (
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                ) : (
-                  <Save className="h-4 w-4 mr-2" />
-                )}
-                Salvar Modificações
-              </Button>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Termo de Fomento">Termo de Fomento</SelectItem>
+                  <SelectItem value="Termo de Colaboração">Termo de Colaboração</SelectItem>
+                  <SelectItem value="Acordo de Cooperação">Acordo de Cooperação</SelectItem>
+                  <SelectItem value="Contrato de Gestão">Contrato de Gestão</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
-          </CardContent>
-        </Card>
-
-        <Card className="shadow-sm border-slate-200 h-fit">
-          <CardHeader>
-            <CardTitle className="text-lg flex items-center">
-              <CalendarClock className="w-5 h-5 mr-2 text-slate-500" /> Linha do Tempo
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="relative border-l-2 border-slate-200 ml-3 space-y-6 pb-4">
-              <div className="relative pl-6">
-                <div className="absolute w-3 h-3 bg-slate-400 rounded-full -left-[7px] top-1.5 ring-4 ring-white"></div>
-                <p className="text-sm font-semibold text-slate-800">Criação do Registro</p>
-                <p className="text-xs text-muted-foreground">
-                  {new Date(partnership.created_at).toLocaleDateString('pt-BR')}
-                </p>
-              </div>
-              <div className="relative pl-6">
-                <div className={`absolute w-3 h-3 rounded-full -left-[7px] top-1.5 ring-4 ring-white ${data.start_date ? 'bg-emerald-500' : 'bg-slate-300'}`}></div>
-                <p className={`text-sm font-semibold ${data.start_date ? 'text-slate-800' : 'text-slate-400'}`}>Início da Vigência</p>
-                <p className="text-xs text-muted-foreground">
-                  {data.start_date ? new Date(data.start_date).toLocaleDateString('pt-BR') : 'Pendente'}
-                </p>
-              </div>
-              <div className="relative pl-6">
-                <div className={`absolute w-3 h-3 rounded-full -left-[7px] top-1.5 ring-4 ring-white ${data.end_date ? 'bg-amber-500' : 'bg-slate-300'}`}></div>
-                <p className={`text-sm font-semibold ${data.end_date ? 'text-slate-800' : 'text-slate-400'}`}>Término da Vigência</p>
-                <p className="text-xs text-muted-foreground">
-                  {data.end_date ? new Date(data.end_date).toLocaleDateString('pt-BR') : 'Pendente'}
-                </p>
-              </div>
+            <div className="space-y-2">
+              <Label>Número do Instrumento</Label>
+              <Input
+                value={formData.instrument_number}
+                onChange={(e) => setFormData({ ...formData, instrument_number: e.target.value })}
+                placeholder="Ex: 01/2026"
+              />
             </div>
-          </CardContent>
-        </Card>
-      </div>
+            <div className="space-y-2">
+              <Label>Número do Processo Administrativo</Label>
+              <Input
+                value={formData.process_number}
+                onChange={(e) => setFormData({ ...formData, process_number: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Valor Total (R$)</Label>
+              <Input
+                type="number"
+                value={formData.value}
+                onChange={(e) =>
+                  setFormData({ ...formData, value: parseFloat(e.target.value) || 0 })
+                }
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Data de Início (Vigência)</Label>
+              <Input
+                type="date"
+                value={formData.start_date}
+                onChange={(e) => setFormData({ ...formData, start_date: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Data de Término (Vigência)</Label>
+              <Input
+                type="date"
+                value={formData.end_date}
+                onChange={(e) => setFormData({ ...formData, end_date: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2 md:col-span-2">
+              <Label>Fase Geral da Parceria</Label>
+              <Select
+                value={formData.status}
+                onValueChange={(v) => setFormData({ ...formData, status: v })}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Planejamento">Planejamento e Elaboração</SelectItem>
+                  <SelectItem value="Chamamento">Chamamento Público</SelectItem>
+                  <SelectItem value="Celebração">Celebração de Termo</SelectItem>
+                  <SelectItem value="Execução">Execução do Objeto</SelectItem>
+                  <SelectItem value="Prestação de Contas">
+                    Aguardando Aprovação de Contas
+                  </SelectItem>
+                  <SelectItem value="Encerrado">Encerrado / Baixado</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2 md:col-span-2">
+              <Label>Descrição Detalhada do Objeto</Label>
+              <Textarea
+                rows={4}
+                value={formData.object_description}
+                onChange={(e) => setFormData({ ...formData, object_description: e.target.value })}
+              />
+            </div>
+          </div>
+          <div className="flex justify-end pt-4 border-t">
+            <Button onClick={handleSave} disabled={loading}>
+              {loading ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <Save className="mr-2 h-4 w-4" />
+              )}
+              Salvar Dados Gerais
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   )
 }

@@ -39,6 +39,7 @@ import Cebas from './pages/osc/Cebas'
 import GestaoParcerias from './pages/osc/GestaoParcerias'
 import ParceriaDetalhes from './pages/osc/ParceriaDetalhes'
 import PrestacaoContasList from './pages/osc/PrestacaoContasList'
+import PrestacaoContasDetalhes from './pages/osc/PrestacaoContasDetalhes'
 import ConformidadeEducacional from './pages/osc/ConformidadeEducacional'
 import ProtecaoInfantil from './pages/osc/ProtecaoInfantil'
 import LGPDEscolar from './pages/osc/LGPDEscolar'
@@ -140,6 +141,7 @@ const App = () => (
                 <Route path="osc/parcerias" element={<GestaoParcerias />} />
                 <Route path="osc/parcerias/:id" element={<ParceriaDetalhes />} />
                 <Route path="osc/prestacao-contas" element={<PrestacaoContasList />} />
+                <Route path="osc/prestacao-contas/:id" element={<PrestacaoContasDetalhes />} />
                 <Route path="osc/conformidade-educacional" element={<ConformidadeEducacional />} />
                 <Route path="osc/protecao-infantil" element={<ProtecaoInfantil />} />
                 <Route path="osc/lgpd-escolar" element={<LGPDEscolar />} />

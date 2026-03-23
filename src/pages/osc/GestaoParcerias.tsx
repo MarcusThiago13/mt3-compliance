@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
-import { Handshake, Plus, Loader2, Search, ArrowRight, Layers } from 'lucide-react'
+import { Handshake, Plus, Loader2, Search, ArrowRight, Layers, FileText } from 'lucide-react'
 import { supabase } from '@/lib/supabase/client'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -42,6 +42,7 @@ export default function GestaoParcerias() {
   const [title, setTitle] = useState('')
   const [publicEntity, setPublicEntity] = useState('')
   const [instrument, setInstrument] = useState('Termo de Fomento')
+  const [instrumentNumber, setInstrumentNumber] = useState('')
 
   const fetchData = async () => {
     if (!tenantId) return
@@ -65,7 +66,7 @@ export default function GestaoParcerias() {
     if (!title || !publicEntity) {
       return toast({
         title: 'Atenção',
-        description: 'Preencha os campos obrigatórios',
+        description: 'Preencha os campos obrigatórios.',
         variant: 'destructive',
       })
     }
@@ -78,13 +79,18 @@ export default function GestaoParcerias() {
           title,
           public_entity: publicEntity,
           instrument_type: instrument,
+          instrument_number: instrumentNumber,
           status: 'Planejamento',
+          current_phase: 'Planejamento',
         })
         .select()
         .single()
 
       if (error) throw error
-      toast({ title: 'Sucesso', description: 'Parceria criada. Redirecionando para o módulo de gestão.' })
+      toast({
+        title: 'Sucesso',
+        description: 'Parceria criada. Redirecionando para o painel da parceria.',
+      })
       setIsModalOpen(false)
       navigate(`/${tenantId}/osc/parcerias/${data.id}`)
     } catch (e: any) {
@@ -95,7 +101,8 @@ export default function GestaoParcerias() {
   }
 
   const getStatusBadge = (status: string) => {
-    const colors: any = {
+    const s = status || 'Planejamento'
+    const colors: Record<string, string> = {
       Planejamento: 'bg-slate-100 text-slate-800',
       Chamamento: 'bg-blue-100 text-blue-800',
       Celebração: 'bg-purple-100 text-purple-800',
@@ -105,9 +112,9 @@ export default function GestaoParcerias() {
     }
     return (
       <Badge
-        className={`${colors[status] || 'bg-slate-100'} hover:${colors[status]} border-none shadow-sm`}
+        className={`${colors[s] || 'bg-slate-100 text-slate-800'} border-none shadow-sm font-medium`}
       >
-        {status}
+        {s}
       </Badge>
     )
   }
@@ -117,17 +124,19 @@ export default function GestaoParcerias() {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b pb-4">
         <div>
           <h1 className="text-3xl font-bold text-purple-800 flex items-center gap-3">
-            <Handshake className="h-8 w-8" /> Gestão de Parcerias
+            <Handshake className="h-8 w-8" /> Central de Gestão de Parcerias
           </h1>
           <p className="text-muted-foreground mt-1 max-w-3xl">
-            Módulo central estruturante. Organize todo o ciclo de vida das parcerias, integrando a habilitação, execução, histórico institucional e prestação de contas num único eixo rastreável.
+            Eixo organizador do ciclo completo das parcerias celebradas com a Administração Pública.
+            Consolide habilitação, plano de trabalho, execução, prestação de contas e encerramento
+            em um só lugar.
           </p>
         </div>
         <Button
-          className="bg-purple-700 hover:bg-purple-800 text-white shadow-sm"
+          className="bg-purple-700 hover:bg-purple-800 text-white shadow-sm shrink-0"
           onClick={() => setIsModalOpen(true)}
         >
-          <Plus className="mr-2 h-4 w-4" /> Registrar Parceria
+          <Plus className="mr-2 h-4 w-4" /> Cadastrar Nova Parceria
         </Button>
       </div>
 
@@ -139,7 +148,7 @@ export default function GestaoParcerias() {
             </div>
             <div>
               <p className="text-2xl font-bold text-purple-900">{parcerias.length}</p>
-              <p className="text-sm font-medium text-purple-700">Parcerias Registradas</p>
+              <p className="text-sm font-medium text-purple-700">Total de Parcerias</p>
             </div>
           </CardContent>
         </Card>
@@ -150,22 +159,31 @@ export default function GestaoParcerias() {
             </div>
             <div>
               <p className="text-2xl font-bold text-emerald-900">
-                {parcerias.filter(p => p.status === 'Execução').length}
+                {
+                  parcerias.filter((p) => p.status === 'Execução' || p.current_phase === 'Execução')
+                    .length
+                }
               </p>
-              <p className="text-sm font-medium text-emerald-700">Em Execução</p>
+              <p className="text-sm font-medium text-emerald-700">Em Execução Ativa</p>
             </div>
           </CardContent>
         </Card>
         <Card className="bg-amber-50/50 border-amber-100 shadow-sm">
           <CardContent className="p-4 flex items-center gap-4">
             <div className="p-3 bg-white rounded-full text-amber-600 shadow-sm">
-              <Search className="h-6 w-6" />
+              <FileText className="h-6 w-6" />
             </div>
             <div>
               <p className="text-2xl font-bold text-amber-900">
-                {parcerias.filter(p => p.status === 'Prestação de Contas').length}
+                {
+                  parcerias.filter(
+                    (p) =>
+                      p.status === 'Prestação de Contas' ||
+                      p.current_phase === 'Prestação de Contas',
+                  ).length
+                }
               </p>
-              <p className="text-sm font-medium text-amber-700">Aguardando Aprovação de Contas</p>
+              <p className="text-sm font-medium text-amber-700">Aguardando Avaliação de Contas</p>
             </div>
           </CardContent>
         </Card>
@@ -177,7 +195,9 @@ export default function GestaoParcerias() {
             <span>Relação de Instrumentos Pactuados</span>
             <Search className="h-4 w-4 text-muted-foreground" />
           </CardTitle>
-          <CardDescription>Acesse o detalhamento dos blocos gerenciais de cada parceria.</CardDescription>
+          <CardDescription>
+            Acesse o detalhamento gerencial, operacional e jurídico de cada parceria.
+          </CardDescription>
         </CardHeader>
         <CardContent>
           {loading ? (
@@ -188,6 +208,13 @@ export default function GestaoParcerias() {
             <div className="text-center py-12 text-muted-foreground border-2 border-dashed rounded-lg bg-muted/10">
               <Handshake className="h-10 w-10 mx-auto mb-3 opacity-30" />
               <p>Nenhuma parceria cadastrada nesta organização.</p>
+              <Button
+                variant="link"
+                className="mt-2 text-purple-700"
+                onClick={() => setIsModalOpen(true)}
+              >
+                Registrar a primeira parceria
+              </Button>
             </div>
           ) : (
             <Table>
@@ -195,9 +222,9 @@ export default function GestaoParcerias() {
                 <TableRow>
                   <TableHead>Título / Objeto</TableHead>
                   <TableHead>Ente Público</TableHead>
-                  <TableHead>Instrumento</TableHead>
-                  <TableHead>Status (Blocos)</TableHead>
-                  <TableHead className="text-right">Ação</TableHead>
+                  <TableHead>Instrumento / Nº</TableHead>
+                  <TableHead>Fase Atual</TableHead>
+                  <TableHead className="text-right">Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -209,11 +236,22 @@ export default function GestaoParcerias() {
                   >
                     <TableCell className="font-semibold text-purple-900">{p.title}</TableCell>
                     <TableCell>{p.public_entity}</TableCell>
-                    <TableCell className="text-muted-foreground">{p.instrument_type}</TableCell>
+                    <TableCell>
+                      <div className="text-sm">{p.instrument_type}</div>
+                      {p.instrument_number && (
+                        <div className="text-xs text-muted-foreground font-mono">
+                          {p.instrument_number}
+                        </div>
+                      )}
+                    </TableCell>
                     <TableCell>{getStatusBadge(p.status)}</TableCell>
                     <TableCell className="text-right">
-                      <Button variant="ghost" size="sm" className="text-purple-700">
-                        Gerenciar <ArrowRight className="ml-2 h-4 w-4" />
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-purple-700 hover:text-purple-800 hover:bg-purple-100"
+                      >
+                        Acessar Eixo <ArrowRight className="ml-2 h-4 w-4" />
                       </Button>
                     </TableCell>
                   </TableRow>
@@ -227,15 +265,15 @@ export default function GestaoParcerias() {
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Iniciar Registro de Nova Parceria</DialogTitle>
+            <DialogTitle>Registro Inicial da Parceria</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label>Nome de Referência ou Objeto da Parceria *</Label>
+              <Label>Nome de Referência ou Resumo do Objeto *</Label>
               <Input
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                placeholder="Ex: Projeto Educação Inclusiva"
+                placeholder="Ex: Projeto Educação Inclusiva em Ação"
               />
             </div>
             <div className="space-y-2">
@@ -243,22 +281,32 @@ export default function GestaoParcerias() {
               <Input
                 value={publicEntity}
                 onChange={(e) => setPublicEntity(e.target.value)}
-                placeholder="Ex: Secretaria Municipal de Educação"
+                placeholder="Ex: Secretaria Estadual de Educação"
               />
             </div>
-            <div className="space-y-2">
-              <Label>Tipo de Instrumento Jurídico</Label>
-              <Select value={instrument} onValueChange={setInstrument}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Termo de Fomento">Termo de Fomento</SelectItem>
-                  <SelectItem value="Termo de Colaboração">Termo de Colaboração</SelectItem>
-                  <SelectItem value="Acordo de Cooperação">Acordo de Cooperação</SelectItem>
-                  <SelectItem value="Contrato de Gestão">Contrato de Gestão</SelectItem>
-                </SelectContent>
-              </Select>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Tipo de Instrumento</Label>
+                <Select value={instrument} onValueChange={setInstrument}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Termo de Fomento">Termo de Fomento</SelectItem>
+                    <SelectItem value="Termo de Colaboração">Termo de Colaboração</SelectItem>
+                    <SelectItem value="Acordo de Cooperação">Acordo de Cooperação</SelectItem>
+                    <SelectItem value="Contrato de Gestão">Contrato de Gestão</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>Nº do Instrumento (Opcional)</Label>
+                <Input
+                  value={instrumentNumber}
+                  onChange={(e) => setInstrumentNumber(e.target.value)}
+                  placeholder="Ex: 001/2026"
+                />
+              </div>
             </div>
           </div>
           <DialogFooter>
@@ -268,10 +316,10 @@ export default function GestaoParcerias() {
             <Button
               onClick={handleCreate}
               disabled={isSaving}
-              className="bg-purple-600 hover:bg-purple-700"
+              className="bg-purple-600 hover:bg-purple-700 text-white"
             >
               {isSaving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-              Criar e Avançar para Habilitação
+              Criar e Organizar Eixo
             </Button>
           </DialogFooter>
         </DialogContent>

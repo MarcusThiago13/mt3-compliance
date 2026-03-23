@@ -1,56 +1,52 @@
-import { LineChart, Users, FileCheck, AlertCircle } from 'lucide-react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
+import { BarChart3, TrendingUp } from 'lucide-react'
 
-export function IndicadoresTab({ tenantId }: { tenantId?: string }) {
+export default function IndicadoresTab({ tenantId }: { tenantId: string }) {
   return (
-    <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card className="shadow-sm">
-          <CardContent className="p-6 flex items-center gap-4">
-            <div className="p-4 bg-blue-100 rounded-full">
-              <Users className="h-6 w-6 text-blue-700" />
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground font-medium">Estudos de Caso Ativos</p>
-              <h3 className="text-3xl font-bold text-slate-800">42</h3>
-            </div>
+    <div className="space-y-6 animate-fade-in">
+      <h3 className="text-lg font-bold text-slate-800 flex items-center">
+        <BarChart3 className="h-5 w-5 mr-2 text-blue-600" /> Indicadores de Qualidade e Conformidade
+      </h3>
+
+      <div className="grid sm:grid-cols-3 gap-6">
+        <Card className="shadow-sm border-emerald-100 bg-emerald-50/50">
+          <CardContent className="p-6 text-center">
+            <p className="text-sm font-semibold text-emerald-800 uppercase mb-2">
+              Cobertura de PEI
+            </p>
+            <h3 className="text-4xl font-bold text-emerald-700">100%</h3>
+            <p className="text-xs text-emerald-600 mt-2 flex items-center justify-center">
+              <TrendingUp className="h-3 w-3 mr-1" /> Dentro da meta MEC
+            </p>
           </CardContent>
         </Card>
 
-        <Card className="shadow-sm">
-          <CardContent className="p-6 flex items-center gap-4">
-            <div className="p-4 bg-emerald-100 rounded-full">
-              <FileCheck className="h-6 w-6 text-emerald-700" />
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground font-medium">Cobertura de PAEE/PEI</p>
-              <h3 className="text-3xl font-bold text-slate-800">88%</h3>
-            </div>
+        <Card className="shadow-sm border-blue-100 bg-blue-50/50">
+          <CardContent className="p-6 text-center">
+            <p className="text-sm font-semibold text-blue-800 uppercase mb-2">
+              Profissionais Habilitados
+            </p>
+            <h3 className="text-4xl font-bold text-blue-700">2/2</h3>
+            <p className="text-xs text-blue-600 mt-2">100% Adequação</p>
           </CardContent>
         </Card>
 
-        <Card className="shadow-sm border-amber-200 bg-amber-50/30">
-          <CardContent className="p-6 flex items-center gap-4">
-            <div className="p-4 bg-amber-100 rounded-full">
-              <AlertCircle className="h-6 w-6 text-amber-700" />
-            </div>
-            <div>
-              <p className="text-sm text-amber-800 font-medium">Planos Pendentes de Revisão</p>
-              <h3 className="text-3xl font-bold text-amber-900">5</h3>
-            </div>
+        <Card className="shadow-sm border-slate-200">
+          <CardContent className="p-6 text-center">
+            <p className="text-sm font-semibold text-slate-600 uppercase mb-2">
+              Casos Ativos (PAEE)
+            </p>
+            <h3 className="text-4xl font-bold text-slate-800">14</h3>
+            <p className="text-xs text-slate-500 mt-2">Mapeados no Censo</p>
           </CardContent>
         </Card>
       </div>
 
-      <Card className="shadow-sm border-blue-100">
-        <CardHeader>
-          <CardTitle className="text-lg flex items-center gap-2">
-            <LineChart className="h-5 w-5 text-blue-600" /> Evolução de Atendimentos Especializados
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="h-64 flex items-center justify-center border-t bg-slate-50">
-          <p className="text-muted-foreground text-sm">
-            O gráfico de evolução será carregado assim que houver histórico trimestral suficiente.
+      <Card className="shadow-sm">
+        <CardContent className="p-8 text-center text-muted-foreground">
+          <p>
+            O dashboard detalhado de métricas de acessibilidade e proficiência está sendo compilado
+            com base nos Planos Individuais ativos.
           </p>
         </CardContent>
       </Card>

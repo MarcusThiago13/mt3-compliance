@@ -1,5 +1,5 @@
-import { BookA, Plus, FileSignature } from 'lucide-react'
-import { Card, CardContent } from '@/components/ui/card'
+import { useState, useEffect } from 'react'
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import {
   Table,
@@ -10,104 +10,86 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
+import { supabase } from '@/lib/supabase/client'
+import { Loader2, FileText, CheckCircle2, AlertCircle } from 'lucide-react'
 
-const mockPlans = [
-  {
-    student: 'A. M. Silva (TEA)',
-    type: 'PAEE',
-    status: 'Aprovado',
-    version: 'v2.1',
-    nextReview: '10/06/2026',
-  },
-  {
-    student: 'A. M. Silva (TEA)',
-    type: 'PEI',
-    status: 'Aprovado',
-    version: 'v1.0',
-    nextReview: '10/06/2026',
-  },
-  {
-    student: 'J. P. Santos (TDAH)',
-    type: 'PAEE',
-    status: 'Em Elaboração',
-    version: 'v1.0',
-    nextReview: '-',
-  },
-]
+export default function PlanosTab({ tenantId }: { tenantId: string }) {
+  const [plans, setPlans] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
 
-export function PlanosTab({ tenantId }: { tenantId?: string }) {
+  const fetchPlans = async () => {
+    setLoading(true)
+    const { data } = await supabase
+      .from('osc_inclusive_plans')
+      .select('*, osc_inclusive_cases(student_name)')
+      .eq('tenant_id', tenantId)
+
+    if (data) setPlans(data)
+    setLoading(false)
+  }
+
+  useEffect(() => {
+    if (tenantId) fetchPlans()
+  }, [tenantId])
+
   return (
-    <div className="space-y-4">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
-        <h4 className="text-lg font-semibold flex items-center gap-2 text-blue-900">
-          <BookA className="h-5 w-5 text-blue-600" /> Planos Educacionais (PAEE e PEI)
-        </h4>
-        <div className="flex gap-2">
-          <Button variant="outline" className="border-blue-200 text-blue-700 hover:bg-blue-50">
-            <Plus className="mr-2 h-4 w-4" /> Novo PAEE
-          </Button>
-          <Button className="bg-blue-600 hover:bg-blue-700">
-            <Plus className="mr-2 h-4 w-4" /> Novo PEI
-          </Button>
-        </div>
+    <div className="space-y-6 animate-fade-in">
+      <div className="flex justify-between items-center">
+        <h3 className="text-lg font-bold text-slate-800 flex items-center">
+          <FileText className="h-5 w-5 mr-2 text-blue-600" /> Acompanhamento de PAEE e PEI
+        </h3>
+        <Button className="bg-blue-600 hover:bg-blue-700 text-white">Criar Plano</Button>
       </div>
 
-      <Card className="border-blue-100 shadow-sm">
+      <Card className="shadow-sm">
         <CardContent className="p-0">
-          <Table>
-            <TableHeader className="bg-slate-50">
-              <TableRow>
-                <TableHead>Estudante</TableHead>
-                <TableHead>Instrumento</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Versão</TableHead>
-                <TableHead>Próxima Revisão</TableHead>
-                <TableHead className="text-right">Ação</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {mockPlans.map((p, i) => (
-                <TableRow key={i} className="hover:bg-blue-50/50">
-                  <TableCell className="font-medium">{p.student}</TableCell>
-                  <TableCell>
-                    <Badge
-                      variant="outline"
-                      className={
-                        p.type === 'PEI'
-                          ? 'border-purple-200 text-purple-700 bg-purple-50'
-                          : 'border-blue-200 text-blue-700 bg-blue-50'
-                      }
-                    >
-                      {p.type}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    {p.status === 'Aprovado' ? (
-                      <Badge className="bg-emerald-100 text-emerald-800 border-none hover:bg-emerald-200">
-                        Aprovado
-                      </Badge>
-                    ) : (
-                      <Badge
-                        variant="secondary"
-                        className="bg-amber-100 text-amber-800 border-none hover:bg-amber-200"
-                      >
-                        Em Elaboração
-                      </Badge>
-                    )}
-                  </TableCell>
-                  <TableCell className="font-mono text-xs text-muted-foreground">
-                    {p.version}
-                  </TableCell>
-                  <TableCell className="text-sm">{p.nextReview}</TableCell>
-                  <TableCell className="text-right">
-                    <Button variant="ghost" size="sm">
-                      <FileSignature className="h-4 w-4 mr-2" /> Editar
-                    </Button>
-                  </TableCell>
+          {loading ? (
+            <div className="flex justify-center py-12">
+              <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+            </div>
+          ) : plans.length === 0 ? (
+            <div className="text-center py-12 text-muted-foreground">
+              Nenhum plano (PEI ou PAEE) elaborado ainda. Crie o primeiro plano a partir de um
+              Estudo de Caso.
+            </div>
+          ) : (
+            <Table>
+              <TableHeader className="bg-slate-50">
+                <TableRow>
+                  <TableHead>Estudante</TableHead>
+                  <TableHead>Tipo de Plano</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Responsáveis (AEE/Docente)</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {plans.map((p) => (
+                  <TableRow key={p.id}>
+                    <TableCell className="font-medium">
+                      {p.osc_inclusive_cases?.student_name}
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="outline">{p.plan_type}</Badge>
+                    </TableCell>
+                    <TableCell>
+                      {p.status === 'Vigente' ? (
+                        <Badge className="bg-emerald-100 text-emerald-800 border-none">
+                          <CheckCircle2 className="h-3 w-3 mr-1" /> Vigente
+                        </Badge>
+                      ) : (
+                        <Badge className="bg-amber-100 text-amber-800 border-none">
+                          <AlertCircle className="h-3 w-3 mr-1" /> Em Elaboração
+                        </Badge>
+                      )}
+                    </TableCell>
+                    <TableCell className="text-sm text-muted-foreground">
+                      {p.responsibles || 'Não atribuído'}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
         </CardContent>
       </Card>
     </div>

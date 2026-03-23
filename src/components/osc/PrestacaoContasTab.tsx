@@ -1,53 +1,24 @@
 import { useState, useEffect } from 'react'
+import { Link } from 'react-router-dom'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
 import { supabase } from '@/lib/supabase/client'
 import { toast } from '@/hooks/use-toast'
 import {
   Loader2,
   FileCheck,
-  Play,
   AlertTriangle,
   ShieldCheck,
-  Save,
-  Receipt,
-  MessageSquareWarning,
+  ArrowRight,
   Landmark,
   FileSpreadsheet,
-  Lock,
 } from 'lucide-react'
-
-import DiligenciasTab from './DiligenciasTab'
-import ContasBancariasTab from './ContasBancariasTab'
-import ConciliacaoBancariaTab from './ConciliacaoBancariaTab'
-import RelatoriosPrestacaoTab from './RelatoriosPrestacaoTab'
-import FechamentoMensalTab from './FechamentoMensalTab'
+import { Badge } from '@/components/ui/badge'
 
 export default function PrestacaoContasTab({ partnership }: any) {
   const [accountability, setAccountability] = useState<any>(null)
   const [execution, setExecution] = useState<any>(null)
   const [loading, setLoading] = useState(true)
-  const [saving, setSaving] = useState(false)
-  const [activeTab, setActiveTab] = useState('overview')
-
-  const [formData, setFormData] = useState({
-    report_type: 'Anual',
-    status: 'Em Elaboração',
-    deadline: '',
-    submission_date: '',
-    diligence_notes: '',
-    final_decision: '',
-  })
 
   const fetchData = async () => {
     setLoading(true)
@@ -58,17 +29,7 @@ export default function PrestacaoContasTab({ partnership }: any) {
       .eq('partnership_id', partnership.id)
       .maybeSingle()
 
-    if (accData) {
-      setAccountability(accData)
-      setFormData({
-        report_type: accData.report_type || 'Anual',
-        status: accData.status || 'Em Elaboração',
-        deadline: accData.deadline || '',
-        submission_date: accData.submission_date || '',
-        diligence_notes: accData.diligence_notes || '',
-        final_decision: accData.final_decision || '',
-      })
-    }
+    if (accData) setAccountability(accData)
 
     const { data: execData } = await supabase
       .from('osc_partnership_execution' as any)
@@ -83,34 +44,6 @@ export default function PrestacaoContasTab({ partnership }: any) {
   useEffect(() => {
     fetchData()
   }, [partnership.id])
-
-  const handleStart = async () => {
-    setSaving(true)
-    const { data, error } = await supabase
-      .from('osc_partnership_accountability' as any)
-      .insert({ partnership_id: partnership.id })
-      .select()
-      .single()
-
-    if (data) {
-      setAccountability(data)
-      toast({ title: 'Sucesso', description: 'Módulo de Prestação de Contas iniciado.' })
-    }
-    if (error) toast({ title: 'Erro', description: error.message, variant: 'destructive' })
-    setSaving(false)
-  }
-
-  const handleSave = async () => {
-    setSaving(true)
-    const { error } = await supabase
-      .from('osc_partnership_accountability' as any)
-      .update({ ...formData, updated_at: new Date().toISOString() })
-      .eq('id', accountability.id)
-
-    if (error) toast({ title: 'Erro', description: error.message, variant: 'destructive' })
-    else toast({ title: 'Sucesso', description: 'Dados gerais atualizados.' })
-    setSaving(false)
-  }
 
   const renderRiskMotor = () => {
     if (!execution) return null
@@ -131,15 +64,7 @@ export default function PrestacaoContasTab({ partnership }: any) {
       risks.push({
         level: 'Médio',
         title: 'Descompasso Físico-Financeiro Moderado',
-        desc: `Atenção: A utilização de recursos (${financial}%) está acima das metas atingidas (${physical}%). Necessário justificar desvios.`,
-      })
-    }
-
-    if (financial > 90 && physical < 100) {
-      risks.push({
-        level: 'Médio',
-        title: 'Risco de Insuficiência de Saldo',
-        desc: 'Recursos quase esgotados, mas o objeto ainda não foi totalmente concluído.',
+        desc: `Atenção: A utilização de recursos (${financial}%) está acima das metas atingidas (${physical}%). Necessário justificar desvios na prestação de contas.`,
       })
     }
 
@@ -162,7 +87,7 @@ export default function PrestacaoContasTab({ partnership }: any) {
       <div className="space-y-3">
         <h4 className="font-semibold text-slate-800 flex items-center">
           <AlertTriangle className="h-4 w-4 mr-2 text-amber-500" />
-          Motor de Conformidade (Nexo Causal)
+          Motor de Nexo Causal (Físico x Financeiro)
         </h4>
         {risks.map((r, i) => (
           <div
@@ -196,196 +121,115 @@ export default function PrestacaoContasTab({ partnership }: any) {
     )
   }
 
-  if (!accountability) {
-    return (
-      <Card className="border-amber-100 bg-amber-50/30 text-center py-12">
-        <CardContent className="space-y-4">
-          <FileCheck className="h-12 w-12 text-amber-400 mx-auto" />
-          <div>
-            <h3 className="text-lg font-bold text-amber-900">
-              Prestação de Contas e Gestão Financeira
-            </h3>
-            <p className="text-sm text-amber-700 max-w-md mx-auto mt-2">
-              Inicie a estruturação da prestação de contas (Blocos 4 e 6) habilitando a conciliação
-              extrato-cêntrica, controle de restituições e geração de demonstrativos automáticos.
-            </p>
-          </div>
-          <Button
-            onClick={handleStart}
-            disabled={saving}
-            className="bg-amber-600 hover:bg-amber-700 mt-4"
-          >
-            {saving ? (
-              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-            ) : (
-              <Play className="h-4 w-4 mr-2" />
-            )}
-            Iniciar Módulo Integrado
-          </Button>
-        </CardContent>
-      </Card>
-    )
-  }
-
   return (
-    <div className="space-y-6">
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="flex flex-wrap w-full h-auto p-1 bg-slate-100 rounded-lg justify-start gap-1">
-          <TabsTrigger
-            value="overview"
-            className="py-2 px-3 text-xs sm:text-sm data-[state=active]:bg-white data-[state=active]:text-blue-800 data-[state=active]:shadow-sm"
-          >
-            <FileCheck className="w-4 h-4 mr-1 sm:mr-2" /> Visão Geral
-          </TabsTrigger>
-          <TabsTrigger
-            value="contas"
-            className="py-2 px-3 text-xs sm:text-sm data-[state=active]:bg-white data-[state=active]:text-blue-800 data-[state=active]:shadow-sm"
-          >
-            <Landmark className="w-4 h-4 mr-1 sm:mr-2" /> Contas (B4)
-          </TabsTrigger>
-          <TabsTrigger
-            value="conciliacao"
-            className="py-2 px-3 text-xs sm:text-sm data-[state=active]:bg-white data-[state=active]:text-purple-700 data-[state=active]:shadow-sm"
-          >
-            <FileSpreadsheet className="w-4 h-4 mr-1 sm:mr-2" /> Conciliação
-          </TabsTrigger>
-          <TabsTrigger
-            value="relatorios"
-            className="py-2 px-3 text-xs sm:text-sm data-[state=active]:bg-white data-[state=active]:text-emerald-700 data-[state=active]:shadow-sm"
-          >
-            <Receipt className="w-4 h-4 mr-1 sm:mr-2" /> Demonstrativos
-          </TabsTrigger>
-          <TabsTrigger
-            value="diligencias"
-            className="py-2 px-3 text-xs sm:text-sm data-[state=active]:bg-white data-[state=active]:text-amber-700 data-[state=active]:shadow-sm"
-          >
-            <MessageSquareWarning className="w-4 h-4 mr-1 sm:mr-2" /> Diligências (B6)
-          </TabsTrigger>
-          <TabsTrigger
-            value="fechamento"
-            className="py-2 px-3 text-xs sm:text-sm data-[state=active]:bg-slate-800 data-[state=active]:text-white data-[state=active]:shadow-sm ml-auto"
-          >
-            <Lock className="w-4 h-4 mr-1 sm:mr-2" /> Fechamento
-          </TabsTrigger>
-        </TabsList>
-
-        <div className="mt-6">
-          <TabsContent value="overview" className="space-y-6 m-0 outline-none">
-            {renderRiskMotor()}
-
-            <Card className="shadow-sm border-slate-200">
-              <CardHeader>
-                <CardTitle className="text-lg text-slate-800">
-                  Status da Prestação de Contas (Bloco 6)
-                </CardTitle>
-                <CardDescription>Controle de prazos e pareceres do ente parceiro.</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="grid md:grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <Label>Tipo de Relatório (conforme regulamento)</Label>
-                    <Select
-                      value={formData.report_type}
-                      onValueChange={(v) => setFormData({ ...formData, report_type: v })}
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Parcial">Parcial / Intermediária</SelectItem>
-                        <SelectItem value="Anual">Anual</SelectItem>
-                        <SelectItem value="Final">Final</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Status de Envio na Plataforma do Ente</Label>
-                    <Select
-                      value={formData.status}
-                      onValueChange={(v) => setFormData({ ...formData, status: v })}
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Em Elaboração">Em Elaboração (Interno)</SelectItem>
-                        <SelectItem value="Enviada">Enviada para Análise</SelectItem>
-                        <SelectItem value="Em Diligência">Em Diligência / Saneamento</SelectItem>
-                        <SelectItem value="Aprovada">Aprovada (Regular)</SelectItem>
-                        <SelectItem value="Aprovada com Ressalvas">
-                          Aprovada com Ressalvas
-                        </SelectItem>
-                        <SelectItem value="Rejeitada">Rejeitada (Irregular)</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Prazo Limite Legal/Contratual</Label>
-                    <Input
-                      type="date"
-                      value={formData.deadline}
-                      onChange={(e) => setFormData({ ...formData, deadline: e.target.value })}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Data de Protocolo Efetivo</Label>
-                    <Input
-                      type="date"
-                      value={formData.submission_date}
-                      onChange={(e) =>
-                        setFormData({ ...formData, submission_date: e.target.value })
-                      }
-                    />
-                  </div>
-                  <div className="space-y-2 md:col-span-2">
-                    <Label>Decisão Final / Parecer Conclusivo</Label>
-                    <Input
-                      value={formData.final_decision}
-                      onChange={(e) => setFormData({ ...formData, final_decision: e.target.value })}
-                      placeholder="Ex: Contas julgadas regulares conforme Parecer nº 123..."
-                    />
-                  </div>
-                </div>
-
-                <div className="flex justify-end pt-4 border-t">
-                  <Button
-                    onClick={handleSave}
-                    disabled={saving}
-                    className="bg-slate-800 hover:bg-slate-900"
-                  >
-                    {saving ? (
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    ) : (
-                      <Save className="h-4 w-4 mr-2" />
-                    )}
-                    Salvar Visão Geral
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="contas" className="m-0 outline-none">
-            <ContasBancariasTab partnership={partnership} />
-          </TabsContent>
-
-          <TabsContent value="conciliacao" className="m-0 outline-none">
-            <ConciliacaoBancariaTab partnership={partnership} />
-          </TabsContent>
-
-          <TabsContent value="relatorios" className="m-0 outline-none">
-            <RelatoriosPrestacaoTab partnership={partnership} />
-          </TabsContent>
-
-          <TabsContent value="diligencias" className="m-0 outline-none">
-            <DiligenciasTab partnership={partnership} accountabilityId={accountability.id} />
-          </TabsContent>
-
-          <TabsContent value="fechamento" className="m-0 outline-none">
-            <FechamentoMensalTab partnership={partnership} accountability={accountability} />
-          </TabsContent>
+    <div className="space-y-6 animate-fade-in">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-amber-50/50 p-4 rounded-lg border border-amber-100">
+        <div>
+          <h3 className="font-semibold text-amber-900 flex items-center">
+            <FileCheck className="h-5 w-5 mr-2 text-amber-600" />
+            Integração com Prestação de Contas
+          </h3>
+          <p className="text-sm text-amber-800 mt-1 max-w-2xl">
+            Este painel consolida o status geral da prestação de contas desta parceria. O
+            detalhamento financeiro, conciliação e relatórios encontram-se no módulo específico.
+          </p>
         </div>
-      </Tabs>
+        <Button asChild className="bg-amber-600 hover:bg-amber-700 text-white shrink-0 shadow-sm">
+          <Link to={`/${partnership.tenant_id}/osc/prestacao-contas/${partnership.id}`}>
+            Acessar Módulo Financeiro <ArrowRight className="ml-2 h-4 w-4" />
+          </Link>
+        </Button>
+      </div>
+
+      <div className="grid md:grid-cols-2 gap-6">
+        <div className="space-y-6">
+          {renderRiskMotor()}
+
+          <Card className="shadow-sm border-slate-200">
+            <CardHeader>
+              <CardTitle className="text-lg">Status Geral da Prestação</CardTitle>
+              <CardDescription>Resumo dos prazos e envio ao ente parceiro.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex justify-between items-center p-3 bg-slate-50 rounded-md border">
+                <span className="text-sm font-medium text-slate-700">Status Atual:</span>
+                <Badge
+                  variant="outline"
+                  className={
+                    accountability?.status === 'Aprovada'
+                      ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                      : 'bg-amber-50 text-amber-700 border-amber-200'
+                  }
+                >
+                  {accountability?.status || 'Não Iniciada'}
+                </Badge>
+              </div>
+              <div className="flex justify-between items-center p-3 bg-slate-50 rounded-md border">
+                <span className="text-sm font-medium text-slate-700">Prazo Legal (Envio):</span>
+                <span className="text-sm font-semibold text-slate-900">
+                  {accountability?.deadline
+                    ? new Date(accountability.deadline).toLocaleDateString('pt-BR')
+                    : 'Não definido'}
+                </span>
+              </div>
+              <div className="flex justify-between items-center p-3 bg-slate-50 rounded-md border">
+                <span className="text-sm font-medium text-slate-700">Tipo de Relatório:</span>
+                <span className="text-sm font-semibold text-slate-900">
+                  {accountability?.report_type || '-'}
+                </span>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        <div className="space-y-6">
+          <Card className="shadow-sm border-slate-200 bg-slate-50/50">
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center">
+                <Landmark className="h-5 w-5 mr-2 text-blue-600" />
+                Dados Estruturais (Exportados)
+              </CardTitle>
+              <CardDescription>
+                Informações desta Gestão de Parcerias que alimentam a Prestação de Contas.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="flex items-center gap-2 text-sm text-slate-700">
+                <FileCheck className="h-4 w-4 text-emerald-500 shrink-0" />
+                <span>Plano de Trabalho, Metas e Indicadores (B3) vinculados.</span>
+              </div>
+              <div className="flex items-center gap-2 text-sm text-slate-700">
+                <FileCheck className="h-4 w-4 text-emerald-500 shrink-0" />
+                <span>Instrumento e Cronograma de Desembolso integrados.</span>
+              </div>
+              <div className="flex items-center gap-2 text-sm text-slate-700">
+                <FileCheck className="h-4 w-4 text-emerald-500 shrink-0" />
+                <span>Relatórios de Execução do Objeto (B4) sincronizados.</span>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-amber-100 shadow-sm">
+            <CardContent className="p-5 flex items-center justify-between">
+              <div>
+                <h4 className="font-bold text-slate-800 text-sm flex items-center mb-1">
+                  <FileSpreadsheet className="h-4 w-4 mr-2 text-amber-600" />
+                  Operação Detalhada
+                </h4>
+                <p className="text-xs text-muted-foreground">
+                  Conciliação bancária, extratos e demonstrativos financeiros residem no módulo
+                  próprio.
+                </p>
+              </div>
+              <Button variant="outline" size="sm" asChild className="shrink-0 ml-4">
+                <Link to={`/${partnership.tenant_id}/osc/prestacao-contas/${partnership.id}`}>
+                  Abrir
+                </Link>
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
     </div>
   )
 }

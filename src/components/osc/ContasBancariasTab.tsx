@@ -51,7 +51,6 @@ export default function ContasBancariasTab({ partnership }: any) {
       .select('*')
       .eq('partnership_id', partnership.id)
       .order('created_at', { ascending: true })
-
     if (error) toast({ title: 'Erro', description: error.message, variant: 'destructive' })
     else setAccounts(data || [])
     setLoading(false)
@@ -62,23 +61,19 @@ export default function ContasBancariasTab({ partnership }: any) {
   }, [partnership.id])
 
   const handleSave = async () => {
-    if (!formData.name || !formData.bank || !formData.account_number) {
+    if (!formData.name || !formData.bank || !formData.account_number)
       return toast({
         title: 'Atenção',
         description: 'Preencha os campos obrigatórios.',
         variant: 'destructive',
       })
-    }
     setIsSaving(true)
-    const { error } = await supabase.from('osc_bank_accounts' as any).insert({
-      partnership_id: partnership.id,
-      ...formData,
-    })
-
-    if (error) {
-      toast({ title: 'Erro', description: error.message, variant: 'destructive' })
-    } else {
-      toast({ title: 'Sucesso', description: 'Conta bancária registrada com sucesso.' })
+    const { error } = await supabase
+      .from('osc_bank_accounts' as any)
+      .insert({ partnership_id: partnership.id, ...formData })
+    if (error) toast({ title: 'Erro', description: error.message, variant: 'destructive' })
+    else {
+      toast({ title: 'Sucesso', description: 'Conta registrada.' })
       setIsModalOpen(false)
       fetchAccounts()
       setFormData({
@@ -98,16 +93,16 @@ export default function ContasBancariasTab({ partnership }: any) {
         <div>
           <h3 className="font-semibold text-slate-800 flex items-center">
             <Landmark className="h-5 w-5 mr-2 text-blue-600" />
-            Gestão Financeira e Contas Bancárias (Bloco 4)
+            Estrutura de Contas Bancárias
           </h3>
           <p className="text-sm text-muted-foreground mt-1">
-            Cadastre a conta específica (fonte primária da prestação) e a conta matriz (para
-            restituições).
+            Controle da conta específica vinculada à parceria e contas de recursos próprios para
+            eventuais restituições.
           </p>
         </div>
         <Button
           onClick={() => setIsModalOpen(true)}
-          className="bg-blue-600 hover:bg-blue-700 shrink-0"
+          className="bg-blue-600 hover:bg-blue-700 text-white shrink-0"
         >
           <Plus className="h-4 w-4 mr-2" /> Adicionar Conta
         </Button>
@@ -233,10 +228,9 @@ export default function ContasBancariasTab({ partnership }: any) {
             <Button
               onClick={handleSave}
               disabled={isSaving}
-              className="bg-blue-600 hover:bg-blue-700"
+              className="bg-blue-600 hover:bg-blue-700 text-white"
             >
-              {isSaving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-              Salvar Conta
+              {isSaving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />} Salvar Conta
             </Button>
           </DialogFooter>
         </DialogContent>

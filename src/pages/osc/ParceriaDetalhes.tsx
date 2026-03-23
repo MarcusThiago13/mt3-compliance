@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useParams, Link, useSearchParams } from 'react-router-dom'
-import { Handshake, ArrowLeft, Loader2 } from 'lucide-react'
+import { Handshake, ArrowLeft, Loader2, FileText, ChevronRight } from 'lucide-react'
 import { supabase } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -60,57 +60,109 @@ export default function ParceriaDetalhes() {
     <div className="space-y-6 animate-fade-in-up pb-12">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shrink-0 border-b pb-4">
         <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" asChild className="rounded-full">
+          <Button variant="ghost" size="icon" asChild className="rounded-full shrink-0">
             <Link to={`/${tenantId}/osc/parcerias`}>
               <ArrowLeft className="h-5 w-5" />
             </Link>
           </Button>
-          <div>
-            <div className="flex items-center gap-3">
-              <h1 className="text-2xl font-bold text-slate-800 truncate max-w-lg">
+          <div className="min-w-0">
+            <div className="flex items-center gap-3 flex-wrap">
+              <h1
+                className="text-2xl font-bold text-slate-800 truncate max-w-lg"
+                title={partnership.title}
+              >
                 {partnership.title}
               </h1>
-              <Badge className="bg-purple-100 text-purple-800 border-none shadow-sm">
+              <Badge className="bg-purple-100 text-purple-800 border-none shadow-sm whitespace-nowrap">
                 {partnership.status}
               </Badge>
             </div>
-            <p className="text-sm text-muted-foreground flex items-center mt-1">
-              <Handshake className="h-4 w-4 mr-1.5" /> {partnership.public_entity} |{' '}
-              {partnership.instrument_type}
-            </p>
+            <div className="flex items-center text-sm text-muted-foreground mt-1 flex-wrap gap-1.5">
+              <Handshake className="h-4 w-4 shrink-0 text-purple-400" />
+              <span className="font-medium text-slate-700">{partnership.public_entity}</span>
+              <ChevronRight className="h-3 w-3 text-slate-300" />
+              <span>{partnership.instrument_type}</span>
+              {partnership.instrument_number && (
+                <>
+                  <ChevronRight className="h-3 w-3 text-slate-300" />
+                  <span className="font-mono text-xs px-1.5 bg-slate-100 rounded">
+                    {partnership.instrument_number}
+                  </span>
+                </>
+              )}
+            </div>
           </div>
         </div>
+        <Button
+          variant="outline"
+          className="text-purple-700 border-purple-200 hover:bg-purple-50 shrink-0"
+        >
+          <FileText className="mr-2 h-4 w-4" /> Exportar Dossiê da Parceria
+        </Button>
       </div>
 
-      <div className="w-full overflow-x-auto pb-2">
+      <div className="w-full overflow-x-auto pb-2 scrollbar-thin">
         <Tabs value={tab} onValueChange={handleTabChange} className="w-full min-w-max">
-          <TabsList className="flex w-full h-auto p-1 bg-slate-100/80 rounded-lg justify-start gap-1">
-            <TabsTrigger value="gestao" className="py-2 px-3 text-xs sm:text-sm data-[state=active]:bg-white data-[state=active]:shadow-sm">
-              Gestão Geral (B5)
+          <TabsList className="flex w-full h-auto p-1.5 bg-slate-100/80 rounded-lg justify-start gap-1.5">
+            <TabsTrigger
+              value="gestao"
+              className="py-2.5 px-3.5 text-xs sm:text-sm data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-purple-800 font-medium transition-all"
+            >
+              Gestão da Parceria (B5)
             </TabsTrigger>
-            <TabsTrigger value="habilitacao" className="py-2 px-3 text-xs sm:text-sm data-[state=active]:bg-white data-[state=active]:shadow-sm">
-              Habilitação (B2)
+            <TabsTrigger
+              value="habilitacao"
+              className="py-2.5 px-3.5 text-xs sm:text-sm data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-purple-800 font-medium transition-all"
+            >
+              Habilitação & Celebração (B2)
             </TabsTrigger>
-            <TabsTrigger value="plano" className="py-2 px-3 text-xs sm:text-sm data-[state=active]:bg-white data-[state=active]:shadow-sm">
+            <TabsTrigger
+              value="plano"
+              className="py-2.5 px-3.5 text-xs sm:text-sm data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-purple-800 font-medium transition-all"
+            >
               Plano de Trabalho (B3)
             </TabsTrigger>
-            <TabsTrigger value="execucao" className="py-2 px-3 text-xs sm:text-sm data-[state=active]:bg-white data-[state=active]:shadow-sm">
-              Execução (B4)
+            <TabsTrigger
+              value="execucao"
+              className="py-2.5 px-3.5 text-xs sm:text-sm data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-purple-800 font-medium transition-all"
+            >
+              Execução do Objeto (B4)
             </TabsTrigger>
-            <TabsTrigger value="prestacao" className="py-2 px-3 text-xs sm:text-sm data-[state=active]:bg-white data-[state=active]:shadow-sm border-l-2 ml-1 border-amber-200">
-              Contas & Finanças
+
+            <div className="w-px h-6 bg-slate-300 mx-1 self-center" />
+
+            <TabsTrigger
+              value="prestacao"
+              className="py-2.5 px-3.5 text-xs sm:text-sm data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-amber-700 font-medium border border-transparent data-[state=active]:border-amber-200 transition-all bg-amber-50/50"
+            >
+              Integração: Prestação de Contas
             </TabsTrigger>
-            <TabsTrigger value="transparencia" className="py-2 px-3 text-xs sm:text-sm data-[state=active]:bg-white data-[state=active]:shadow-sm ml-1">
+
+            <div className="w-px h-6 bg-slate-300 mx-1 self-center" />
+
+            <TabsTrigger
+              value="transparencia"
+              className="py-2.5 px-3.5 text-xs sm:text-sm data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-blue-700 font-medium transition-all"
+            >
               Transparência (B6)
             </TabsTrigger>
-            <TabsTrigger value="rede" className="py-2 px-3 text-xs sm:text-sm data-[state=active]:bg-white data-[state=active]:shadow-sm">
-              Rede (B7)
+            <TabsTrigger
+              value="rede"
+              className="py-2.5 px-3.5 text-xs sm:text-sm data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-purple-800 font-medium transition-all"
+            >
+              Atuação em Rede (B7)
             </TabsTrigger>
-            <TabsTrigger value="encerramento" className="py-2 px-3 text-xs sm:text-sm data-[state=active]:bg-white data-[state=active]:shadow-sm">
-              Encerramento (B8/9)
+            <TabsTrigger
+              value="encerramento"
+              className="py-2.5 px-3.5 text-xs sm:text-sm data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-orange-700 font-medium transition-all"
+            >
+              Bens, Saldos e Encerramento
             </TabsTrigger>
-            <TabsTrigger value="historico" className="py-2 px-3 text-xs sm:text-sm data-[state=active]:bg-white data-[state=active]:shadow-sm">
-              Histórico (B10)
+            <TabsTrigger
+              value="historico"
+              className="py-2.5 px-3.5 text-xs sm:text-sm data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-slate-800 font-medium transition-all"
+            >
+              Histórico Institucional (B10)
             </TabsTrigger>
           </TabsList>
 

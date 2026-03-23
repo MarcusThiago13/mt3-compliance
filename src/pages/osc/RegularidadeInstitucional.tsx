@@ -30,8 +30,18 @@ const BLOCKS = [
     items: [
       { id: 'a1', name: 'Natureza Jurídica', status: 'valid', date: 'Associação Privada (399-9)' },
       { id: 'a2', name: 'Comprovante de CNPJ e Sede Ativa', status: 'valid', date: 'Ativo' },
-      { id: 'a3', name: 'Cadastro de Unidades Vinculadas (Filiais)', status: 'valid', date: '2 Unidades Registradas' },
-      { id: 'a4', name: 'Tempo de Existência Institucional (Lei 13.019)', status: 'valid', date: 'Comprovado (> 3 anos)' },
+      {
+        id: 'a3',
+        name: 'Cadastro de Unidades Vinculadas (Filiais)',
+        status: 'valid',
+        date: '2 Unidades Registradas',
+      },
+      {
+        id: 'a4',
+        name: 'Tempo de Existência Institucional (Art. 33, Lei 13.019)',
+        status: 'valid',
+        date: 'Comprovado (> 3 anos)',
+      },
     ],
   },
   {
@@ -39,10 +49,30 @@ const BLOCKS = [
     title: 'Governança, Estatuto e Dirigentes',
     icon: <Users className="w-4 h-4 mr-2 text-purple-600" />,
     items: [
-      { id: 'b1', name: 'Estatuto Social averbado (Art. 33, Lei 13.019)', status: 'valid', date: 'Aderente' },
-      { id: 'b2', name: 'Ata de Eleição da Diretoria atual registrada', status: 'valid', date: 'Vigente até 12/2026' },
-      { id: 'b3', name: 'Relação Nominal Atualizada dos Dirigentes', status: 'warning', date: 'Revisão Necessária' },
-      { id: 'b4', name: 'Comprovante de Residência / Docs dos Dirigentes', status: 'missing', date: 'Pendente (Bloqueante)' },
+      {
+        id: 'b1',
+        name: 'Estatuto Social averbado (Art. 33, Lei 13.019)',
+        status: 'valid',
+        date: 'Aderente',
+      },
+      {
+        id: 'b2',
+        name: 'Ata de Eleição da Diretoria atual registrada',
+        status: 'valid',
+        date: 'Vigente até 12/2026',
+      },
+      {
+        id: 'b3',
+        name: 'Relação Nominal Atualizada dos Dirigentes',
+        status: 'warning',
+        date: 'Revisão Necessária',
+      },
+      {
+        id: 'b4',
+        name: 'Comprovante de Residência e Docs dos Dirigentes',
+        status: 'missing',
+        date: 'Pendente (Bloqueante)',
+      },
     ],
   },
   {
@@ -51,9 +81,24 @@ const BLOCKS = [
     icon: <Briefcase className="w-4 h-4 mr-2 text-purple-600" />,
     items: [
       { id: 'c1', name: 'Capacidade Operacional Declarada', status: 'valid', date: 'Registrada' },
-      { id: 'c2', name: 'Atestados de Capacidade Técnica (Experiência)', status: 'valid', date: '3 Atestados' },
-      { id: 'c3', name: 'Histórico de Parcerias Anteriores', status: 'valid', date: 'Atualizado' },
-      { id: 'c4', name: 'Área de Atuação (Estatutária e Real)', status: 'valid', date: 'Educação / Assistência Social' },
+      {
+        id: 'c2',
+        name: 'Atestados de Capacidade Técnica (Experiência)',
+        status: 'valid',
+        date: '3 Atestados',
+      },
+      {
+        id: 'c3',
+        name: 'Histórico Institucional de Parcerias',
+        status: 'valid',
+        date: 'Atualizado',
+      },
+      {
+        id: 'c4',
+        name: 'Área de Atuação (Estatutária e Real)',
+        status: 'valid',
+        date: 'Educação / Assistência Social',
+      },
     ],
   },
   {
@@ -61,22 +106,62 @@ const BLOCKS = [
     title: 'Certidões Fiscais, Trabalhistas e Certificações',
     icon: <Award className="w-4 h-4 mr-2 text-purple-600" />,
     items: [
-      { id: 'd1', name: 'Certidão Conjunta Federal (RFB/INSS)', status: 'valid', date: 'Val: 15/08/2026' },
-      { id: 'd2', name: 'Certidão Negativa Estadual e Municipal', status: 'valid', date: 'Val: 10/07/2026' },
-      { id: 'd3', name: 'Certificado de Regularidade do FGTS (CRF)', status: 'missing', date: 'Expirada (Bloqueante)' },
+      {
+        id: 'd1',
+        name: 'Certidão Conjunta Federal (RFB/INSS)',
+        status: 'valid',
+        date: 'Val: 15/08/2026',
+      },
+      {
+        id: 'd2',
+        name: 'Certidão Negativa Estadual e Municipal',
+        status: 'valid',
+        date: 'Val: 10/07/2026',
+      },
+      {
+        id: 'd3',
+        name: 'Certificado de Regularidade do FGTS (CRF)',
+        status: 'missing',
+        date: 'Expirada (Bloqueante)',
+      },
       { id: 'd4', name: 'CNDT - Débitos Trabalhistas', status: 'valid', date: 'Val: 01/10/2026' },
-      { id: 'd5', name: 'Titulação de Utilidade Pública ou CEBAS (Opcional)', status: 'valid', date: 'CEBAS Educação Vigente' },
+      {
+        id: 'd5',
+        name: 'Titulação de Utilidade Pública ou CEBAS (Opcional)',
+        status: 'valid',
+        date: 'CEBAS Educação Vigente',
+      },
     ],
   },
   {
     id: 'e',
-    title: 'Impedimentos, Sanções e Histórico (Bloco 9)',
+    title: 'Impedimentos, Sanções e Histórico',
     icon: <ShieldX className="w-4 h-4 mr-2 text-purple-600" />,
     items: [
-      { id: 'e1', name: 'Consulta ao CEIS (Inidôneas e Suspensas)', status: 'valid', date: 'Nada Consta' },
-      { id: 'e2', name: 'Consulta ao CNEP (Entidades Punidas)', status: 'valid', date: 'Nada Consta' },
-      { id: 'e3', name: 'Histórico de Contas Rejeitadas (TCE/TCU)', status: 'valid', date: 'Regular' },
-      { id: 'e4', name: 'Declaração de não incidência de vedações', status: 'valid', date: 'Assinada' },
+      {
+        id: 'e1',
+        name: 'Consulta ao CEIS (Inidôneas e Suspensas)',
+        status: 'valid',
+        date: 'Nada Consta',
+      },
+      {
+        id: 'e2',
+        name: 'Consulta ao CNEP (Entidades Punidas)',
+        status: 'valid',
+        date: 'Nada Consta',
+      },
+      {
+        id: 'e3',
+        name: 'Histórico de Contas Rejeitadas (TCE/TCU)',
+        status: 'valid',
+        date: 'Regular',
+      },
+      {
+        id: 'e4',
+        name: 'Declaração de não incidência de vedações',
+        status: 'valid',
+        date: 'Assinada',
+      },
     ],
   },
 ]
@@ -97,9 +182,11 @@ export default function RegularidadeInstitucional() {
     }
   }
 
-  // Calculating readiness score for UI representation
   const totalItems = BLOCKS.reduce((acc, block) => acc + block.items.length, 0)
-  const validItems = BLOCKS.reduce((acc, block) => acc + block.items.filter((i) => i.status === 'valid').length, 0)
+  const validItems = BLOCKS.reduce(
+    (acc, block) => acc + block.items.filter((i) => i.status === 'valid').length,
+    0,
+  )
   const readinessPercentage = Math.round((validItems / totalItems) * 100)
 
   return (
@@ -110,11 +197,12 @@ export default function RegularidadeInstitucional() {
             <Landmark className="h-8 w-8" /> Regularidade Institucional (Bloco 1)
           </h1>
           <p className="text-muted-foreground mt-1 max-w-3xl">
-            Gestão consolidada da estrutura e aptidão da OSC. Cadastro central, certidões, dirigentes e controle rigoroso de impedimentos para viabilizar e habilitar a celebração de novas parcerias.
+            Base central da OSC. Organiza cadastro estrutural, mandatos, aptidão operacional,
+            certidões e controle rigoroso de impedimentos para viabilizar novas parcerias.
           </p>
         </div>
         <Button className="bg-purple-700 hover:bg-purple-800 text-white shadow-sm">
-          <FileText className="mr-2 h-4 w-4" /> Relatório de Prontidão (Checklist)
+          <FileText className="mr-2 h-4 w-4" /> Relatório de Prontidão Institucional
         </Button>
       </div>
 
@@ -122,13 +210,21 @@ export default function RegularidadeInstitucional() {
         <Card className="md:col-span-1 shadow-sm border-purple-100 h-fit sticky top-6">
           <CardHeader>
             <CardTitle className="text-lg">Prontidão para Celebração</CardTitle>
-            <CardDescription>Status geral da OSC para participar de editais e firmar termos.</CardDescription>
+            <CardDescription>
+              Status geral da OSC para participar de editais e firmar termos.
+            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             <div>
               <div className="flex justify-between text-sm font-medium mb-2">
                 <span>Conformidade Documental</span>
-                <span className={readinessPercentage < 100 ? 'text-red-600 font-bold' : 'text-emerald-600 font-bold'}>
+                <span
+                  className={
+                    readinessPercentage < 100
+                      ? 'text-red-600 font-bold'
+                      : 'text-emerald-600 font-bold'
+                  }
+                >
                   {readinessPercentage}%
                 </span>
               </div>
@@ -143,11 +239,12 @@ export default function RegularidadeInstitucional() {
             {readinessPercentage < 100 && (
               <div className="bg-red-50 border border-red-200 rounded-lg p-4 animate-in fade-in">
                 <div className="flex items-center gap-2 text-red-800 font-bold mb-2">
-                  <ShieldX className="h-5 w-5" />
+                  <ShieldX className="h-5 w-5 shrink-0" />
                   <span>Semáforo: Bloqueado</span>
                 </div>
                 <p className="text-xs text-red-700">
-                  O sistema detectou pendências críticas no cadastro de dirigentes e em certidões fiscais. A OSC está inabilitada temporariamente para avançar no Bloco 2 de Celebração.
+                  O sistema detectou pendências críticas no cadastro de dirigentes e certidões. A
+                  OSC está inabilitada temporariamente para celebrar novas parcerias.
                 </p>
               </div>
             )}
@@ -177,9 +274,15 @@ export default function RegularidadeInstitucional() {
               <h4 className="font-semibold text-slate-800 text-sm flex items-center">
                 <Building className="w-4 h-4 mr-2 text-slate-600" /> Resumo do Cadastro
               </h4>
-              <p className="text-xs text-slate-600 mt-2"><strong>CNPJ:</strong> 00.000.000/0001-00</p>
-              <p className="text-xs text-slate-600 mt-1"><strong>Sede:</strong> São Paulo/SP</p>
-              <p className="text-xs text-slate-600 mt-1"><strong>Presidente:</strong> João Silva (Mandato: 2026)</p>
+              <p className="text-xs text-slate-600 mt-2">
+                <strong>CNPJ:</strong> 00.000.000/0001-00
+              </p>
+              <p className="text-xs text-slate-600 mt-1">
+                <strong>Sede:</strong> São Paulo/SP
+              </p>
+              <p className="text-xs text-slate-600 mt-1">
+                <strong>Presidente:</strong> João Silva (Mandato: 2026)
+              </p>
             </div>
           </CardContent>
         </Card>
@@ -229,7 +332,7 @@ export default function RegularidadeInstitucional() {
                             </Button>
                           )}
                           <Button size="sm" variant="ghost" className="h-8 text-xs">
-                            Ver Documento
+                            Detalhes
                           </Button>
                         </div>
                       </div>

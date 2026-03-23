@@ -25,7 +25,6 @@ export default function RelatoriosPrestacaoTab({ partnership }: any) {
       .select('*')
       .eq('partnership_id', partnership.id)
       .order('transaction_date', { ascending: true })
-
     if (error) toast({ title: 'Erro', description: error.message, variant: 'destructive' })
     else setLines(data || [])
     setLoading(false)
@@ -34,41 +33,6 @@ export default function RelatoriosPrestacaoTab({ partnership }: any) {
   useEffect(() => {
     fetchData()
   }, [partnership.id])
-
-  const exportCSV = () => {
-    const headers = [
-      'Data do Pagamento',
-      'Categoria de Despesa',
-      'CNPJ/CPF do Fornecedor / Prestador',
-      'Nome do Fornecedor / Prestador',
-      'Número do Documento / NF',
-      'Valor Pago',
-      'Status da Conciliação',
-    ]
-
-    const eligibleLines = lines.filter((l) => l.classification === 'Despesa Elegível')
-
-    const rows = eligibleLines.map((t) => [
-      new Date(t.transaction_date).toLocaleDateString('pt-BR'),
-      t.category_code || '',
-      t.provider_document || '',
-      t.provider_name || '',
-      t.invoice_number || '',
-      t.amount.toFixed(2).replace('.', ','),
-      t.status,
-    ])
-
-    const csvContent = [headers.join(';'), ...rows.map((r) => r.join(';'))].join('\n')
-
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=windows-1252;' })
-    const url = URL.createObjectURL(blob)
-    const link = document.createElement('a')
-    link.setAttribute('href', url)
-    link.setAttribute('download', `Demonstrativo_Integral_Despesas.csv`)
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
-  }
 
   const formatCurrency = (val: number) =>
     new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val)
@@ -93,7 +57,7 @@ export default function RelatoriosPrestacaoTab({ partnership }: any) {
         <Card className="border-blue-100 shadow-sm bg-blue-50/30">
           <CardContent className="p-5">
             <p className="text-sm font-semibold text-blue-800 uppercase tracking-wider mb-1">
-              Total Recebido (Repasses/Rendimentos)
+              Total Entradas (B4)
             </p>
             <h3 className="text-2xl font-bold text-blue-900">{formatCurrency(totalIncomes)}</h3>
           </CardContent>
@@ -101,7 +65,7 @@ export default function RelatoriosPrestacaoTab({ partnership }: any) {
         <Card className="border-emerald-100 shadow-sm bg-emerald-50/30">
           <CardContent className="p-5">
             <p className="text-sm font-semibold text-emerald-800 uppercase tracking-wider mb-1">
-              Despesas Elegíveis Consolidadas
+              Despesas Elegíveis
             </p>
             <h3 className="text-2xl font-bold text-emerald-900">{formatCurrency(totalEligible)}</h3>
           </CardContent>
@@ -118,7 +82,7 @@ export default function RelatoriosPrestacaoTab({ partnership }: any) {
               <p
                 className={`text-sm font-semibold uppercase tracking-wider mb-1 ${pendingRestitutions > 0 ? 'text-red-800' : 'text-slate-600'}`}
               >
-                Pendente de Restituição
+                Pendências Restituição
               </p>
               <h3
                 className={`text-2xl font-bold ${pendingRestitutions > 0 ? 'text-red-900' : 'text-slate-800'}`}
@@ -139,21 +103,15 @@ export default function RelatoriosPrestacaoTab({ partnership }: any) {
         <CardHeader className="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-2 sm:space-y-0">
           <div>
             <CardTitle className="text-lg flex items-center">
-              <FileSpreadsheet className="h-5 w-5 mr-2 text-slate-600" />
-              Demonstrativo Integral de Despesas (DID)
+              <FileSpreadsheet className="h-5 w-5 mr-2 text-slate-600" /> Demonstrativo Integral de
+              Despesas (DID)
             </CardTitle>
             <CardDescription>
-              Gerado automaticamente a partir das movimentações bancárias conciliadas e
-              documentadas.
+              Gerado automaticamente com base na conciliação bancária.
             </CardDescription>
           </div>
-          <Button
-            onClick={exportCSV}
-            disabled={totalEligible === 0}
-            variant="outline"
-            className="border-blue-200 text-blue-700 hover:bg-blue-50"
-          >
-            <Download className="h-4 w-4 mr-2" /> Exportar Planilha
+          <Button variant="outline" className="border-blue-200 text-blue-700 hover:bg-blue-50">
+            <Download className="h-4 w-4 mr-2" /> Exportar Relatório
           </Button>
         </CardHeader>
         <CardContent className="p-0">
@@ -162,16 +120,15 @@ export default function RelatoriosPrestacaoTab({ partnership }: any) {
               <Loader2 className="h-6 w-6 animate-spin text-slate-400" />
             </div>
           ) : (
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto border-t">
               <Table>
-                <TableHeader className="bg-slate-50 border-t">
+                <TableHeader className="bg-slate-50">
                   <TableRow>
                     <TableHead>Data Pgto</TableHead>
                     <TableHead>Categoria</TableHead>
                     <TableHead>Fornecedor / Doc</TableHead>
-                    <TableHead>Documento / NF</TableHead>
+                    <TableHead>Nº NF</TableHead>
                     <TableHead className="text-right">Valor</TableHead>
-                    <TableHead className="text-center">Status</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -188,7 +145,7 @@ export default function RelatoriosPrestacaoTab({ partnership }: any) {
                           </Badge>
                         </TableCell>
                         <TableCell className="font-medium">
-                          {t.provider_name} <br />{' '}
+                          {t.provider_name} <br />
                           <span className="text-xs text-muted-foreground font-mono">
                             {t.provider_document}
                           </span>
@@ -197,18 +154,12 @@ export default function RelatoriosPrestacaoTab({ partnership }: any) {
                         <TableCell className="text-right font-semibold text-slate-700">
                           {formatCurrency(t.amount)}
                         </TableCell>
-                        <TableCell className="text-center">
-                          <CheckCircle2
-                            className="h-4 w-4 text-emerald-500 mx-auto"
-                            title="Conciliada"
-                          />
-                        </TableCell>
                       </TableRow>
                     ))}
                   {totalEligible === 0 && (
                     <TableRow>
-                      <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
-                        Nenhuma despesa elegível conciliada até o momento.
+                      <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                        Nenhuma despesa elegível processada.
                       </TableCell>
                     </TableRow>
                   )}

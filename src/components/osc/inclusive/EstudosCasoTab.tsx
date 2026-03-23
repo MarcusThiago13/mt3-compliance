@@ -1,6 +1,9 @@
-import { FileText, Plus, Search } from 'lucide-react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { useState, useEffect } from 'react'
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
 import {
   Table,
   TableBody,
@@ -9,100 +12,188 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog'
 import { Badge } from '@/components/ui/badge'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { supabase } from '@/lib/supabase/client'
+import { toast } from '@/hooks/use-toast'
+import { Loader2, Plus, Users, Search, ClipboardList } from 'lucide-react'
 
-const mockCases = [
-  {
-    id: 'CASO-001',
-    student: 'A. M. Silva (TEA)',
-    status: 'Ativo',
-    lastReview: '10/03/2026',
-    responsible: 'Ana Paula (Psicóloga)',
-  },
-  {
-    id: 'CASO-002',
-    student: 'J. P. Santos (TDAH)',
-    status: 'Em Revisão',
-    lastReview: '15/03/2026',
-    responsible: 'Carlos (Coord. Pedagógica)',
-  },
-  {
-    id: 'CASO-003',
-    student: 'M. L. Costa (Baixa Visão)',
-    status: 'Ativo',
-    lastReview: '05/02/2026',
-    responsible: 'Julia (Prof. AEE)',
-  },
-]
+export default function EstudosCasoTab({ tenantId }: { tenantId: string }) {
+  const [cases, setCases] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [saving, setSaving] = useState(false)
 
-export function EstudosCasoTab({ tenantId }: { tenantId?: string }) {
+  const [formData, setFormData] = useState({
+    student_name: '',
+    status: 'Ativo',
+    demands: '',
+    barriers: '',
+    potentialities: '',
+  })
+
+  const fetchCases = async () => {
+    setLoading(true)
+    const { data } = await supabase
+      .from('osc_inclusive_cases')
+      .select('*')
+      .eq('tenant_id', tenantId)
+      .order('created_at', { ascending: false })
+    if (data) setCases(data)
+    setLoading(false)
+  }
+
+  useEffect(() => {
+    if (tenantId) fetchCases()
+  }, [tenantId])
+
+  const handleSave = async () => {
+    if (!formData.student_name)
+      return toast({
+        title: 'Atenção',
+        description: 'O nome do estudante é obrigatório.',
+        variant: 'destructive',
+      })
+    setSaving(true)
+    const { error } = await supabase
+      .from('osc_inclusive_cases')
+      .insert({ tenant_id: tenantId, ...formData })
+    if (error) toast({ title: 'Erro', description: error.message, variant: 'destructive' })
+    else {
+      toast({ title: 'Sucesso', description: 'Estudo de caso registrado.' })
+      setIsModalOpen(false)
+      fetchCases()
+      setFormData({
+        student_name: '',
+        status: 'Ativo',
+        demands: '',
+        barriers: '',
+        potentialities: '',
+      })
+    }
+    setSaving(false)
+  }
+
   return (
-    <div className="space-y-4">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
-        <h4 className="text-lg font-semibold flex items-center gap-2 text-blue-900">
-          <FileText className="h-5 w-5 text-blue-600" /> Registro de Estudos de Caso
-        </h4>
-        <Button className="bg-blue-600 hover:bg-blue-700">
-          <Plus className="mr-2 h-4 w-4" /> Novo Estudo
+    <div className="space-y-6 animate-fade-in">
+      <div className="flex justify-between items-center">
+        <h3 className="text-lg font-bold text-slate-800 flex items-center">
+          <ClipboardList className="h-5 w-5 mr-2 text-blue-600" /> Registro de Estudos de Caso
+        </h3>
+        <Button
+          onClick={() => setIsModalOpen(true)}
+          className="bg-blue-600 hover:bg-blue-700 text-white"
+        >
+          <Plus className="h-4 w-4 mr-2" /> Novo Estudo de Caso
         </Button>
       </div>
 
-      <Card className="border-blue-100 shadow-sm">
-        <CardHeader className="pb-3 border-b">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            <CardTitle className="text-base">Casos Acompanhados</CardTitle>
-            <div className="relative w-full sm:w-64">
-              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-              <input
-                type="text"
-                placeholder="Buscar estudante..."
-                className="w-full pl-9 pr-3 py-2 text-sm border rounded-md"
+      <Card className="shadow-sm">
+        <CardContent className="p-0">
+          {loading ? (
+            <div className="flex justify-center py-12">
+              <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+            </div>
+          ) : cases.length === 0 ? (
+            <div className="text-center py-12 text-muted-foreground">
+              <Users className="h-10 w-10 mx-auto mb-3 opacity-30" />
+              <p>Nenhum estudo de caso registrado para a escola.</p>
+            </div>
+          ) : (
+            <Table>
+              <TableHeader className="bg-slate-50">
+                <TableRow>
+                  <TableHead>Estudante</TableHead>
+                  <TableHead>Demandas / Necessidades</TableHead>
+                  <TableHead>Barreiras Identificadas</TableHead>
+                  <TableHead>Status</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {cases.map((c) => (
+                  <TableRow key={c.id}>
+                    <TableCell className="font-medium">{c.student_name}</TableCell>
+                    <TableCell className="text-sm text-muted-foreground truncate max-w-[200px]">
+                      {c.demands || '-'}
+                    </TableCell>
+                    <TableCell className="text-sm text-muted-foreground truncate max-w-[200px]">
+                      {c.barriers || '-'}
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="outline" className="bg-blue-50 text-blue-700">
+                        {c.status}
+                      </Badge>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
+        </CardContent>
+      </Card>
+
+      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Registrar Novo Estudo de Caso</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label>Nome do Estudante (Público-Alvo da Educação Especial) *</Label>
+              <Input
+                value={formData.student_name}
+                onChange={(e) => setFormData({ ...formData, student_name: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Demandas e Necessidades Específicas</Label>
+              <Textarea
+                rows={2}
+                value={formData.demands}
+                onChange={(e) => setFormData({ ...formData, demands: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Barreiras à Inclusão Identificadas</Label>
+              <Textarea
+                rows={2}
+                value={formData.barriers}
+                onChange={(e) => setFormData({ ...formData, barriers: e.target.value })}
+                placeholder="Físicas, Atitudinais, Pedagógicas..."
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Potencialidades do Estudante</Label>
+              <Textarea
+                rows={2}
+                value={formData.potentialities}
+                onChange={(e) => setFormData({ ...formData, potentialities: e.target.value })}
               />
             </div>
           </div>
-        </CardHeader>
-        <CardContent className="p-0">
-          <Table>
-            <TableHeader className="bg-slate-50">
-              <TableRow>
-                <TableHead>Protocolo</TableHead>
-                <TableHead>Estudante / Perfil</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Última Revisão</TableHead>
-                <TableHead>Responsável</TableHead>
-                <TableHead className="text-right">Ação</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {mockCases.map((c) => (
-                <TableRow key={c.id} className="hover:bg-blue-50/50">
-                  <TableCell className="font-mono text-xs text-muted-foreground">{c.id}</TableCell>
-                  <TableCell className="font-medium">{c.student}</TableCell>
-                  <TableCell>
-                    <Badge
-                      variant={c.status === 'Ativo' ? 'default' : 'secondary'}
-                      className={
-                        c.status === 'Ativo'
-                          ? 'bg-emerald-100 text-emerald-800 hover:bg-emerald-200 border-none'
-                          : ''
-                      }
-                    >
-                      {c.status}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-sm">{c.lastReview}</TableCell>
-                  <TableCell className="text-sm text-muted-foreground">{c.responsible}</TableCell>
-                  <TableCell className="text-right">
-                    <Button variant="ghost" size="sm" className="text-blue-600">
-                      Abrir Prontuário
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsModalOpen(false)}>
+              Cancelar
+            </Button>
+            <Button onClick={handleSave} disabled={saving} className="bg-blue-600">
+              {saving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />} Salvar Registro
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

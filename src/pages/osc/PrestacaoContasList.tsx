@@ -32,6 +32,7 @@ export default function PrestacaoContasList() {
         public_entity,
         instrument_type,
         status,
+        current_phase,
         osc_partnership_accountability (
           id,
           status,
@@ -60,7 +61,7 @@ export default function PrestacaoContasList() {
       )
     }
     const status = acc[0].status
-    const colors: any = {
+    const colors: Record<string, string> = {
       'Em Elaboração': 'bg-amber-100 text-amber-800',
       Enviada: 'bg-blue-100 text-blue-800',
       'Em Diligência': 'bg-orange-100 text-orange-800',
@@ -81,30 +82,30 @@ export default function PrestacaoContasList() {
     <div className="space-y-6 animate-fade-in-up pb-12">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b pb-4">
         <div>
-          <h1 className="text-3xl font-bold text-purple-800 flex items-center gap-3">
+          <h1 className="text-3xl font-bold text-amber-800 flex items-center gap-3">
             <FileCheck className="h-8 w-8" /> Prestação de Contas (MROSC)
           </h1>
           <p className="text-muted-foreground mt-1">
-            Visão centralizada da execução financeira e prestação de contas de todas as parcerias.
+            Módulo financeiro detalhado. Gerencie conciliação bancária, notas fiscais, extratos e
+            demonstrativos de cada parceria.
           </p>
         </div>
       </div>
 
-      <Card className="shadow-sm border-purple-100">
+      <Card className="shadow-sm border-amber-100">
         <CardHeader>
           <CardTitle className="text-lg flex items-center justify-between">
-            <span>Painel de Prestações de Contas</span>
+            <span>Relação de Prestações de Contas</span>
             <Search className="h-4 w-4 text-muted-foreground" />
           </CardTitle>
           <CardDescription>
-            Acesse o detalhamento da prestação de contas para registrar despesas, receitas e
-            acompanhar diligências.
+            Acesse o detalhamento da prestação para realizar OCR de notas e fechamento mensal.
           </CardDescription>
         </CardHeader>
         <CardContent>
           {loading ? (
             <div className="flex justify-center py-12">
-              <Loader2 className="h-8 w-8 animate-spin text-purple-700" />
+              <Loader2 className="h-8 w-8 animate-spin text-amber-600" />
             </div>
           ) : partnerships.length === 0 ? (
             <div className="text-center py-12 text-muted-foreground border-2 border-dashed rounded-lg bg-muted/10">
@@ -112,7 +113,7 @@ export default function PrestacaoContasList() {
               <p>Nenhuma parceria cadastrada nesta organização para prestar contas.</p>
               <Button
                 variant="link"
-                className="text-purple-700 mt-2"
+                className="text-amber-700 mt-2"
                 onClick={() => navigate(`/${tenantId}/osc/parcerias`)}
               >
                 Ir para Gestão de Parcerias
@@ -124,7 +125,7 @@ export default function PrestacaoContasList() {
                 <TableRow>
                   <TableHead>Parceria / Objeto</TableHead>
                   <TableHead>Ente Público</TableHead>
-                  <TableHead>Fase da Parceria</TableHead>
+                  <TableHead>Status da Parceria</TableHead>
                   <TableHead>Status da Prestação</TableHead>
                   <TableHead>Prazo Legal</TableHead>
                   <TableHead className="text-right">Ação</TableHead>
@@ -136,14 +137,14 @@ export default function PrestacaoContasList() {
                   return (
                     <TableRow
                       key={p.id}
-                      className="hover:bg-purple-50/50 cursor-pointer transition-colors"
-                      onClick={() => navigate(`/${tenantId}/osc/parcerias/${p.id}?tab=prestacao`)}
+                      className="hover:bg-amber-50/30 cursor-pointer transition-colors"
+                      onClick={() => navigate(`/${tenantId}/osc/prestacao-contas/${p.id}`)}
                     >
-                      <TableCell className="font-semibold text-purple-900">{p.title}</TableCell>
+                      <TableCell className="font-semibold text-slate-800">{p.title}</TableCell>
                       <TableCell>{p.public_entity}</TableCell>
                       <TableCell>
                         <Badge variant="outline" className="text-slate-600 bg-slate-50">
-                          {p.status}
+                          {p.status || p.current_phase || 'Ativa'}
                         </Badge>
                       </TableCell>
                       <TableCell>
@@ -153,8 +154,13 @@ export default function PrestacaoContasList() {
                         {acc?.deadline ? new Date(acc.deadline).toLocaleDateString('pt-BR') : '-'}
                       </TableCell>
                       <TableCell className="text-right">
-                        <Button variant="ghost" size="sm" className="text-purple-700">
-                          {acc ? 'Acessar' : 'Iniciar'} <ArrowRight className="ml-2 h-4 w-4" />
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-amber-700 hover:text-amber-800 hover:bg-amber-100"
+                        >
+                          {acc ? 'Acessar Finanças' : 'Iniciar Módulo'}{' '}
+                          <ArrowRight className="ml-2 h-4 w-4" />
                         </Button>
                       </TableCell>
                     </TableRow>
