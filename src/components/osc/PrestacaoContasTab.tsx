@@ -23,11 +23,13 @@ import {
   Receipt,
   MessageSquareWarning,
   Landmark,
+  FileSpreadsheet,
 } from 'lucide-react'
 
-import ReceitasRendimentosTab from './ReceitasRendimentosTab'
-import DemonstrativoDespesas from './DemonstrativoDespesas'
 import DiligenciasTab from './DiligenciasTab'
+import ContasBancariasTab from './ContasBancariasTab'
+import ConciliacaoBancariaTab from './ConciliacaoBancariaTab'
+import RelatoriosPrestacaoTab from './RelatoriosPrestacaoTab'
 
 export default function PrestacaoContasTab({ partnership }: any) {
   const [accountability, setAccountability] = useState<any>(null)
@@ -200,8 +202,8 @@ export default function PrestacaoContasTab({ partnership }: any) {
           <div>
             <h3 className="text-lg font-bold text-amber-900">Prestação de Contas (MROSC)</h3>
             <p className="text-sm text-amber-700 max-w-md mx-auto mt-2">
-              Inicie a estruturação da prestação de contas para habilitar o lançamento de despesas,
-              conciliação de extratos e o motor de prevenção de glosas.
+              Inicie a estruturação da prestação de contas para habilitar a conciliação
+              extrato-cêntrica, controle de restituições e geração de demonstrativos.
             </p>
           </div>
           <Button
@@ -224,30 +226,36 @@ export default function PrestacaoContasTab({ partnership }: any) {
   return (
     <div className="space-y-6">
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-1 md:grid-cols-4 max-w-4xl h-auto p-1 bg-slate-100">
+        <TabsList className="grid w-full grid-cols-1 md:grid-cols-5 h-auto p-1 bg-slate-100 rounded-lg">
           <TabsTrigger
             value="overview"
-            className="py-2.5 data-[state=active]:bg-white data-[state=active]:text-blue-800 data-[state=active]:shadow-sm"
+            className="py-2.5 data-[state=active]:bg-white data-[state=active]:text-blue-800 data-[state=active]:shadow-sm text-xs sm:text-sm"
           >
-            <FileCheck className="w-4 h-4 mr-2" /> Visão Geral & Prazos
+            <FileCheck className="w-4 h-4 mr-1 sm:mr-2" /> Visão Geral
           </TabsTrigger>
           <TabsTrigger
-            value="receitas"
-            className="py-2.5 data-[state=active]:bg-white data-[state=active]:text-emerald-700 data-[state=active]:shadow-sm"
+            value="contas"
+            className="py-2.5 data-[state=active]:bg-white data-[state=active]:text-blue-800 data-[state=active]:shadow-sm text-xs sm:text-sm"
           >
-            <Landmark className="w-4 h-4 mr-2" /> Receitas e Extrato
+            <Landmark className="w-4 h-4 mr-1 sm:mr-2" /> Contas
           </TabsTrigger>
           <TabsTrigger
-            value="despesas"
-            className="py-2.5 data-[state=active]:bg-white data-[state=active]:text-blue-800 data-[state=active]:shadow-sm"
+            value="conciliacao"
+            className="py-2.5 data-[state=active]:bg-white data-[state=active]:text-purple-700 data-[state=active]:shadow-sm text-xs sm:text-sm"
           >
-            <Receipt className="w-4 h-4 mr-2" /> Despesas (Licitacon)
+            <FileSpreadsheet className="w-4 h-4 mr-1 sm:mr-2" /> Conciliação
+          </TabsTrigger>
+          <TabsTrigger
+            value="relatorios"
+            className="py-2.5 data-[state=active]:bg-white data-[state=active]:text-emerald-700 data-[state=active]:shadow-sm text-xs sm:text-sm"
+          >
+            <Receipt className="w-4 h-4 mr-1 sm:mr-2" /> Demonstrativos
           </TabsTrigger>
           <TabsTrigger
             value="diligencias"
-            className="py-2.5 data-[state=active]:bg-white data-[state=active]:text-amber-700 data-[state=active]:shadow-sm"
+            className="py-2.5 data-[state=active]:bg-white data-[state=active]:text-amber-700 data-[state=active]:shadow-sm text-xs sm:text-sm"
           >
-            <MessageSquareWarning className="w-4 h-4 mr-2" /> Diligências
+            <MessageSquareWarning className="w-4 h-4 mr-1 sm:mr-2" /> Diligências
           </TabsTrigger>
         </TabsList>
 
@@ -349,15 +357,16 @@ export default function PrestacaoContasTab({ partnership }: any) {
             </Card>
           </TabsContent>
 
-          <TabsContent value="receitas" className="m-0 outline-none">
-            <ReceitasRendimentosTab
-              partnership={partnership}
-              accountabilityId={accountability.id}
-            />
+          <TabsContent value="contas" className="m-0 outline-none">
+            <ContasBancariasTab partnership={partnership} />
           </TabsContent>
 
-          <TabsContent value="despesas" className="m-0 outline-none">
-            <DemonstrativoDespesas partnership={partnership} accountabilityId={accountability.id} />
+          <TabsContent value="conciliacao" className="m-0 outline-none">
+            <ConciliacaoBancariaTab partnership={partnership} />
+          </TabsContent>
+
+          <TabsContent value="relatorios" className="m-0 outline-none">
+            <RelatoriosPrestacaoTab partnership={partnership} />
           </TabsContent>
 
           <TabsContent value="diligencias" className="m-0 outline-none">
