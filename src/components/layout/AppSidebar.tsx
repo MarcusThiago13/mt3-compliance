@@ -38,6 +38,7 @@ import {
   Accessibility,
   FileCheck,
   Briefcase,
+  Lock,
 } from 'lucide-react'
 import { getParentClauses, getClausesByParent } from '@/lib/iso-data'
 import { useAppStore } from '@/stores/main'
@@ -155,6 +156,14 @@ export function AppSidebar() {
                       <Link to={`${tid}/trabalhista`}>
                         <Briefcase />
                         <span>Compliance Trabalhista</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton asChild isActive={location.pathname.includes('/digital')}>
+                      <Link to={`${tid}/digital`}>
+                        <Lock />
+                        <span>Compliance Digital e LGPD</span>
                       </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>

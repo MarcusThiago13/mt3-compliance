@@ -23,20 +23,25 @@ Deno.serve(async (req: Request) => {
 
     // Initialize client with user's JWT to enforce RLS and permissions natively
     const supabaseClient = createClient(supabaseUrl, supabaseAnonKey, {
-      global: { headers: { Authorization: authHeader } }
+      global: { headers: { Authorization: authHeader } },
     })
 
-    const { data: { user }, error: userError } = await supabaseClient.auth.getUser()
-    
+    const {
+      data: { user },
+      error: userError,
+    } = await supabaseClient.auth.getUser()
+
     if (userError || !user) {
-      throw new Error(`Não autorizado (Token inválido): ${userError?.message || 'Sessão não identificada'}`)
+      throw new Error(
+        `Não autorizado (Token inválido): ${userError?.message || 'Sessão não identificada'}`,
+      )
     }
 
-    const isSuperAdmin = 
-      user.email === 'admin@example.com' || 
-      user.email === 'marcusthiago.adv@gmail.com' || 
-      user.app_metadata?.role === 'admin' || 
-      user.user_metadata?.is_admin === true || 
+    const isSuperAdmin =
+      user.email === 'admin@example.com' ||
+      user.email === 'marcusthiago.adv@gmail.com' ||
+      user.app_metadata?.role === 'admin' ||
+      user.user_metadata?.is_admin === true ||
       user.user_metadata?.is_admin === 'true'
 
     const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey)
@@ -46,19 +51,23 @@ Deno.serve(async (req: Request) => {
       const { action, tenant_id, target_user_id, target_tenant_id, updates } = body
 
       if (!action) {
-         throw new Error('Ação não especificada na requisição.')
+        throw new Error('Ação não especificada na requisição.')
       }
 
       if (action === 'get_users') {
-        let users = [];
+        let users = []
         if (tenant_id) {
           // Security Check: Verify if caller is authorized for this tenant
           if (!isSuperAdmin) {
-            const { data: isMember } = await supabaseClient.rpc('is_tenant_member_uuid', { check_tenant_id: tenant_id })
+            const { data: isMember } = await supabaseClient.rpc('is_tenant_member_uuid', {
+              check_tenant_id: tenant_id,
+            })
             if (!isMember) throw new Error('Acesso negado ao tenant especificado.')
           }
 
-          const { data, error } = await supabaseAdmin.rpc('get_tenant_users', { target_tenant_id: tenant_id })
+          const { data, error } = await supabaseAdmin.rpc('get_tenant_users', {
+            target_tenant_id: tenant_id,
+          })
           if (error) throw new Error(`Erro ao buscar usuários da organização: ${error.message}`)
           users = (data || []).map((u: any) => ({
             id: u.user_id,
@@ -67,12 +76,13 @@ Deno.serve(async (req: Request) => {
             status: u.status,
             role: u.role,
             classification: u.classification,
-            phone: u.contact_phone
+            phone: u.contact_phone,
           }))
         } else {
           // Only superadmins can fetch all users globally
-          if (!isSuperAdmin) throw new Error('Acesso negado. Operação restrita a administradores globais.')
-          
+          if (!isSuperAdmin)
+            throw new Error('Acesso negado. Operação restrita a administradores globais.')
+
           const { data, error } = await supabaseAdmin.rpc('get_all_users')
           if (error) throw new Error(`Erro ao buscar usuários globais: ${error.message}`)
           users = (data || []).map((u: any) => ({
@@ -83,7 +93,7 @@ Deno.serve(async (req: Request) => {
             role: u.role,
             classification: u.classification,
             tenant: { id: u.tenant_id, name: u.tenant_name },
-            phone: u.contact_phone
+            phone: u.contact_phone,
           }))
         }
 
@@ -94,11 +104,14 @@ Deno.serve(async (req: Request) => {
       }
 
       if (action === 'update_user' || action === 'remove_user') {
-        if (!target_user_id || !target_tenant_id) throw new Error('Parâmetros inválidos. Informe o usuário e a organização.')
-        
+        if (!target_user_id || !target_tenant_id)
+          throw new Error('Parâmetros inválidos. Informe o usuário e a organização.')
+
         // Security Check for mutations
         if (!isSuperAdmin) {
-          const { data: isMember } = await supabaseClient.rpc('is_tenant_member_uuid', { check_tenant_id: target_tenant_id })
+          const { data: isMember } = await supabaseClient.rpc('is_tenant_member_uuid', {
+            check_tenant_id: target_tenant_id,
+          })
           if (!isMember) throw new Error('Acesso negado para modificar acessos nesta organização.')
         }
 
@@ -107,9 +120,9 @@ Deno.serve(async (req: Request) => {
             .from('user_tenants')
             .update(updates)
             .match({ user_id: target_user_id, tenant_id: target_tenant_id })
-          
+
           if (error) throw new Error(`Erro ao atualizar acessos do usuário: ${error.message}`)
-          
+
           const { data: userResp } = await supabaseAdmin.auth.admin.getUserById(target_user_id)
           if (userResp?.user?.email) {
             const invUpdates = { ...updates }
@@ -129,9 +142,9 @@ Deno.serve(async (req: Request) => {
             .from('user_tenants')
             .delete()
             .match({ user_id: target_user_id, tenant_id: target_tenant_id })
-            
+
           if (error) throw new Error(`Erro ao remover acessos do usuário: ${error.message}`)
-          
+
           if (userResp?.user?.email) {
             await supabaseAdmin
               .from('invitations')
@@ -145,7 +158,7 @@ Deno.serve(async (req: Request) => {
           status: 200,
         })
       }
-      
+
       throw new Error('Ação não suportada no endpoint.')
     }
 
@@ -154,11 +167,10 @@ Deno.serve(async (req: Request) => {
     // Retornamos 200 com payload de erro para evitar que o Supabase Client
     // lance FunctionsHttpError genérico e esconda a mensagem real.
     // Isso também evita disparar o Bug Scanner com alertas de "Network 400".
-    console.warn("Admin-Users Edge Function Error:", error.message);
+    console.warn('Admin-Users Edge Function Error:', error.message)
     return new Response(JSON.stringify({ error: error.message || 'Erro interno desconhecido.' }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      status: 200, 
+      status: 200,
     })
   }
 })
-

@@ -30,6 +30,7 @@ import PublicReport from './pages/PublicReport'
 import PublicReportStatus from './pages/PublicReportStatus'
 import DueDiligence from './pages/DueDiligence'
 import Trabalhista from './pages/Trabalhista'
+import DigitalCompliance from './pages/DigitalCompliance'
 import PublicFormCollection from './pages/PublicFormCollection'
 import CollectionLinks from './pages/CollectionLinks'
 import CommunicationsLog from './pages/CommunicationsLog'
@@ -136,6 +137,7 @@ const App = () => (
                 <Route path="inbox" element={<EvidenceInbox />} />
                 <Route path="due-diligence" element={<DueDiligence />} />
                 <Route path="trabalhista" element={<Trabalhista />} />
+                <Route path="digital" element={<DigitalCompliance />} />
                 <Route path="communications" element={<CommunicationsLog />} />
                 <Route path="templates" element={<TenantTemplates />} />
                 <Route path="documents" element={<TenantDocuments />} />
