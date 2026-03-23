@@ -11,11 +11,15 @@ import {
 } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Plus, Sparkles, Loader2, Search, ShieldAlert } from 'lucide-react'
+import { Plus, Sparkles, Loader2, Search, ShieldAlert, BookOpen } from 'lucide-react'
 import { toast } from '@/hooks/use-toast'
+import { useAppStore } from '@/stores/main'
 
 export function RiskInventory() {
   const { tenantId } = useParams()
+  const { activeTenant } = useAppStore()
+  const isEducacional = activeTenant?.org_subtype === 'educacional'
+
   const [risks, setRisks] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [aiLoading, setAiLoading] = useState(false)
@@ -44,6 +48,48 @@ export function RiskInventory() {
     }, 2500)
   }
 
+  const loadEduRisks = () => {
+    if (risks.find((r) => r.code === 'RE-01')) {
+      toast({ description: 'Biblioteca educacional já carregada.' })
+      return
+    }
+
+    const newRisks = [
+      {
+        id: 'mock-r1',
+        code: 'RE-01',
+        title: 'Falha na proteção integral da criança (ECA)',
+        category: 'Operacional / Reputacional',
+        status: 'Identificado',
+        isAi: false,
+        assessments: [{ inherent_score: 20, residual_score: 16 }],
+      },
+      {
+        id: 'mock-r2',
+        code: 'RE-02',
+        title: 'Subdimensionamento financeiro do plano de trabalho',
+        category: 'Financeiro (MROSC)',
+        status: 'Em Tratamento',
+        isAi: false,
+        assessments: [{ inherent_score: 15, residual_score: 10 }],
+      },
+      {
+        id: 'mock-r3',
+        code: 'RE-03',
+        title: 'Glosas em prestação de contas por falta de evidência',
+        category: 'Compliance / MROSC',
+        status: 'Identificado',
+        isAi: true,
+        assessments: [{ inherent_score: 25, residual_score: 12 }],
+      },
+    ]
+    setRisks([...newRisks, ...risks])
+    toast({
+      title: 'Biblioteca OSC Educacional',
+      description: 'Riscos setoriais carregados com sucesso.',
+    })
+  }
+
   if (loading)
     return (
       <div className="flex justify-center py-12">
@@ -61,6 +107,15 @@ export function RiskInventory() {
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
+          {isEducacional && (
+            <Button
+              variant="outline"
+              onClick={loadEduRisks}
+              className="border-blue-200 text-blue-700 bg-blue-50 hover:bg-blue-100 w-full sm:w-auto"
+            >
+              <BookOpen className="h-4 w-4 mr-2" /> Biblioteca OSC Educacional
+            </Button>
+          )}
           <Button
             onClick={runAiMapping}
             disabled={aiLoading}

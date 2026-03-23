@@ -38,6 +38,9 @@ import RegularidadeInstitucional from './pages/osc/RegularidadeInstitucional'
 import Cebas from './pages/osc/Cebas'
 import GestaoParcerias from './pages/osc/GestaoParcerias'
 import ParceriaDetalhes from './pages/osc/ParceriaDetalhes'
+import ConformidadeEducacional from './pages/osc/ConformidadeEducacional'
+import ProtecaoInfantil from './pages/osc/ProtecaoInfantil'
+import LGPDEscolar from './pages/osc/LGPDEscolar'
 
 const AuthGuard = ({ children }: { children: React.ReactNode }) => {
   const { user, loading, signIn } = useAuth()
@@ -134,6 +137,9 @@ const App = () => (
                 <Route path="osc/cebas" element={<Cebas />} />
                 <Route path="osc/parcerias" element={<GestaoParcerias />} />
                 <Route path="osc/parcerias/:id" element={<ParceriaDetalhes />} />
+                <Route path="osc/conformidade-educacional" element={<ConformidadeEducacional />} />
+                <Route path="osc/protecao-infantil" element={<ProtecaoInfantil />} />
+                <Route path="osc/lgpd-escolar" element={<LGPDEscolar />} />
               </Route>
             </Route>
             <Route path="*" element={<NotFound />} />

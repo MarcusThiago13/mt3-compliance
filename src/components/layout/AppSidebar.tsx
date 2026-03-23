@@ -32,6 +32,9 @@ import {
   Landmark,
   FileBadge,
   Handshake,
+  Baby,
+  Shield,
+  BookOpen,
 } from 'lucide-react'
 import { getParentClauses, getClausesByParent } from '@/lib/iso-data'
 import { useAppStore } from '@/stores/main'
@@ -226,6 +229,60 @@ export function AppSidebar() {
                         >
                           <FileBadge />
                           <span>Módulo CEBAS</span>
+                        </Link>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  </SidebarMenu>
+                </SidebarGroupContent>
+              </SidebarGroup>
+            )}
+
+            {activeTenant?.org_type === 'osc' && activeTenant?.org_subtype === 'educacional' && (
+              <SidebarGroup>
+                <SidebarGroupLabel className="text-blue-600 font-semibold">
+                  OSC Educacional
+                </SidebarGroupLabel>
+                <SidebarGroupContent>
+                  <SidebarMenu>
+                    <SidebarMenuItem>
+                      <SidebarMenuButton
+                        asChild
+                        isActive={location.pathname.includes('/osc/conformidade-educacional')}
+                      >
+                        <Link
+                          to={`${tid}/osc/conformidade-educacional`}
+                          className="text-blue-800 hover:text-blue-900"
+                        >
+                          <BookOpen />
+                          <span>Conformidade Educacional</span>
+                        </Link>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                    <SidebarMenuItem>
+                      <SidebarMenuButton
+                        asChild
+                        isActive={location.pathname.includes('/osc/protecao-infantil')}
+                      >
+                        <Link
+                          to={`${tid}/osc/protecao-infantil`}
+                          className="text-blue-800 hover:text-blue-900"
+                        >
+                          <Baby />
+                          <span>Proteção Infantil & Inclusão</span>
+                        </Link>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                    <SidebarMenuItem>
+                      <SidebarMenuButton
+                        asChild
+                        isActive={location.pathname.includes('/osc/lgpd-escolar')}
+                      >
+                        <Link
+                          to={`${tid}/osc/lgpd-escolar`}
+                          className="text-blue-800 hover:text-blue-900"
+                        >
+                          <Shield />
+                          <span>LGPD Escolar</span>
                         </Link>
                       </SidebarMenuButton>
                     </SidebarMenuItem>

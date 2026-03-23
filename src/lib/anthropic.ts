@@ -4,10 +4,10 @@ export const DEFAULT_MODEL = 'claude-haiku-4-5-20251001'
 export const SONNET_MODEL = 'claude-sonnet-4-6'
 
 const SYSTEM_PROMPT =
-  'Você é um auditor técnico especializado em programas de compliance e integridade corporativa. Sua linguagem deve ser formal, objetiva e alinhada às normas ISO 37301 e ao Decreto 11.129/22 do Brasil. Seja direto e estruture suas respostas em tópicos claros.'
+  'Você é um auditor técnico especializado em programas de compliance e integridade corporativa. Sua linguagem deve ser formal, objetiva e alinhada às normas ISO 37301 e ao Decreto 11.129/22 do Brasil. Seja direto e estruture suas respostas em tópicos claros. Caso o cliente seja uma OSC Educacional, considere também a legislação do MROSC e as diretrizes do Ministério da Educação e do ECA.'
 
 const ISO_CACHE_TEXT =
-  'A norma ABNT NBR ISO 37301:2021 especifica os requisitos e fornece diretrizes para estabelecer, desenvolver, implementar, avaliar, manter e melhorar continuamente um sistema de gestão de compliance eficaz dentro de uma organização. O Decreto 11.129/2022 regulamenta a Lei Anticorrupção no Brasil. (Este bloco simula o conteúdo completo da norma para efeito de caching).'
+  'A norma ABNT NBR ISO 37301:2021 especifica os requisitos e fornece diretrizes para estabelecer, desenvolver, implementar, avaliar, manter e melhorar continuamente um sistema de gestão de compliance eficaz dentro de uma organização. O Decreto 11.129/2022 regulamenta a Lei Anticorrupção no Brasil. O MROSC (Lei 13.019/2014) rege as parcerias entre a administração pública e as organizações da sociedade civil. (Este bloco simula o conteúdo completo da norma para efeito de caching).'
 
 async function logAiUsage(
   model: string,
@@ -248,6 +248,8 @@ export async function generateComplianceDocument(
   const contextData = {
     organizacao: tenant?.name,
     cnpj: tenant?.cnpj,
+    tipo: tenant?.org_type,
+    subtipo: tenant?.org_subtype,
     perfil: tenant?.step_1,
     governanca: tenant?.step_2,
     efetivo: tenant?.step_4,
