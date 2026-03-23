@@ -7,10 +7,10 @@ Deno.serve(async (req: Request) => {
   try {
     const { userMessage, history = [], contextData = {} } = await req.json()
     const anthropicKey = Deno.env.get('VITE_ANTHROPIC_API_KEY') || Deno.env.get('ANTHROPIC_API_KEY')
-
-    let aiResponseText = ''
+    
+    let aiResponseText = ""
     let actions: any[] = []
-
+    
     if (anthropicKey) {
       const systemPrompt = `Você é o Claude, assistente de IA especialista em Compliance Corporativo, ISO 37301 e MROSC (Decreto 11.129/22 e Lei 13.019/14), integrado nativamente e de forma onipresente ao sistema "mt3 Compliance".
 O usuário está visualizando a seguinte tela/rota do sistema: ${contextData.path || 'Desconhecida'}
@@ -43,7 +43,7 @@ Dicas de caminhos de navegação (Substitua {tenantId} pelo ID ${contextData.ten
         headers: {
           'x-api-key': anthropicKey,
           'anthropic-version': '2023-06-01',
-          'content-type': 'application/json',
+          'content-type': 'application/json'
         },
         body: JSON.stringify({
           model: 'claude-3-haiku-20240307',
@@ -51,24 +51,24 @@ Dicas de caminhos de navegação (Substitua {tenantId} pelo ID ${contextData.ten
           system: systemPrompt,
           messages: [
             ...history.map((h: any) => ({ role: h.role, content: h.content })),
-            { role: 'user', content: userMessage },
-          ],
-        }),
+            { role: 'user', content: userMessage }
+          ]
+        })
       })
-
+      
       const data = await res.json()
       if (data.content && data.content[0]) {
         aiResponseText = data.content[0].text
       } else {
-        throw new Error(data.error?.message || 'Invalid or empty response from Anthropic API')
+        throw new Error(data.error?.message || "Invalid or empty response from Anthropic API")
       }
     } else {
       // Intelligent Mock when API key is missing
       const isMrosc = contextData.path?.includes('/osc')
       const isReport = contextData.path?.includes('/report')
-
+      
       aiResponseText = `Compreendi sua mensagem: "${userMessage}".\n\nComo estou rodando em modo de simulação (sem a chave da API do Claude configurada no backend), atuo como um assistente pré-programado para demonstrar minhas capacidades contextuais e onipresentes.`
-
+      
       if (isMrosc) {
         aiResponseText += `\n\nVejo pelo contexto da tela que você está operando no módulo **MROSC (OSCs)**. Posso ajudar a analisar a prestação de contas baseada no extrato bancário, conferir o enquadramento de rubricas do DID ou sugerir ações de saneamento para diligências do Ente Público.`
       } else if (isReport) {
@@ -76,23 +76,16 @@ Dicas de caminhos de navegação (Substitua {tenantId} pelo ID ${contextData.ten
       } else {
         aiResponseText += `\n\nEstou analisando o contexto da tela atual (\`${contextData.path}\`) e estou pronto para auxiliar com a implementação da ISO 37301, avaliação de Due Diligence e geração do Dossiê Oficial.`
       }
-
+      
       const targetLower = userMessage.toLowerCase()
-      if (
-        targetLower.includes('ir para') ||
-        targetLower.includes('navegar') ||
-        targetLower.includes('prestação de contas') ||
-        targetLower.includes('dashboard') ||
-        targetLower.includes('usuário')
-      ) {
-        const targetPath =
-          targetLower.includes('prestaç') && contextData.tenantId
-            ? `/${contextData.tenantId}/osc/prestacao-contas`
-            : targetLower.includes('usuário')
-              ? '/admin/users'
-              : '/tenants'
-
-        aiResponseText += `\n\nEntendido, vou executar a tarefa de redirecionamento imediatamente para você!\n\`\`\`json\n{"action": "NAVIGATE", "path": "${targetPath}"}\n\`\`\``
+      if (targetLower.includes('ir para') || targetLower.includes('navegar') || targetLower.includes('prestação de contas') || targetLower.includes('dashboard') || targetLower.includes('usuário')) {
+         const targetPath = targetLower.includes('prestaç') && contextData.tenantId 
+           ? `/${contextData.tenantId}/osc/prestacao-contas` 
+           : targetLower.includes('usuário') 
+             ? '/admin/users' 
+             : '/tenants'
+             
+         aiResponseText += `\n\nEntendido, vou executar a tarefa de redirecionamento imediatamente para você!\n\`\`\`json\n{"action": "NAVIGATE", "path": "${targetPath}"}\n\`\`\``
       }
     }
 
@@ -103,12 +96,12 @@ Dicas de caminhos de navegação (Substitua {tenantId} pelo ID ${contextData.ten
         actions.push(JSON.parse(actionMatch[1]))
         aiResponseText = aiResponseText.replace(actionMatch[0], '')
       } catch (e) {
-        console.warn('Failed to parse AI action JSON block', e)
+        console.warn("Failed to parse AI action JSON block", e)
       }
     }
 
     return new Response(JSON.stringify({ message: aiResponseText.trim(), actions }), {
-      headers: { 'Content-Type': 'application/json', ...corsHeaders },
+      headers: { 'Content-Type': 'application/json', ...corsHeaders }
     })
   } catch (e: any) {
     return new Response(JSON.stringify({ error: e.message }), { status: 400, headers: corsHeaders })
