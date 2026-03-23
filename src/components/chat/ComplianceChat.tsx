@@ -1,9 +1,16 @@
 import { useState, useRef, useEffect } from 'react'
-import { MessageSquare, X, Send, Loader2, Sparkles, Navigation } from 'lucide-react'
+import { MessageSquare, X, Send, Loader2, Sparkles, Navigation, UserCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/card'
 import { Textarea } from '@/components/ui/textarea'
 import { ScrollArea } from '@/components/ui/scroll-area'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { aiService } from '@/services/ai'
 import { useParams, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '@/hooks/use-auth'
@@ -19,6 +26,7 @@ export function ComplianceChat() {
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState('')
   const [isLoading, setIsLoading] = useState(false)
+  const [persona, setPersona] = useState('Geral')
 
   const { tenantId, id: routeId } = useParams<{ tenantId?: string; id?: string }>()
   const location = useLocation()
@@ -36,7 +44,7 @@ export function ComplianceChat() {
         {
           role: 'assistant',
           content:
-            'Olá! Sou o Claude, seu assistente de IA especialista no mt3 Compliance. Compreendo todo o contexto da tela em que você está. Como posso ajudar com MROSC, ISO 37301 ou guiar você pelo sistema agora?',
+            'Olá! Sou o Claude, seu assistente de IA especialista em GRC, ISO 37301, ISO 37001, LGPD e MROSC. Estou onipresente no mt3 Compliance.\n\nVocê pode alterar minha "Persona de Atuação" no menu acima para análises focadas. Como posso auxiliar nesta tela?',
         },
       ])
     }
@@ -56,7 +64,8 @@ export function ComplianceChat() {
       tenantId,
       routeId,
       userEmail: user?.email,
-      pageText: text.substring(0, 2500), // Capture first 2500 chars for context
+      pageText: text.substring(0, 3000), // Capture first 3000 chars for context
+      persona,
     }
   }
 
@@ -115,25 +124,37 @@ export function ComplianceChat() {
     }
   }
 
+  const handlePersonaChange = (val: string) => {
+    setPersona(val)
+    if (messages.length > 0) {
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: 'assistant',
+          content: `🔄 **Modo de Atuação alterado para: ${val}**\nEstou pronto para analisar o sistema sob esta nova perspectiva normativa. Como posso ajudar?`,
+        },
+      ])
+    }
+  }
+
   const getQuickPrompts = () => {
     if (location.pathname.includes('/report') || location.pathname.includes('/status')) {
       return [
-        'O que é considerado fraude e corrupção?',
-        'Como o sistema garante meu anonimato total?',
-        'Qual o prazo médio para apuração de um relato?',
+        'Como garantir a conformidade e anonimização de dados segundo a LGPD neste relato?',
+        'O que é considerado fraude e corrupção pela ISO 37001?',
+        'Analise a qualidade das informações descritas na denúncia.',
       ]
     }
     if (location.pathname.includes('/osc')) {
       return [
+        'Como Auditor, aponte os riscos de glosa no demonstrativo atual.',
         'Quais as regras do MROSC para elaboração do plano de trabalho?',
-        'Como devo classificar uma despesa bancária no Demonstrativo (DID)?',
-        'Quais as diretrizes para prestação de contas financeiras com a Administração Pública?',
         'Navegar para Central de Prestações de Contas',
       ]
     }
     return [
       'Quais são os principais requisitos da ISO 37301:2021?',
-      'Como avaliar adequadamente um risco de compliance na matriz?',
+      'Como Compliance Officer, como devo avaliar um risco na matriz?',
       'Navegar para o Dashboard Global de Organizações',
     ]
   }
@@ -141,20 +162,48 @@ export function ComplianceChat() {
   return (
     <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end">
       {isOpen && (
-        <Card className="w-[340px] sm:w-[400px] h-[550px] mb-4 shadow-2xl flex flex-col border-primary/20 animate-in slide-in-from-bottom-5 fade-in-0 duration-300">
-          <CardHeader className="p-3 border-b bg-primary/5 flex flex-row items-center justify-between shrink-0">
-            <CardTitle className="text-sm font-bold flex items-center text-primary">
-              <Sparkles className="h-4 w-4 mr-2" /> Consultor IA (Onipresente)
-            </CardTitle>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-6 w-6 rounded-full"
-              onClick={() => setIsOpen(false)}
-            >
-              <X className="h-4 w-4" />
-            </Button>
+        <Card className="w-[340px] sm:w-[420px] h-[600px] mb-4 shadow-2xl flex flex-col border-primary/20 animate-in slide-in-from-bottom-5 fade-in-0 duration-300">
+          <CardHeader className="p-3 border-b bg-primary/5 flex flex-col gap-2 shrink-0">
+            <div className="flex flex-row items-center justify-between">
+              <CardTitle className="text-sm font-bold flex items-center text-primary">
+                <Sparkles className="h-4 w-4 mr-2" /> Consultor IA (Onipresente)
+              </CardTitle>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-6 w-6 rounded-full"
+                onClick={() => setIsOpen(false)}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+            <div className="flex items-center gap-2">
+              <UserCircle className="h-4 w-4 text-muted-foreground shrink-0" />
+              <Select value={persona} onValueChange={handlePersonaChange}>
+                <SelectTrigger className="h-7 text-xs flex-1 bg-background shadow-sm border-slate-200">
+                  <SelectValue placeholder="Selecione a Persona..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Geral" className="text-xs">
+                    Assistente Geral (Padrão)
+                  </SelectItem>
+                  <SelectItem value="Auditor" className="text-xs">
+                    Auditor Interno (Riscos/Glosas)
+                  </SelectItem>
+                  <SelectItem value="Consultor" className="text-xs">
+                    Consultor de Plano de Trabalho
+                  </SelectItem>
+                  <SelectItem value="DPO" className="text-xs">
+                    DPO / Especialista LGPD
+                  </SelectItem>
+                  <SelectItem value="Compliance" className="text-xs">
+                    Compliance Officer (ISO/GRC)
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </CardHeader>
+
           <CardContent className="flex-1 p-0 overflow-hidden relative">
             <ScrollArea className="h-full w-full p-4" ref={scrollRef}>
               <div className="flex flex-col gap-3 pb-2">
@@ -164,7 +213,7 @@ export function ComplianceChat() {
                     className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}
                   >
                     <div
-                      className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-sm shadow-sm whitespace-pre-wrap leading-relaxed ${m.role === 'user' ? 'bg-primary text-primary-foreground rounded-tr-sm' : 'bg-muted border rounded-tl-sm text-foreground'}`}
+                      className={`max-w-[90%] rounded-2xl px-4 py-2.5 text-sm shadow-sm whitespace-pre-wrap leading-relaxed ${m.role === 'user' ? 'bg-primary text-primary-foreground rounded-tr-sm' : 'bg-muted border rounded-tl-sm text-foreground'}`}
                     >
                       {m.content}
                     </div>
@@ -185,7 +234,7 @@ export function ComplianceChat() {
                 {!isLoading && messages.length === 1 && (
                   <div className="mt-4 flex flex-col gap-2">
                     <span className="text-xs font-semibold text-muted-foreground px-1 uppercase tracking-wider">
-                      Sugestões com base no contexto atual:
+                      Sugestões contextuais:
                     </span>
                     {getQuickPrompts().map((prompt, i) => (
                       <button
@@ -212,7 +261,7 @@ export function ComplianceChat() {
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder="Pergunte sobre a tela, leis ou peça para navegar..."
+                placeholder="Pergunte sobre a tela, GRC, MROSC, ISO..."
                 className="min-h-[40px] h-12 resize-none py-3 text-sm bg-muted/30 border-transparent focus-visible:ring-1 focus-visible:bg-background"
               />
               <Button

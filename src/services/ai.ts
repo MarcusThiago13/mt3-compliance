@@ -22,15 +22,26 @@ export const aiService = {
       const isMrosc = contextData?.path?.includes('/osc')
       const isReport = contextData?.path?.includes('/report')
       const isStatus = contextData?.path?.includes('/status')
+      const persona = contextData?.persona || 'Geral'
 
-      let msg = `Recebi sua mensagem: "${userMessage}".\n\nComo a chave do Claude não está configurada no ambiente ou houve falha de rede, estou atuando em modo simulado, mas compreendo que você está na tela \`${contextData?.path || '/'}\`.`
+      let msg = `Recebi sua mensagem: "${userMessage}".\n\n[Modo Simulado - Persona: ${persona}]\nComo a chave da API não está configurada ou houve falha de rede, compreendo que você está na tela \`${contextData?.path || '/'}\`.`
 
-      if (isMrosc) {
-        msg += `\n\nNesta área do MROSC, as regras de prestação de contas exigem rigor na comprovação de despesas. O Demonstrativo Integral de Despesas (DID) deve estar alinhado com o extrato bancário específico da parceria.`
-      } else if (isReport || isStatus) {
-        msg += `\n\nVocê está acessando o Canal Seguro. Este ambiente garante criptografia de ponta a ponta e anonimato garantido pela lei de proteção ao denunciante.`
+      if (persona === 'Auditor') {
+        msg += `\n\n**Visão de Auditor:** Identifiquei que é crucial manter a trilha de evidências intacta nesta tela. Preste muita atenção em potenciais descompassos físico-financeiros e verifique o lastro documental de cada lançamento para evitar glosas.`
+      } else if (persona === 'DPO') {
+        msg += `\n\n**Visão de DPO / LGPD:** Lembre-se de revisar os controles de privacidade e garantir a anonimização de dados pessoais sensíveis (como CPFs e informações de assistidos) antes de gerar qualquer relatório público a partir daqui.`
+      } else if (persona === 'Consultor') {
+        msg += `\n\n**Visão de Consultor:** Para otimizar o planejamento, assegure que as metas do plano de trabalho sejam SMART (Específicas, Mensuráveis, Alcançáveis, Relevantes e Temporais). Recomendo revisar a coerência das rubricas.`
+      } else if (persona === 'Compliance') {
+        msg += `\n\n**Visão de Compliance Officer:** Em conformidade com a ISO 37301 e 37001, certifique-se de que os riscos associados a esta etapa estejam mapeados na matriz de riscos e que haja evidências de controles mitigatórios aplicados.`
       } else {
-        msg += `\n\nNo mt3 Compliance, focamos na ISO 37301. Se precisar gerar um dossiê, basta acessar o módulo de Inteligência.`
+        if (isMrosc) {
+          msg += `\n\nNesta área do MROSC, as regras de prestação de contas exigem rigor na comprovação de despesas. O Demonstrativo Integral de Despesas (DID) deve estar alinhado com o extrato bancário específico da parceria.`
+        } else if (isReport || isStatus) {
+          msg += `\n\nVocê está acessando o Canal Seguro. Este ambiente garante criptografia de ponta a ponta e anonimato garantido pela lei de proteção ao denunciante.`
+        } else {
+          msg += `\n\nNo mt3 Compliance, focamos na ISO 37301. Se precisar gerar um dossiê, basta acessar o módulo de Inteligência.`
+        }
       }
 
       let actions = []
