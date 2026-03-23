@@ -3,7 +3,6 @@ import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar'
 import { AppSidebar } from '@/components/layout/AppSidebar'
 import { Header } from '@/components/layout/Header'
 import { useAppStore } from '@/stores/main'
-import { ComplianceChat } from '@/components/chat/ComplianceChat'
 
 export default function Layout() {
   const { auditorMode } = useAppStore()
@@ -27,7 +26,6 @@ export default function Layout() {
             )}
             <Outlet />
           </main>
-          <ComplianceChat />
         </SidebarInset>
       </div>
     </SidebarProvider>

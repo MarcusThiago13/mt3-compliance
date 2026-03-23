@@ -8,6 +8,7 @@ import { AuthProvider, useAuth } from '@/hooks/use-auth'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { ShieldCheck } from 'lucide-react'
+import { ComplianceChat } from '@/components/chat/ComplianceChat'
 
 import Index from './pages/Index'
 import NotFound from './pages/NotFound'
@@ -153,6 +154,9 @@ const App = () => (
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>
+
+          {/* Assistente Onipresente Global */}
+          <ComplianceChat />
         </TooltipProvider>
       </BrowserRouter>
     </AuthProvider>

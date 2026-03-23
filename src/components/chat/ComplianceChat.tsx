@@ -1,11 +1,13 @@
 import { useState, useRef, useEffect } from 'react'
-import { MessageSquare, X, Send, Loader2, Sparkles, AlertCircle } from 'lucide-react'
+import { MessageSquare, X, Send, Loader2, Sparkles, Navigation } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/card'
 import { Textarea } from '@/components/ui/textarea'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { aiService } from '@/services/ai'
-import { useParams, useLocation } from 'react-router-dom'
+import { useParams, useLocation, useNavigate } from 'react-router-dom'
+import { useAuth } from '@/hooks/use-auth'
+import { toast } from '@/hooks/use-toast'
 
 interface Message {
   role: 'user' | 'assistant'
@@ -14,19 +16,31 @@ interface Message {
 
 export function ComplianceChat() {
   const [isOpen, setIsOpen] = useState(false)
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      role: 'assistant',
-      content:
-        'Olá! Sou seu assistente especializado em ISO 37301, MROSC e Decreto 11.129/22. Como posso ajudar com a conformidade da sua organização hoje?',
-    },
-  ])
+  const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState('')
   const [isLoading, setIsLoading] = useState(false)
 
-  const { tenantId, id: clauseId } = useParams<{ tenantId?: string; id?: string }>()
+  const { tenantId, id: routeId } = useParams<{ tenantId?: string; id?: string }>()
   const location = useLocation()
+  const navigate = useNavigate()
+
+  // Safely get auth without breaking if used outside standard context
+  const auth = useAuth()
+  const user = auth?.user
+
   const scrollRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (messages.length === 0) {
+      setMessages([
+        {
+          role: 'assistant',
+          content:
+            'Olá! Sou o Claude, seu assistente de IA especialista no mt3 Compliance. Compreendo todo o contexto da tela em que você está. Como posso ajudar com MROSC, ISO 37301 ou guiar você pelo sistema agora?',
+        },
+      ])
+    }
+  }, [messages.length])
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -34,29 +48,49 @@ export function ComplianceChat() {
     }
   }, [messages, isLoading])
 
-  const handleSend = async () => {
-    if (!input.trim() || isLoading) return
+  const extractPageContext = () => {
+    const mainElement = document.querySelector('main')
+    const text = mainElement ? mainElement.innerText : ''
+    return {
+      path: location.pathname,
+      tenantId,
+      routeId,
+      userEmail: user?.email,
+      pageText: text.substring(0, 2500), // Capture first 2500 chars for context
+    }
+  }
 
-    const userMessage = input.trim()
+  const handleSend = async (text: string = input) => {
+    if (!text.trim() || isLoading) return
+
+    const userMessage = text.trim()
     setInput('')
     setMessages((prev) => [...prev, { role: 'user', content: userMessage }])
     setIsLoading(true)
 
     try {
-      // Determine context automatically from current route
-      let contextType = 'general'
-      let contextId = tenantId
+      const contextData = extractPageContext()
 
-      if (location.pathname.includes('/osc/')) contextType = 'osc_mrosc'
-      else if (clauseId) {
-        contextType = 'iso_clause'
-        contextId = clauseId
-      }
-
-      const response = await aiService.chat(userMessage, contextType, contextId)
+      const response = await aiService.chat(
+        userMessage,
+        messages.filter((m) => m.role === 'assistant' || m.role === 'user'),
+        contextData,
+      )
 
       if (response && response.message) {
         setMessages((prev) => [...prev, { role: 'assistant', content: response.message }])
+
+        if (response.actions && response.actions.length > 0) {
+          for (const action of response.actions) {
+            if (action.action === 'NAVIGATE' && action.path) {
+              toast({
+                title: 'Ação Automática IA',
+                description: `Executando redirecionamento solicitado para: ${action.path}`,
+              })
+              navigate(action.path)
+            }
+          }
+        }
       } else {
         throw new Error('Resposta inválida do motor de IA')
       }
@@ -81,13 +115,36 @@ export function ComplianceChat() {
     }
   }
 
+  const getQuickPrompts = () => {
+    if (location.pathname.includes('/report') || location.pathname.includes('/status')) {
+      return [
+        'O que é considerado fraude e corrupção?',
+        'Como o sistema garante meu anonimato total?',
+        'Qual o prazo médio para apuração de um relato?',
+      ]
+    }
+    if (location.pathname.includes('/osc')) {
+      return [
+        'Quais as regras do MROSC para elaboração do plano de trabalho?',
+        'Como devo classificar uma despesa bancária no Demonstrativo (DID)?',
+        'Quais as diretrizes para prestação de contas financeiras com a Administração Pública?',
+        'Navegar para Central de Prestações de Contas',
+      ]
+    }
+    return [
+      'Quais são os principais requisitos da ISO 37301:2021?',
+      'Como avaliar adequadamente um risco de compliance na matriz?',
+      'Navegar para o Dashboard Global de Organizações',
+    ]
+  }
+
   return (
     <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end">
       {isOpen && (
-        <Card className="w-80 sm:w-96 h-[500px] mb-4 shadow-2xl flex flex-col border-primary/20 animate-in slide-in-from-bottom-5 fade-in-0 duration-300">
+        <Card className="w-[340px] sm:w-[400px] h-[550px] mb-4 shadow-2xl flex flex-col border-primary/20 animate-in slide-in-from-bottom-5 fade-in-0 duration-300">
           <CardHeader className="p-3 border-b bg-primary/5 flex flex-row items-center justify-between shrink-0">
             <CardTitle className="text-sm font-bold flex items-center text-primary">
-              <Sparkles className="h-4 w-4 mr-2" /> Consultor IA
+              <Sparkles className="h-4 w-4 mr-2" /> Consultor IA (Onipresente)
             </CardTitle>
             <Button
               variant="ghost"
@@ -107,20 +164,43 @@ export function ComplianceChat() {
                     className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}
                   >
                     <div
-                      className={`max-w-[85%] rounded-2xl px-3 py-2 text-sm shadow-sm ${m.role === 'user' ? 'bg-primary text-primary-foreground rounded-tr-sm' : 'bg-muted border rounded-tl-sm text-foreground'}`}
+                      className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-sm shadow-sm whitespace-pre-wrap leading-relaxed ${m.role === 'user' ? 'bg-primary text-primary-foreground rounded-tr-sm' : 'bg-muted border rounded-tl-sm text-foreground'}`}
                     >
                       {m.content}
                     </div>
                   </div>
                 ))}
+
                 {isLoading && (
                   <div className="flex justify-start">
                     <div className="max-w-[85%] rounded-2xl rounded-tl-sm px-4 py-2 bg-muted border flex items-center gap-2">
-                      <Loader2 className="h-3 w-3 animate-spin text-primary" />
+                      <Loader2 className="h-4 w-4 animate-spin text-primary" />
                       <span className="text-xs text-muted-foreground">
-                        Analisando base normativa...
+                        Analisando tela e conhecimento normativo...
                       </span>
                     </div>
+                  </div>
+                )}
+
+                {!isLoading && messages.length === 1 && (
+                  <div className="mt-4 flex flex-col gap-2">
+                    <span className="text-xs font-semibold text-muted-foreground px-1 uppercase tracking-wider">
+                      Sugestões com base no contexto atual:
+                    </span>
+                    {getQuickPrompts().map((prompt, i) => (
+                      <button
+                        key={i}
+                        onClick={() => handleSend(prompt)}
+                        className="text-left text-xs bg-background border hover:bg-muted/50 p-2.5 rounded-lg text-foreground transition-colors flex items-center gap-2"
+                      >
+                        {prompt.startsWith('Navegar') ? (
+                          <Navigation className="h-3 w-3 text-primary shrink-0" />
+                        ) : (
+                          <MessageSquare className="h-3 w-3 text-primary shrink-0" />
+                        )}
+                        <span className="leading-tight">{prompt}</span>
+                      </button>
+                    ))}
                   </div>
                 )}
               </div>
@@ -132,16 +212,16 @@ export function ComplianceChat() {
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder="Pergunte sobre ISO, Leis, MROSC..."
-                className="min-h-[40px] h-10 resize-none py-2 text-sm bg-muted/50 border-transparent focus-visible:ring-1 focus-visible:bg-background"
+                placeholder="Pergunte sobre a tela, leis ou peça para navegar..."
+                className="min-h-[40px] h-12 resize-none py-3 text-sm bg-muted/30 border-transparent focus-visible:ring-1 focus-visible:bg-background"
               />
               <Button
                 size="icon"
-                onClick={handleSend}
+                onClick={() => handleSend()}
                 disabled={!input.trim() || isLoading}
-                className="h-10 w-10 shrink-0 rounded-full shadow-sm"
+                className="h-12 w-12 shrink-0 rounded-full shadow-sm"
               >
-                <Send className="h-4 w-4" />
+                <Send className="h-5 w-5" />
               </Button>
             </div>
           </CardFooter>
@@ -150,10 +230,14 @@ export function ComplianceChat() {
 
       <Button
         onClick={() => setIsOpen(!isOpen)}
-        className="h-14 w-14 rounded-full shadow-xl hover:shadow-2xl transition-all duration-300 bg-primary hover:scale-105"
+        className="h-14 w-14 rounded-full shadow-xl hover:shadow-2xl transition-all duration-300 bg-primary hover:scale-105 group"
         size="icon"
       >
-        {isOpen ? <X className="h-6 w-6" /> : <MessageSquare className="h-6 w-6" />}
+        {isOpen ? (
+          <X className="h-6 w-6" />
+        ) : (
+          <Sparkles className="h-6 w-6 group-hover:animate-pulse" />
+        )}
       </Button>
     </div>
   )
