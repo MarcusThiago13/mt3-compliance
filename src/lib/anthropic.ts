@@ -1,5 +1,25 @@
 import { supabase } from '@/lib/supabase/client'
 
+export const callAnthropicMessage = async (system: string, messages: any[], opts?: any) => {
+  console.log('Mocking Anthropic message:', system, messages, opts)
+  return {
+    content: [
+      {
+        text: 'Análise gerada pela IA (Simulação). Para habilitar em produção, configure a integração com Anthropic/Claude.',
+      },
+    ],
+  }
+}
+
+export const callAnthropicChat = async (messages: any[], system?: string) => {
+  return callAnthropicMessage(system || '', messages)
+}
+
+export const createBatchRequest = async (...args: any[]) => {
+  console.log('Mocking Batch Request:', args)
+  return { status: 'success' }
+}
+
 export const generateComplianceDocument = async (tenantId: string, template: any, params: any) => {
   // Fetch rich context from DB using the secure client (which automatically applies RLS)
   // We fetch Risks, Gaps, Due Diligences, and Whistleblower reports to provide full context
