@@ -32,8 +32,12 @@ import CollectionLinks from './pages/CollectionLinks'
 import CommunicationsLog from './pages/CommunicationsLog'
 import TenantDocuments from './pages/TenantDocuments'
 import DocumentEditor from './pages/DocumentEditor'
+
+// OSC Routes
 import RegularidadeInstitucional from './pages/osc/RegularidadeInstitucional'
 import Cebas from './pages/osc/Cebas'
+import GestaoParcerias from './pages/osc/GestaoParcerias'
+import ParceriaDetalhes from './pages/osc/ParceriaDetalhes'
 
 const AuthGuard = ({ children }: { children: React.ReactNode }) => {
   const { user, loading, signIn } = useAuth()
@@ -128,6 +132,8 @@ const App = () => (
                 {/* OSC Routes */}
                 <Route path="osc/regularidade" element={<RegularidadeInstitucional />} />
                 <Route path="osc/cebas" element={<Cebas />} />
+                <Route path="osc/parcerias" element={<GestaoParcerias />} />
+                <Route path="osc/parcerias/:id" element={<ParceriaDetalhes />} />
               </Route>
             </Route>
             <Route path="*" element={<NotFound />} />

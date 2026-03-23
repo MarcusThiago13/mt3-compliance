@@ -31,6 +31,7 @@ import {
   Library,
   Landmark,
   FileBadge,
+  Handshake,
 } from 'lucide-react'
 import { getParentClauses, getClausesByParent } from '@/lib/iso-data'
 import { useAppStore } from '@/stores/main'
@@ -197,6 +198,20 @@ export function AppSidebar() {
                         >
                           <Landmark />
                           <span>Regularidade Institucional</span>
+                        </Link>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                    <SidebarMenuItem>
+                      <SidebarMenuButton
+                        asChild
+                        isActive={location.pathname.includes('/osc/parcerias')}
+                      >
+                        <Link
+                          to={`${tid}/osc/parcerias`}
+                          className="text-purple-800 hover:text-purple-900"
+                        >
+                          <Handshake />
+                          <span>Gestão de Parcerias</span>
                         </Link>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
