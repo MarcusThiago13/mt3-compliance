@@ -1,64 +1,80 @@
-# Relatório de Diagnóstico e Auditoria Estrutural – mt3 Compliance
-
-**Data da Auditoria:** 22 de Março de 2026  
-**Escopo:** Segurança, Isolamento Multi-tenant, Integrações de IA, Estabilidade de Módulos e UX.
-
----
+# Relatório de Auditoria-Geral do mt3 Compliance
 
 ## 1. Resumo Executivo
 
-A auditoria técnica e funcional revelou que o **mt3 Compliance** possui uma arquitetura base excelente. No entanto, o crescimento acelerado do sistema e a adição de Edge Functions complexas (como o Motor Documental e Disparos de E-mail) introduziram vulnerabilidades de **Bypass de RLS (Row Level Security)**. Se não corrigidas, essas vulnerabilidades permitiriam acessos cruzados entre _tenants_ via manipulação de API.
+Este relatório consolida a auditoria arquitetural, funcional e de segurança realizada no sistema **mt3 Compliance**. O sistema evoluiu para uma plataforma robusta, atendendo empresas privadas, OSCs e o Poder Público de forma integrada.
 
-Aplicamos um pacote completo de refatoração estrutural (Backend e Frontend) para isolar hermeticamente os clientes, solidificar a IA e garantir o registro auditável das comunicações. **O sistema encontra-se agora apto para escalabilidade segura.**
-
----
-
-## 2. Visão Geral da Arquitetura e Achados Críticos
-
-### 2.1. Risco de Quebra de Isolamento (Edge Functions)
-
-- **Achado [CRÍTICO]:** As funções `generate-dossier`, `admin-users` e `send-email` estavam instanciando o `supabaseAdmin` (Service Role Key) diretamente, sem verificar se o portador do JWT possuía vínculo com o `tenant_id` requisitado. Isso anulava as políticas de segurança do banco.
-- **Ação Realizada:** Refatoramos todas as Edge Functions. Agora, elas instanciam um cliente de autenticação com o JWT do usuário e validam obrigatoriamente a associação ao _tenant_ (ou privilégios de SuperAdmin) antes de liberar qualquer dado.
-
-### 2.2. Acesso de SuperAdmin Bloqueado por RLS
-
-- **Achado [ALTO]:** A função de verificação `is_tenant_member_uuid`, responsável por liberar o acesso aos dados nas políticas de segurança (RLS), não reconhecia administradores globais (SuperAdmins). Isso causava falhas silenciosas nos painéis de gestão geral.
-- **Ação Realizada:** Desenvolvemos e aplicamos a migração `20260322000000_audit_rls_fixes.sql`. A função de banco de dados agora reconhece nativamente eixos de administração global, estabilizando os painéis de supervisão sem ferir o isolamento dos clientes regulares.
-
-### 2.3. Falha Silenciosa em Comunicações (WhatsApp)
-
-- **Achado [ALTO]:** O módulo Multicanal no frontend permitia o envio de mensagens pelo WhatsApp (via `wa.me`), mas o registro na tabela `communication_logs` falhava silenciosamente porque não havia política de inserção (INSERT RLS) configurada para clientes autenticados.
-- **Ação Realizada:** Inclusão da política `auth_insert_logs` na migração de segurança, habilitando a gravação perfeita da trilha de auditoria para disparos via WhatsApp.
-
-### 2.4. Fragilidade no Parseamento de IA (Motor Documental e SWOT)
-
-- **Achado [MÉDIO]:** O módulo de Contexto da Organização esperava um JSON perfeito da Anthropic API. Ocasionalmente, o modelo Claude retorna blocos de código Markdown (` ```json `), o que causava "crash" (quebra de estado) na aplicação.
-- **Ação Realizada:** Inserimos uma lógica robusta de Regex em `OrganizationContext.tsx` que higieniza a resposta da IA antes do `JSON.parse`, garantindo que a tela nunca congele.
-
-### 2.5. Riqueza de Contexto do Motor Documental (RAG)
-
-- **Achado [BAIXO]:** O gerador documental inteligente estava consumindo apenas Riscos e Gaps, ignorando o volume riquíssimo de dados das Due Diligences e Denúncias.
-- **Ação Realizada:** Expandimos a função `generateComplianceDocument` em `src/lib/anthropic.ts`. Agora, o contexto (RAG) da IA consome status de Due Diligence e agregações de denúncias ativas, resultando em relatórios vastamente superiores.
+O foco principal desta auditoria foi testar e solidificar a **segregação multi-tenant (RLS)**, a **estabilidade da autenticação via Edge Functions**, e a **arquitetura condicional de módulos transversais** (Compliance Trabalhista e Digital). Concluímos que a base estrutural é coerente e preparada para escalar, tendo sido aplicadas correções críticas focadas na estabilidade e segurança.
 
 ---
 
-## 3. Matriz de Correções e Testes de Revalidação
+## 2. Visão Geral da Arquitetura e Multi-Tenancy
 
-| Módulo / Funcionalidade            | Status Pós-Auditoria | Revalidação (QA)                                                             |
-| :--------------------------------- | :------------------- | :--------------------------------------------------------------------------- |
-| **Isolamento de Tenants (RLS)**    | Seguro               | Todas as RPCs e Edge Functions verificam `auth.uid()`.                       |
-| **Edge Functions (Dossiê/E-mail)** | Seguro               | JWT é exigido; Service Role bloqueado para bypass lateral.                   |
-| **Geração de Documentos (IA)**     | Excelente            | O contexto consumido respeita rigorosamente o cliente atual.                 |
-| **Comunicações e Logs**            | Corrigido            | `communication_logs` agora grava eventos de WhatsApp corretamente.           |
-| **Links Públicos de Coleta**       | Seguro               | A proteção contra enumeração e reaproveitamento está sólida.                 |
-| **UX: Impressão de Relatórios**    | Melhorado            | Regex de conversão Markdown->HTML atualizado para suportar listas e tabelas. |
+O **mt3** utiliza uma abordagem de Banco de Dados Único (Single Database) com forte aplicação de _Row Level Security_ (RLS).
+
+### 2.1. O que foi auditado:
+
+- **Separação de Dados:** Validou-se a presença da coluna `tenant_id` em praticamente todas as tabelas transacionais.
+- **Funções de Auxílio RLS (`is_tenant_member` e `is_tenant_member_uuid`):** Foram analisadas as validações de autoridade global do sistema. Notou-se que antes as validações baseavam-se exclusivamente na string do e-mail do autor da requisição, o que funcionava em MVP mas poderia apresentar fragilidades em uma governança corporativa de longa escala.
+
+### 2.2. Ação Corretiva Realizada:
+
+- Um script SQL de "Hardening" foi implementado e executado (`20260324130000_audit_fixes_and_rls_hardening.sql`) para reescrever as funções de segurança do banco, validando de forma imutável a role administrativa através das propriedades em cache criptografado de metadados (`app_metadata` e `user_metadata`) da sessão JWT.
+- Inclusão e revisão das cláusulas restritivas do tipo `WITH CHECK` ausentes ou sub-dimensionadas nas políticas dos submódulos de **OSC** e **Prestação de Contas**, garantindo que usuários operacionais ou de integrações não possam criar registros apontando forçosamente para o ID de outros tenants.
 
 ---
 
-## 4. Recomendações Estratégicas para o Futuro
+## 3. Estabilidade de Autenticação e Edge Functions
 
-1.  **Monitoramento de Custos de IA:** Recomendamos construir uma view agregada de consumo de _tokens_ em tempo real para disparar alertas preventivos, dado o aumento do escopo de geração documental.
-2.  **Assinatura Digital (Fase 2 do CMS):** Os documentos PDF/A gerados já contam com _hash_ de auditoria. O próximo passo lógico é integrar uma API (ex: ZapSign ou Docusign) para oficialização executiva.
-3.  **Webhook de Retorno do WhatsApp:** Avaliar migrar a "Opção A (Manual)" para a "Opção B (API)" no WhatsApp para capturar eventos de "Mensagem Lida" diretamente no log, assim como já é feito com o Resend (E-mail).
+O usuário relatou o erro impeditivo de infraestrutura `Auth session missing` ao acessar a rota `/admin/users`.
 
-**Conclusão:** O mt3 Compliance atinge hoje um nível avançado de maturidade técnica. A base de dados está blindada, a integração com IA está sofisticada e o workflow documental é confiável para fins de auditoria normativa.
+### 3.1. Causa Raiz:
+
+Foi diagnosticado que a chamada do SDK do Supabase para Edge Functions (`supabase.functions.invoke`) em determinadas sessões podia ocasionalmente enviar a montagem string do cabeçalho como `Authorization: Bearer undefined` ou `null` caso o token não estivesse totalmente inicializado no local storage, derrubando a execução nativa e bloqueando a requisição do painel na Edge Function.
+
+### 3.2. Correção Realizada:
+
+- Implementamos validação severa na recepção e desestruturação de token no header nas funções `admin-users`, `admin-invite`, `generate-dossier` e `send-email`.
+- As funções agora interceptam o header viciado e bloqueiam as requisições devolvendo HTTP 401 claro em formato amigável ao JSON para que o front-end possa capturar e informar a expiração da sessão, se assim necessário, ao invés de desmoronar as promessas em exceção não tratada (`Unhandled Promise Rejection`).
+- Criado o arquivo proxy oficial `src/services/admin.ts` servindo agora como repositório canônico em Typescript das chamadas administrativas destas funções, assegurando tipagem correta de respostas.
+
+---
+
+## 4. Integração do Módulo "Compliance Digital e Privacidade"
+
+A auditoria mapeou e testou as adições do recente novo módulo digital.
+
+### 4.1. Achados:
+
+- O módulo foi implementado transversalmente e logicamente de maneira correta (acessível via `/:tenantId/digital`).
+- Os campos adaptativos da tríade (_Poder Público vs OSC vs Empresa_) estão logicamente controlados em `PerfilDigitalTab.tsx` e nas visões de Governança (`GovernancaDigitalTab.tsx`).
+- O Dashboard conta com o recurso do Workflow "Smart Blocking" de fornecedores.
+
+### 4.2. Correções Realizadas:
+
+- Para que o "Smart Blocking" do módulo de Operadores de Dados funcionasse na prática e bloqueasse fornecedores do contas-a-pagar de fato, as colunas correspondentes (`block_payments` e `last_incident_date`) em Due Diligence foram adicionadas nas migrações precedentes que validamos.
+
+---
+
+## 5. Módulo de OSCs, CEBAS e Prestação de Contas
+
+A vertical de terceiro setor e do MROSC foi auditada para atestar se a carga regulatória (complexa em sua natureza) estava segregada e não vaza para o núcleo corporativo (visão comercial).
+
+### 5.1. Achados e Validações:
+
+- O sidebar de menu (`AppSidebar.tsx`) apenas expõe os módulos de OSC (`/osc/regularidade`, `/osc/parcerias`, etc.) quando a flag primária `org_type = 'osc'` for identificada dentro do Tenant. A granularidade obedece inclusive ao submódulo de Educação e LGPD Infantil.
+- A ferramenta conciliação da Prestação de Contas mantém uma estrutura contábil que cruza com os relatórios das contas bancárias mantendo os bloqueios (Glosas) ativos em `osc_accountability_diligences`.
+
+---
+
+## 6. Parecer de Integridade Operacional e Recomendações Futuras
+
+A auditoria atesta que o software final atingiu maturidade transacional de alta escalabilidade.
+
+### Riscos Residuais Menores e Recomendação Evolutiva (Roadmap):
+
+1. **Cache de Permissões no Front-end:** Atualmente as listagens operam RLS diretas na sessão. Recomendamos que, no próximo ciclo de evolução de arquitetura, a resposta da API armazene globalmente via Redux/Zustand a granularidade (se é Consultor, Auditor, etc.) minimizando consultas `SELECT` nas roles.
+2. **Uso de IA e Controle de Rate-Limit:** A onipresença da IA Generativa (`ComplianceChat` por Claude via RAG local) eleva massivamente a autonomia das análises. No entanto, é salutar prever na próxima SPRINT contadores que impeçam um abuso no consumo de tokens para proteger custos do modelo SaaS.
+3. **Escalabilidade Longo Prazo em Logs de Auditoria:** As trilhas transacionais imutáveis de ações críticas estão enchendo de maneira saudável. Com a volumetria estimada no futuro as consultas do painel de administração em cima de `audit_logs` devem ser alvo de tabelas particionadas (Time-Series) ou Cold Storage na AWS.
+
+Em essência: a base arquitetônica do **mt3** obedece fidedignamente aos preceitos rigorosos de _Security by Design_ e de segregação de ambientes essenciais à auditoria regulatória. A plataforma suportará a adoção massiva de perfis sem degradar dados alheios.
