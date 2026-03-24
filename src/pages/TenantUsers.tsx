@@ -12,7 +12,7 @@ import {
   Trash2,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import {
   Table,
   TableBody,
@@ -34,7 +34,7 @@ import {
   removeInvitation,
 } from '@/services/admin'
 import { useAppStore } from '@/stores/main'
-import { useAuth } from '@/hooks/use-auth'
+import { useRBAC } from '@/hooks/use-rbac'
 import {
   Dialog,
   DialogContent,
@@ -67,14 +67,7 @@ import { SendCommunicationModal } from '@/components/shared/SendCommunicationMod
 export default function TenantUsers() {
   const { tenantId } = useParams<{ tenantId: string }>()
   const { activeTenant } = useAppStore()
-  const { user: currentUser } = useAuth()
-
-  const isAdmin =
-    currentUser?.email === 'admin@example.com' ||
-    currentUser?.email === 'marcusthiago.adv@gmail.com' ||
-    currentUser?.app_metadata?.role === 'admin' ||
-    currentUser?.user_metadata?.is_admin === true ||
-    currentUser?.user_metadata?.is_admin === 'true'
+  const { isAdmin, loading: rbacLoading } = useRBAC()
 
   const [records, setRecords] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
@@ -149,6 +142,14 @@ export default function TenantUsers() {
     if (isAdmin && tenantId) fetchInitialData()
   }, [isAdmin, tenantId])
 
+  if (rbacLoading) {
+    return (
+      <div className="flex h-64 items-center justify-center text-muted-foreground">
+        <Loader2 className="h-8 w-8 animate-spin mr-2" /> Validando permissões...
+      </div>
+    )
+  }
+
   if (!isAdmin) {
     return <Navigate to={`/${tenantId}/clause/4.1`} replace />
   }
@@ -199,7 +200,7 @@ export default function TenantUsers() {
           phone: editPhone,
         })
       }
-      toast({ title: 'Sucesso', description: 'Usuário atualizado.' })
+      toast({ title: 'Sucesso', description: 'Usuário atualizado com sucesso.' })
       setIsEditDialogOpen(false)
       fetchInitialData()
     } catch (error: any) {
@@ -267,21 +268,35 @@ export default function TenantUsers() {
   const getRoleBadge = (roleValue: string) => {
     const roleObj = USER_ROLES.find((r) => r.value === roleValue)
     const label = roleObj ? roleObj.label : roleValue
-    if (roleValue === 'admin')
-      return (
-        <Badge className="bg-purple-100 text-purple-800 hover:bg-purple-100 border-none">
-          {label}
-        </Badge>
-      )
-    if (roleValue === 'editor')
-      return (
-        <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-100 border-none">{label}</Badge>
-      )
-    return (
-      <Badge className="bg-gray-100 text-gray-800 hover:bg-gray-100 border-none">
-        {label || 'Apenas Leitura'}
-      </Badge>
-    )
+
+    switch (roleValue) {
+      case 'admin':
+        return (
+          <Badge className="bg-purple-100 text-purple-800 hover:bg-purple-100 border-none">
+            {label}
+          </Badge>
+        )
+      case 'editor':
+        return (
+          <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-100 border-none">{label}</Badge>
+        )
+      case 'auditor':
+        return (
+          <Badge className="bg-amber-100 text-amber-800 hover:bg-amber-100 border-none">
+            {label}
+          </Badge>
+        )
+      case 'consultant':
+        return (
+          <Badge className="bg-teal-100 text-teal-800 hover:bg-teal-100 border-none">{label}</Badge>
+        )
+      default:
+        return (
+          <Badge className="bg-gray-100 text-gray-800 hover:bg-gray-100 border-none">
+            {label || 'Apenas Leitura'}
+          </Badge>
+        )
+    }
   }
 
   return (
@@ -290,10 +305,10 @@ export default function TenantUsers() {
         <div>
           <h1 className="text-3xl font-bold text-primary flex items-center gap-3">
             <Users className="h-8 w-8" />
-            Acessos: {activeTenant?.name || 'Carregando...'}
+            Permissões e Acessos
           </h1>
           <p className="text-muted-foreground mt-1">
-            Gestão centralizada de usuários e permissões específicos desta organização.
+            Gestão granular de usuários (RBAC) e convites desta organização.
           </p>
         </div>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
@@ -306,8 +321,7 @@ export default function TenantUsers() {
             <DialogHeader>
               <DialogTitle>Convidar para {activeTenant?.name}</DialogTitle>
               <DialogDescription>
-                Adicione um usuário e defina seu nível de acesso. Se o e-mail já possuir conta, ele
-                será vinculado automaticamente.
+                Adicione um usuário e defina seu nível de acesso granular.
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4 py-4">
@@ -338,7 +352,7 @@ export default function TenantUsers() {
                   />
                 </div>
                 <div className="space-y-2 col-span-2 sm:col-span-1">
-                  <Label>Permissão (RBAC) *</Label>
+                  <Label>Nível de Acesso (RBAC) *</Label>
                   <Select value={role} onValueChange={setRole}>
                     <SelectTrigger>
                       <SelectValue />
@@ -399,7 +413,7 @@ export default function TenantUsers() {
               />
             </div>
             <div className="space-y-2">
-              <Label>Permissão (RBAC) *</Label>
+              <Label>Nível de Acesso (RBAC) *</Label>
               <Select value={editRole} onValueChange={setEditRole}>
                 <SelectTrigger>
                   <SelectValue />
@@ -445,6 +459,10 @@ export default function TenantUsers() {
           <CardTitle className="flex items-center gap-2">
             <ShieldCheck className="h-5 w-5" /> Membros Ativos e Pendentes
           </CardTitle>
+          <CardDescription>
+            Todos os usuários listados abaixo possuem acesso estrito aos dados deste tenant,
+            conforme suas permissões de leitura ou escrita.
+          </CardDescription>
         </CardHeader>
         <CardContent>
           {loading ? (
@@ -463,7 +481,7 @@ export default function TenantUsers() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Usuário</TableHead>
-                  <TableHead>Perfil de Acesso</TableHead>
+                  <TableHead>Perfil de Acesso (RBAC)</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead className="text-right">Ações</TableHead>
                 </TableRow>

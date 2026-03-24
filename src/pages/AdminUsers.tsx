@@ -379,21 +379,35 @@ export default function AdminUsers() {
   const getRoleBadge = (roleValue: string) => {
     const roleObj = USER_ROLES.find((r) => r.value === roleValue)
     const label = roleObj ? roleObj.label : roleValue
-    if (roleValue === 'admin')
-      return (
-        <Badge className="bg-purple-100 text-purple-800 hover:bg-purple-100 border-none">
-          {label}
-        </Badge>
-      )
-    if (roleValue === 'editor')
-      return (
-        <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-100 border-none">{label}</Badge>
-      )
-    return (
-      <Badge className="bg-gray-100 text-gray-800 hover:bg-gray-100 border-none">
-        {label || 'Apenas Leitura'}
-      </Badge>
-    )
+
+    switch (roleValue) {
+      case 'admin':
+        return (
+          <Badge className="bg-purple-100 text-purple-800 hover:bg-purple-100 border-none">
+            {label}
+          </Badge>
+        )
+      case 'editor':
+        return (
+          <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-100 border-none">{label}</Badge>
+        )
+      case 'auditor':
+        return (
+          <Badge className="bg-amber-100 text-amber-800 hover:bg-amber-100 border-none">
+            {label}
+          </Badge>
+        )
+      case 'consultant':
+        return (
+          <Badge className="bg-teal-100 text-teal-800 hover:bg-teal-100 border-none">{label}</Badge>
+        )
+      default:
+        return (
+          <Badge className="bg-gray-100 text-gray-800 hover:bg-gray-100 border-none">
+            {label || 'Apenas Leitura'}
+          </Badge>
+        )
+    }
   }
 
   return (
@@ -402,10 +416,10 @@ export default function AdminUsers() {
         <div>
           <h1 className="text-3xl font-bold text-primary flex items-center gap-3">
             <Users className="h-8 w-8" />
-            Gestão de Usuários
+            Gestão Global de Usuários
           </h1>
           <p className="text-muted-foreground mt-1">
-            Controle de acessos, convites e permissões (RBAC) centralizado.
+            Controle de acessos, convites e permissões granulares (RBAC) centralizado.
           </p>
         </div>
       </div>
@@ -479,7 +493,7 @@ export default function AdminUsers() {
                       />
                     </div>
                     <div className="space-y-2 col-span-2 sm:col-span-1">
-                      <Label>Permissão (RBAC) *</Label>
+                      <Label>Nível de Acesso (RBAC) *</Label>
                       <Select value={role} onValueChange={setRole}>
                         <SelectTrigger>
                           <SelectValue />

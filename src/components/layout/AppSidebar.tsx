@@ -42,6 +42,7 @@ import {
 } from 'lucide-react'
 import { getParentClauses, getClausesByParent } from '@/lib/iso-data'
 import { useAppStore } from '@/stores/main'
+import { useRBAC } from '@/hooks/use-rbac'
 import { Button } from '@/components/ui/button'
 
 const phaseIcons: Record<string, any> = {
@@ -56,9 +57,10 @@ const phaseIcons: Record<string, any> = {
 
 export function AppSidebar() {
   const location = useLocation()
-  const { activeTenant, userRole, auditorMode, setAuditorMode } = useAppStore()
-  const parentClauses = getParentClauses()
+  const { activeTenant, auditorMode, setAuditorMode } = useAppStore()
+  const { isSuperAdmin, isAdmin } = useRBAC()
 
+  const parentClauses = getParentClauses()
   const tid = activeTenant ? `/${activeTenant.id}` : ''
 
   return (
@@ -81,44 +83,42 @@ export function AppSidebar() {
         )}
       </SidebarHeader>
       <SidebarContent>
-        <SidebarGroup>
-          <SidebarGroupLabel>Administração Central</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {userRole === 'superadmin' && (
-                <>
-                  <SidebarMenuItem>
-                    <SidebarMenuButton
-                      asChild
-                      isActive={location.pathname === '/tenants' || location.pathname === '/'}
-                    >
-                      <Link to="/tenants">
-                        <Users />
-                        <span>Gestão de Clientes</span>
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                  <SidebarMenuItem>
-                    <SidebarMenuButton asChild isActive={location.pathname === '/admin/users'}>
-                      <Link to="/admin/users">
-                        <UserCog />
-                        <span>Gestão de Usuários</span>
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                  <SidebarMenuItem>
-                    <SidebarMenuButton asChild isActive={location.pathname === '/admin/ai-usage'}>
-                      <Link to="/admin/ai-usage">
-                        <BrainCircuit />
-                        <span>Consumo de IA</span>
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                </>
-              )}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+        {isSuperAdmin && (
+          <SidebarGroup>
+            <SidebarGroupLabel>Administração Central</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                <SidebarMenuItem>
+                  <SidebarMenuButton
+                    asChild
+                    isActive={location.pathname === '/tenants' || location.pathname === '/'}
+                  >
+                    <Link to="/tenants">
+                      <Users />
+                      <span>Gestão de Clientes</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild isActive={location.pathname === '/admin/users'}>
+                    <Link to="/admin/users">
+                      <UserCog />
+                      <span>Gestão de Usuários</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild isActive={location.pathname === '/admin/ai-usage'}>
+                    <Link to="/admin/ai-usage">
+                      <BrainCircuit />
+                      <span>Consumo de IA</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
 
         {activeTenant && (
           <>
@@ -126,6 +126,16 @@ export function AppSidebar() {
               <SidebarGroupLabel>Workspace do Cliente</SidebarGroupLabel>
               <SidebarGroupContent>
                 <SidebarMenu>
+                  {isAdmin && (
+                    <SidebarMenuItem>
+                      <SidebarMenuButton asChild isActive={location.pathname === `${tid}/users`}>
+                        <Link to={`${tid}/users`}>
+                          <UserCog />
+                          <span>Usuários e Permissões</span>
+                        </Link>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  )}
                   <SidebarMenuItem>
                     <SidebarMenuButton
                       asChild

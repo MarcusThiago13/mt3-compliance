@@ -15,7 +15,9 @@ export const USER_CLASSIFICATIONS = [
 ]
 
 export const USER_ROLES = [
-  { value: 'viewer', label: 'Apenas Leitura' },
-  { value: 'editor', label: 'Editor' },
   { value: 'admin', label: 'Administrador' },
+  { value: 'editor', label: 'Gestor / Operador' },
+  { value: 'auditor', label: 'Auditor' },
+  { value: 'consultant', label: 'Consultor' },
+  { value: 'viewer', label: 'Apenas Leitura / Visualizador' },
 ]
