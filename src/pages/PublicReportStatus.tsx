@@ -56,7 +56,11 @@ export default function PublicReportStatus() {
       const m = await whistleblowingService.getMessages(id)
       setMessages(m)
     } catch (e: any) {
-      toast({ title: 'Erro', description: 'Falha ao carregar dados.', variant: 'destructive' })
+      toast({
+        title: 'Erro',
+        description: 'Falha ao carregar dados do relato.',
+        variant: 'destructive',
+      })
     }
   }
 
@@ -136,11 +140,14 @@ export default function PublicReportStatus() {
               <h2 className="text-lg font-bold text-slate-800">Status do Relato</h2>
               <p className="text-sm text-slate-500">
                 Aberto em{' '}
-                {report?.created_at ? new Date(report.created_at).toLocaleDateString() : ''}
+                {report?.created_at
+                  ? new Date(report.created_at).toLocaleDateString()
+                  : 'Carregando...'}
               </p>
             </div>
+            {/* Proteção contra falha de renderização se report estiver null */}
             <Badge className="text-sm py-1 px-3 bg-slate-100 text-slate-800 uppercase tracking-wider">
-              {report?.status.replace('_', ' ')}
+              {report?.status ? report.status.replace('_', ' ') : 'CARREGANDO'}
             </Badge>
           </CardContent>
         </Card>

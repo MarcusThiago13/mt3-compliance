@@ -2,13 +2,12 @@ import { supabase } from '@/lib/supabase/client'
 
 export const whistleblowingService = {
   async submitReport(payload: any) {
-    const { data, error } = await supabase
-      .from('whistleblower_reports' as any)
-      .insert([payload])
-      .select('id, protocol_number')
-      .single()
+    // Remoção do .select() no final do insert para evitar erro de RLS (PGRST116)
+    // para usuários anônimos que têm permissão de INSERT, mas não de SELECT geral.
+    const { error } = await supabase.from('whistleblower_reports' as any).insert([payload])
+
     if (error) throw error
-    return data
+    return { success: true }
   },
 
   async checkCredentials(tenantId: string, protocol: string, passwordHash: string) {
@@ -22,11 +21,10 @@ export const whistleblowingService = {
   },
 
   async getReportForReporter(reportId: string) {
-    const { data, error } = await supabase
-      .from('whistleblower_reports' as any)
-      .select('id, protocol_number, status, created_at, category')
-      .eq('id', reportId)
-      .single()
+    // Utilizando a nova RPC que ignora o bloqueio do RLS para o denunciante que já tem o ID
+    const { data, error } = await supabase.rpc('get_public_report_details', {
+      p_report_id: reportId,
+    })
     if (error) throw error
     return data
   },
