@@ -124,10 +124,10 @@ export default function PublicReport() {
           <div className="space-y-6">
             <div className="text-center mb-8">
               <h1 className="text-3xl font-bold text-slate-800 mb-4">Bem-vindo ao Canal Seguro</h1>
-              <p className="text-slate-600 text-lg">
+              <div className="text-slate-600 text-lg">
                 Este ambiente garante proteção absoluta e "Zero Tracking". Seu IP e dados de
                 navegação não são registrados.
-              </p>
+              </div>
             </div>
             <div className="grid sm:grid-cols-2 gap-6">
               <Card
@@ -140,9 +140,9 @@ export default function PublicReport() {
                 <CardContent className="p-6 text-center space-y-4">
                   <EyeOff className="h-12 w-12 mx-auto text-slate-500" />
                   <h3 className="font-bold text-xl">Denúncia Anônima</h3>
-                  <p className="text-sm text-slate-500">
+                  <div className="text-sm text-slate-500">
                     Nenhum dado pessoal será solicitado. Sua identidade será totalmente preservada.
-                  </p>
+                  </div>
                   <Button variant="outline" className="w-full">
                     Escolher Anônima
                   </Button>
@@ -158,16 +158,18 @@ export default function PublicReport() {
                 <CardContent className="p-6 text-center space-y-4">
                   <User className="h-12 w-12 mx-auto text-primary" />
                   <h3 className="font-bold text-xl">Denúncia Identificada</h3>
-                  <p className="text-sm text-slate-500">
+                  <div className="text-sm text-slate-500">
                     Seus dados serão mantidos em sigilo pelo Comitê de Ética. Ajuda na comunicação
                     direta.
-                  </p>
+                  </div>
                   <Button className="w-full">Escolher Identificada</Button>
                 </CardContent>
               </Card>
             </div>
             <div className="text-center mt-8 pt-8 border-t">
-              <p className="text-sm text-slate-500 mb-4">Já possui um protocolo em andamento?</p>
+              <div className="text-sm text-slate-500 mb-4">
+                Já possui um protocolo em andamento?
+              </div>
               <Button variant="link" asChild>
                 <Link to={`/r/${tenantId}/status`}>
                   Acompanhar Relato Existente <ArrowRight className="ml-2 h-4 w-4" />
@@ -299,10 +301,10 @@ export default function PublicReport() {
               <CheckCircle2 className="h-16 w-16 mx-auto text-emerald-500" />
               <div>
                 <h2 className="text-2xl font-bold text-slate-800">Relato Enviado com Sucesso</h2>
-                <p className="text-slate-600 mt-2">
+                <div className="text-slate-600 mt-2">
                   Guarde as credenciais abaixo para acessar a Sala Segura. Elas não poderão ser
                   recuperadas se perdidas.
-                </p>
+                </div>
               </div>
               <div className="bg-slate-100 p-6 rounded-lg max-w-sm mx-auto space-y-4">
                 <div>
