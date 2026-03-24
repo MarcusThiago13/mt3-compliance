@@ -7,12 +7,12 @@ Deno.serve(async (req: Request) => {
   try {
     const { userMessage, history = [], contextData = {} } = await req.json()
     const anthropicKey = Deno.env.get('VITE_ANTHROPIC_API_KEY') || Deno.env.get('ANTHROPIC_API_KEY')
-
-    let aiResponseText = ''
+    
+    let aiResponseText = ""
     let actions: any[] = []
-
+    
     const persona = contextData.persona || 'Geral'
-
+    
     if (anthropicKey) {
       const baseContext = `Você é o Claude, integrado nativamente e de forma onipresente ao sistema "mt3 Compliance".
 O mt3 é um Sistema de Gestão de Compliance (SGC) Multi-tenant focado em governança corporativa e em organizações da sociedade civil (OSC).
@@ -30,27 +30,22 @@ Contexto Visível na Tela Atual (Dados Extraídos do DOM):
 ${contextData.pageText?.substring(0, 3000) || 'Nenhum contexto textual visível ou disponível'}
 ---`
 
-      let personaInstruction = ''
-      switch (persona) {
+      let personaInstruction = "";
+      switch(persona) {
         case 'Auditor':
-          personaInstruction =
-            'Atue como um AUDITOR INTERNO RIGOROSO. Seu foco é identificar riscos sistêmicos, cobrar evidências documentais sólidas, alertar sobre descompassos físico-financeiros, potenciais glosas de despesas e quebras de conformidade (MROSC e ISOs). Seja extremamente analítico, crítico e focado em rastreabilidade de auditoria.'
-          break
+          personaInstruction = "Atue como um AUDITOR INTERNO RIGOROSO. Seu foco é identificar riscos sistêmicos, cobrar evidências documentais sólidas, alertar sobre descompassos físico-financeiros, potenciais glosas de despesas e quebras de conformidade (MROSC e ISOs). Seja extremamente analítico, crítico e focado em rastreabilidade de auditoria.";
+          break;
         case 'Consultor':
-          personaInstruction =
-            'Atue como um CONSULTOR DE PLANO DE TRABALHO E GESTÃO. Seu foco é ajudar a estruturar metas SMART, revisar indicadores de resultado, aprimorar o planejamento financeiro e garantir que a execução física esteja perfeitamente alinhada às exigências do MROSC. Seja propositivo, didático e focado na eficiência da execução.'
-          break
+          personaInstruction = "Atue como um CONSULTOR DE PLANO DE TRABALHO E GESTÃO. Seu foco é ajudar a estruturar metas SMART, revisar indicadores de resultado, aprimorar o planejamento financeiro e garantir que a execução física esteja perfeitamente alinhada às exigências do MROSC. Seja propositivo, didático e focado na eficiência da execução.";
+          break;
         case 'DPO':
-          personaInstruction =
-            'Atue como um ESPECIALISTA EM LGPD / DPO (Data Protection Officer). Seu foco absoluto é a proteção de dados pessoais, privacidade by design, anonimização em relatórios de transparência pública, bases legais e adequação de contratos/termos de parceria. Alerte proativamente sobre riscos de exposição indevida de dados na tela atual.'
-          break
+          personaInstruction = "Atue como um ESPECIALISTA EM LGPD / DPO (Data Protection Officer). Seu foco absoluto é a proteção de dados pessoais, privacidade by design, anonimização em relatórios de transparência pública, bases legais e adequação de contratos/termos de parceria. Alerte proativamente sobre riscos de exposição indevida de dados na tela atual.";
+          break;
         case 'Compliance':
-          personaInstruction =
-            'Atue como um COMPLIANCE OFFICER / GESTOR DE GRC. Seu foco é a integridade corporativa, avaliação de riscos (matriz de impacto x probabilidade), Due Diligence de terceiros, aplicação de normativos internos e atendimento estrito às ISOs 37301 e 37001. Promova a cultura de ética corporativa e prevenção a desvios.'
-          break
+          personaInstruction = "Atue como um COMPLIANCE OFFICER / GESTOR DE GRC. Seu foco é a integridade corporativa, avaliação de riscos (matriz de impacto x probabilidade), Due Diligence de terceiros, aplicação de normativos internos e atendimento estrito às ISOs 37301 e 37001. Promova a cultura de ética corporativa e prevenção a desvios.";
+          break;
         default:
-          personaInstruction =
-            'Atue como um ASSISTENTE GERAL DE COMPLIANCE. Responda de forma profissional, didática, direta e técnica às dúvidas sobre regras de compliance, LGPD, MROSC, ISOs e a operação do sistema mt3.'
+          personaInstruction = "Atue como um ASSISTENTE GERAL DE COMPLIANCE. Responda de forma profissional, didática, direta e técnica às dúvidas sobre regras de compliance, LGPD, MROSC, ISOs e a operação do sistema mt3.";
       }
 
       const systemPrompt = `${baseContext}\n\nPersona Selecionada: ${personaInstruction}\n\nDiretrizes de Atuação:
@@ -76,7 +71,7 @@ Dicas de caminhos de navegação (Substitua {tenantId} pelo ID ${contextData.ten
         headers: {
           'x-api-key': anthropicKey,
           'anthropic-version': '2023-06-01',
-          'content-type': 'application/json',
+          'content-type': 'application/json'
         },
         body: JSON.stringify({
           model: 'claude-3-haiku-20240307',
@@ -84,24 +79,24 @@ Dicas de caminhos de navegação (Substitua {tenantId} pelo ID ${contextData.ten
           system: systemPrompt,
           messages: [
             ...history.map((h: any) => ({ role: h.role, content: h.content })),
-            { role: 'user', content: userMessage },
-          ],
-        }),
+            { role: 'user', content: userMessage }
+          ]
+        })
       })
-
+      
       const data = await res.json()
       if (data.content && data.content[0]) {
         aiResponseText = data.content[0].text
       } else {
-        throw new Error(data.error?.message || 'Invalid or empty response from Anthropic API')
+        throw new Error(data.error?.message || "Invalid or empty response from Anthropic API")
       }
     } else {
       // Intelligent Mock when API key is missing
       const isMrosc = contextData.path?.includes('/osc')
       const isReport = contextData.path?.includes('/report')
-
+      
       aiResponseText = `[Modo Simulado - Persona: ${persona}]\nCompreendi sua mensagem: "${userMessage}".\n\nComo estou rodando sem a chave da API do Claude configurada no backend, atuo como um assistente pré-programado para demonstrar minhas capacidades contextuais.`
-
+      
       if (persona === 'Auditor') {
         aiResponseText += `\n\n**Análise de Auditor Interno:** Com base na tela atual (\`${contextData.path}\`), identifico que a rastreabilidade das evidências é o ponto mais crítico. Recomendo revisar minuciosamente se há lastro documental para cada lançamento listado a fim de mitigar riscos de glosa ou não conformidade.`
       } else if (persona === 'DPO') {
@@ -113,23 +108,16 @@ Dicas de caminhos de navegação (Substitua {tenantId} pelo ID ${contextData.ten
       } else {
         aiResponseText += `\n\nEstou analisando o contexto da tela atual (\`${contextData.path}\`) sob a perspectiva de ${persona} e estou pronto para auxiliar com as normativas GRC e ISO 37301/37001 aplicáveis ao cenário.`
       }
-
+      
       const targetLower = userMessage.toLowerCase()
-      if (
-        targetLower.includes('ir para') ||
-        targetLower.includes('navegar') ||
-        targetLower.includes('prestação de contas') ||
-        targetLower.includes('dashboard') ||
-        targetLower.includes('usuário')
-      ) {
-        const targetPath =
-          targetLower.includes('prestaç') && contextData.tenantId
-            ? `/${contextData.tenantId}/osc/prestacao-contas`
-            : targetLower.includes('usuário')
-              ? '/admin/users'
-              : '/tenants'
-
-        aiResponseText += `\n\nEntendido, vou executar a tarefa de redirecionamento imediatamente para você!\n\`\`\`json\n{"action": "NAVIGATE", "path": "${targetPath}"}\n\`\`\``
+      if (targetLower.includes('ir para') || targetLower.includes('navegar') || targetLower.includes('prestação de contas') || targetLower.includes('dashboard') || targetLower.includes('usuário')) {
+         const targetPath = targetLower.includes('prestaç') && contextData.tenantId 
+           ? `/${contextData.tenantId}/osc/prestacao-contas` 
+           : targetLower.includes('usuário') 
+             ? '/admin/users' 
+             : '/tenants'
+             
+         aiResponseText += `\n\nEntendido, vou executar a tarefa de redirecionamento imediatamente para você!\n\`\`\`json\n{"action": "NAVIGATE", "path": "${targetPath}"}\n\`\`\``
       }
     }
 
@@ -140,12 +128,12 @@ Dicas de caminhos de navegação (Substitua {tenantId} pelo ID ${contextData.ten
         actions.push(JSON.parse(actionMatch[1]))
         aiResponseText = aiResponseText.replace(actionMatch[0], '')
       } catch (e) {
-        console.warn('Failed to parse AI action JSON block', e)
+        console.warn("Failed to parse AI action JSON block", e)
       }
     }
 
     return new Response(JSON.stringify({ message: aiResponseText.trim(), actions }), {
-      headers: { 'Content-Type': 'application/json', ...corsHeaders },
+      headers: { 'Content-Type': 'application/json', ...corsHeaders }
     })
   } catch (e: any) {
     return new Response(JSON.stringify({ error: e.message }), { status: 400, headers: corsHeaders })
