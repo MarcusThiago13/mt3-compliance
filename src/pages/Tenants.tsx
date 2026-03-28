@@ -93,7 +93,8 @@ export default function Tenants() {
   const [newTenantName, setNewTenantName] = useState('')
   const [newTenantCnpj, setNewTenantCnpj] = useState('')
   const [newTenantOrgType, setNewTenantOrgType] = useState('empresa')
-  const [newTenantOrgSubtype, setNewTenantOrgSubtype] = useState('')
+  const [newTenantPublicRelations, setNewTenantPublicRelations] = useState('nao')
+  const [newTenantActingAreas, setNewTenantActingAreas] = useState<string[]>([])
   const [isCreating, setIsCreating] = useState(false)
 
   const [isEditTenantOpen, setIsEditTenantOpen] = useState(false)
@@ -101,7 +102,8 @@ export default function Tenants() {
   const [editTenantName, setEditTenantName] = useState('')
   const [editTenantCnpj, setEditTenantCnpj] = useState('')
   const [editTenantOrgType, setEditTenantOrgType] = useState('empresa')
-  const [editTenantOrgSubtype, setEditTenantOrgSubtype] = useState('')
+  const [editTenantPublicRelations, setEditTenantPublicRelations] = useState('nao')
+  const [editTenantActingAreas, setEditTenantActingAreas] = useState<string[]>([])
   const [isUpdating, setIsUpdating] = useState(false)
 
   const [isEmailModalOpen, setIsEmailModalOpen] = useState(false)
@@ -207,7 +209,9 @@ export default function Tenants() {
         cnpj: newTenantCnpj,
         status: 'active',
         org_type: newTenantOrgType,
-        org_subtype: newTenantOrgSubtype || null,
+        public_relations:
+          newTenantOrgType === 'poder_publico' ? 'oculto' : newTenantPublicRelations,
+        acting_areas: newTenantActingAreas,
       } as any)
       .select('id')
       .single()
@@ -239,7 +243,8 @@ export default function Tenants() {
       setNewTenantName('')
       setNewTenantCnpj('')
       setNewTenantOrgType('empresa')
-      setNewTenantOrgSubtype('')
+      setNewTenantPublicRelations('nao')
+      setNewTenantActingAreas([])
       fetchTenants()
     }
     setIsCreating(false)
@@ -250,7 +255,8 @@ export default function Tenants() {
     setEditTenantName(t.name || '')
     setEditTenantCnpj(t.cnpj || '')
     setEditTenantOrgType(t.org_type || 'empresa')
-    setEditTenantOrgSubtype(t.org_subtype || '')
+    setEditTenantPublicRelations(t.public_relations || 'nao')
+    setEditTenantActingAreas(t.acting_areas || [])
     setIsEditTenantOpen(true)
   }
 
@@ -270,7 +276,9 @@ export default function Tenants() {
         name: editTenantName,
         cnpj: editTenantCnpj,
         org_type: editTenantOrgType,
-        org_subtype: editTenantOrgSubtype || null,
+        public_relations:
+          editTenantOrgType === 'poder_publico' ? 'oculto' : editTenantPublicRelations,
+        acting_areas: editTenantActingAreas,
       } as any)
       .eq('id', editingTenantId)
 
@@ -382,13 +390,7 @@ export default function Tenants() {
                   <div className="space-y-4 animate-in fade-in slide-in-from-right-4">
                     <div className="space-y-2">
                       <Label>Tipo de Organização *</Label>
-                      <Select
-                        value={newTenantOrgType}
-                        onValueChange={(v) => {
-                          setNewTenantOrgType(v)
-                          if (v !== 'osc') setNewTenantOrgSubtype('')
-                        }}
-                      >
+                      <Select value={newTenantOrgType} onValueChange={setNewTenantOrgType}>
                         <SelectTrigger>
                           <SelectValue />
                         </SelectTrigger>
@@ -401,23 +403,60 @@ export default function Tenants() {
                         </SelectContent>
                       </Select>
                     </div>
-                    {newTenantOrgType === 'osc' && (
+
+                    {newTenantOrgType !== 'poder_publico' && (
                       <div className="space-y-2 animate-in fade-in">
-                        <Label>Subtipo Organizacional</Label>
-                        <Select value={newTenantOrgSubtype} onValueChange={setNewTenantOrgSubtype}>
+                        <Label>Relação com o Poder Público</Label>
+                        <Select
+                          value={newTenantPublicRelations}
+                          onValueChange={setNewTenantPublicRelations}
+                        >
                           <SelectTrigger>
-                            <SelectValue placeholder="Selecione..." />
+                            <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="educacional">Educacional</SelectItem>
-                            <SelectItem value="assistencia_social">Assistência Social</SelectItem>
-                            <SelectItem value="saude">Saúde</SelectItem>
-                            <SelectItem value="multissetorial">Multissetorial</SelectItem>
-                            <SelectItem value="geral">Geral</SelectItem>
+                            <SelectItem value="sim">
+                              Sim (Contratos, Licitações, Parcerias)
+                            </SelectItem>
+                            <SelectItem value="nao">Não</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
                     )}
+
+                    <div className="space-y-2 animate-in fade-in">
+                      <Label>Áreas de Atuação</Label>
+                      <div className="grid grid-cols-2 gap-2 mt-2">
+                        {[
+                          { id: 'educacao', label: 'Educação' },
+                          { id: 'saude', label: 'Saúde' },
+                          { id: 'assistencia_social', label: 'Assist. Social' },
+                          { id: 'cultura', label: 'Cultura' },
+                          { id: 'meio_ambiente', label: 'Meio Ambiente' },
+                          { id: 'outra', label: 'Outra' },
+                        ].map((area) => (
+                          <label
+                            key={area.id}
+                            className="flex items-center space-x-2 text-sm cursor-pointer p-2 border rounded-md hover:bg-muted/50 transition-colors"
+                          >
+                            <input
+                              type="checkbox"
+                              className="rounded border-input text-primary focus:ring-primary h-4 w-4"
+                              checked={newTenantActingAreas.includes(area.id)}
+                              onChange={(e) => {
+                                if (e.target.checked)
+                                  setNewTenantActingAreas([...newTenantActingAreas, area.id])
+                                else
+                                  setNewTenantActingAreas(
+                                    newTenantActingAreas.filter((a) => a !== area.id),
+                                  )
+                              }}
+                            />
+                            <span>{area.label}</span>
+                          </label>
+                        ))}
+                      </div>
+                    </div>
                   </div>
                 )}
 
@@ -527,9 +566,16 @@ export default function Tenants() {
                           >
                             OSC
                           </Badge>
-                          {t.org_subtype && (
-                            <div className="text-[10px] text-muted-foreground mt-1 capitalize">
-                              {t.org_subtype.replace('_', ' ')}
+                          {t.acting_areas && t.acting_areas.length > 0 && (
+                            <div className="text-[10px] text-muted-foreground mt-1 flex gap-1 flex-wrap">
+                              {t.acting_areas.map((a: string) => (
+                                <span
+                                  key={a}
+                                  className="bg-muted px-1.5 py-0.5 rounded-sm capitalize"
+                                >
+                                  {a.replace('_', ' ')}
+                                </span>
+                              ))}
                             </div>
                           )}
                         </div>
@@ -635,13 +681,7 @@ export default function Tenants() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border-t pt-4">
               <div className="space-y-2">
                 <Label>Tipo de Organização *</Label>
-                <Select
-                  value={editTenantOrgType}
-                  onValueChange={(v) => {
-                    setEditTenantOrgType(v)
-                    if (v !== 'osc') setEditTenantOrgSubtype('')
-                  }}
-                >
+                <Select value={editTenantOrgType} onValueChange={setEditTenantOrgType}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -654,24 +694,57 @@ export default function Tenants() {
                   </SelectContent>
                 </Select>
               </div>
-              {editTenantOrgType === 'osc' && (
-                <div className="space-y-2 animate-in fade-in">
-                  <Label>Subtipo Organizacional</Label>
-                  <Select value={editTenantOrgSubtype} onValueChange={setEditTenantOrgSubtype}>
+              {editTenantOrgType !== 'poder_publico' && (
+                <div className="space-y-2">
+                  <Label>Relação com o Poder Público</Label>
+                  <Select
+                    value={editTenantPublicRelations}
+                    onValueChange={setEditTenantPublicRelations}
+                  >
                     <SelectTrigger>
-                      <SelectValue placeholder="Selecione..." />
+                      <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="educacional">Educacional</SelectItem>
-                      <SelectItem value="assistencia_social">Assistência Social</SelectItem>
-                      <SelectItem value="saude">Saúde</SelectItem>
-                      <SelectItem value="multissetorial">Multissetorial</SelectItem>
-                      <SelectItem value="geral">Geral</SelectItem>
+                      <SelectItem value="sim">Sim (Contratos, Licitações, Parcerias)</SelectItem>
+                      <SelectItem value="nao">Não</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
               )}
             </div>
+            <div className="space-y-2 pt-2">
+              <Label>Áreas de Atuação</Label>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                {[
+                  { id: 'educacao', label: 'Educação' },
+                  { id: 'saude', label: 'Saúde' },
+                  { id: 'assistencia_social', label: 'Assist. Social' },
+                  { id: 'cultura', label: 'Cultura' },
+                  { id: 'meio_ambiente', label: 'Meio Ambiente' },
+                  { id: 'outra', label: 'Outra' },
+                ].map((area) => (
+                  <label
+                    key={area.id}
+                    className="flex items-center space-x-2 text-sm cursor-pointer p-2 border rounded-md hover:bg-muted/50 transition-colors"
+                  >
+                    <input
+                      type="checkbox"
+                      className="rounded border-input text-primary focus:ring-primary h-4 w-4"
+                      checked={editTenantActingAreas.includes(area.id)}
+                      onChange={(e) => {
+                        if (e.target.checked)
+                          setEditTenantActingAreas([...editTenantActingAreas, area.id])
+                        else
+                          setEditTenantActingAreas(
+                            editTenantActingAreas.filter((a) => a !== area.id),
+                          )
+                      }}
+                    />
+                    <span>{area.label}</span>
+                  </label>
+                ))}
+              </div>
+            </div>{' '}
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsEditTenantOpen(false)}>

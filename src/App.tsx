@@ -48,6 +48,8 @@ import ConformidadeEducacional from './pages/osc/ConformidadeEducacional'
 import ProtecaoInfantil from './pages/osc/ProtecaoInfantil'
 import LGPDEscolar from './pages/osc/LGPDEscolar'
 import EducacaoInclusiva from './pages/osc/EducacaoInclusiva'
+import LicitacoesContratos from './pages/gov/LicitacoesContratos'
+import ControleInterno from './pages/gov/ControleInterno'
 
 const AuthGuard = ({ children }: { children: React.ReactNode }) => {
   const { user, loading, signIn } = useAuth()
@@ -154,6 +156,8 @@ const App = () => (
                 <Route path="osc/protecao-infantil" element={<ProtecaoInfantil />} />
                 <Route path="osc/lgpd-escolar" element={<LGPDEscolar />} />
                 <Route path="osc/educacao-inclusiva" element={<EducacaoInclusiva />} />
+                <Route path="gov/licitacoes" element={<LicitacoesContratos />} />
+                <Route path="gov/controle-interno" element={<ControleInterno />} />
               </Route>
             </Route>
             <Route path="*" element={<NotFound />} />

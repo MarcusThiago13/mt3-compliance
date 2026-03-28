@@ -91,7 +91,8 @@ export default function Onboarding() {
             step_1: {
               ...(tenantRecord.step_1 || {}),
               org_type: tenantRecord.org_type,
-              org_subtype: tenantRecord.org_subtype,
+              public_relations: tenantRecord.public_relations,
+              acting_areas: tenantRecord.acting_areas || [],
             },
             step_2: tenantRecord.step_2 || {},
             step_3: tenantRecord.step_3 || {},
@@ -126,7 +127,11 @@ export default function Onboarding() {
             cnpj: dataToSave.step_1.cnpj || '',
             status: 'draft',
             org_type: dataToSave.step_1.org_type || 'empresa',
-            org_subtype: dataToSave.step_1.org_subtype || null,
+            public_relations:
+              dataToSave.step_1.org_type === 'poder_publico'
+                ? 'oculto'
+                : dataToSave.step_1.public_relations || 'nao',
+            acting_areas: dataToSave.step_1.acting_areas || [],
             step_1: dataToSave.step_1,
             step_2: dataToSave.step_2,
             step_3: dataToSave.step_3,
@@ -149,7 +154,11 @@ export default function Onboarding() {
             name: dataToSave.step_1.razao_social || 'Draft',
             cnpj: dataToSave.step_1.cnpj || '',
             org_type: dataToSave.step_1.org_type || 'empresa',
-            org_subtype: dataToSave.step_1.org_subtype || null,
+            public_relations:
+              dataToSave.step_1.org_type === 'poder_publico'
+                ? 'oculto'
+                : dataToSave.step_1.public_relations || 'nao',
+            acting_areas: dataToSave.step_1.acting_areas || [],
             step_1: dataToSave.step_1,
             step_2: dataToSave.step_2,
             step_3: dataToSave.step_3,

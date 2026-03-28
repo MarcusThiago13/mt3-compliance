@@ -147,17 +147,19 @@ export function AppSidebar() {
                       </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
-                  <SidebarMenuItem>
-                    <SidebarMenuButton
-                      asChild
-                      isActive={location.pathname.includes('/due-diligence')}
-                    >
-                      <Link to={`${tid}/due-diligence`}>
-                        <FileSearch />
-                        <span>Due Diligence (KYS)</span>
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
+                  {activeTenant?.org_type !== 'poder_publico' && (
+                    <SidebarMenuItem>
+                      <SidebarMenuButton
+                        asChild
+                        isActive={location.pathname.includes('/due-diligence')}
+                      >
+                        <Link to={`${tid}/due-diligence`}>
+                          <FileSearch />
+                          <span>Due Diligence (KYS)</span>
+                        </Link>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  )}
                   <SidebarMenuItem>
                     <SidebarMenuButton
                       asChild
@@ -215,6 +217,72 @@ export function AppSidebar() {
                 </SidebarMenu>
               </SidebarGroupContent>
             </SidebarGroup>
+
+            {activeTenant?.org_type === 'poder_publico' && (
+              <SidebarGroup>
+                <SidebarGroupLabel className="text-emerald-600 font-semibold">
+                  Integridade Pública
+                </SidebarGroupLabel>
+                <SidebarGroupContent>
+                  <SidebarMenu>
+                    <SidebarMenuItem>
+                      <SidebarMenuButton
+                        asChild
+                        isActive={location.pathname.includes('/gov/controle-interno')}
+                      >
+                        <Link
+                          to={`${tid}/gov/controle-interno`}
+                          className="text-emerald-800 hover:text-emerald-900"
+                        >
+                          <Shield />
+                          <span>Controle Interno e LAI</span>
+                        </Link>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                    <SidebarMenuItem>
+                      <SidebarMenuButton
+                        asChild
+                        isActive={location.pathname.includes('/gov/licitacoes')}
+                      >
+                        <Link
+                          to={`${tid}/gov/licitacoes`}
+                          className="text-emerald-800 hover:text-emerald-900"
+                        >
+                          <Landmark />
+                          <span>Licitações e Contratos</span>
+                        </Link>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  </SidebarMenu>
+                </SidebarGroupContent>
+              </SidebarGroup>
+            )}
+
+            {activeTenant?.public_relations === 'sim' && activeTenant?.org_type === 'empresa' && (
+              <SidebarGroup>
+                <SidebarGroupLabel className="text-emerald-600 font-semibold">
+                  Relações Governamentais
+                </SidebarGroupLabel>
+                <SidebarGroupContent>
+                  <SidebarMenu>
+                    <SidebarMenuItem>
+                      <SidebarMenuButton
+                        asChild
+                        isActive={location.pathname.includes('/gov/licitacoes')}
+                      >
+                        <Link
+                          to={`${tid}/gov/licitacoes`}
+                          className="text-emerald-800 hover:text-emerald-900"
+                        >
+                          <Landmark />
+                          <span>Licitações e Contratos</span>
+                        </Link>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  </SidebarMenu>
+                </SidebarGroupContent>
+              </SidebarGroup>
+            )}
 
             {activeTenant?.org_type === 'osc' && (
               <SidebarGroup>
@@ -284,10 +352,11 @@ export function AppSidebar() {
               </SidebarGroup>
             )}
 
-            {activeTenant?.org_type === 'osc' && activeTenant?.org_subtype === 'educacional' && (
+            {(activeTenant?.acting_areas?.includes('educacao') ||
+              activeTenant?.org_subtype === 'educacional') && (
               <SidebarGroup>
                 <SidebarGroupLabel className="text-blue-600 font-semibold">
-                  OSC Educacional
+                  Trilha Educacional
                 </SidebarGroupLabel>
                 <SidebarGroupContent>
                   <SidebarMenu>

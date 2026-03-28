@@ -19,13 +19,7 @@ export function Step1({ data, updateData }: { data: any; updateData: (d: any) =>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border p-4 rounded-md bg-muted/10">
         <div className="space-y-2">
           <Label>Tipo de Organização *</Label>
-          <Select
-            value={data.org_type || 'empresa'}
-            onValueChange={(v) => {
-              setField('org_type', v)
-              if (v === 'empresa' || v === 'poder_publico') setField('org_subtype', null)
-            }}
-          >
+          <Select value={data.org_type || 'empresa'} onValueChange={(v) => setField('org_type', v)}>
             <SelectTrigger className="bg-background">
               <SelectValue placeholder="Selecione o tipo..." />
             </SelectTrigger>
@@ -37,26 +31,61 @@ export function Step1({ data, updateData }: { data: any; updateData: (d: any) =>
           </Select>
         </div>
 
-        {data.org_type === 'osc' && (
+        {data.org_type !== 'poder_publico' && (
           <div className="space-y-2 animate-in fade-in">
-            <Label>Subtipo ou Foco Organizacional</Label>
+            <Label>Relação com o Poder Público</Label>
             <Select
-              value={data.org_subtype || ''}
-              onValueChange={(v) => setField('org_subtype', v)}
+              value={data.public_relations || 'nao'}
+              onValueChange={(v) => setField('public_relations', v)}
             >
               <SelectTrigger className="bg-background">
-                <SelectValue placeholder="Selecione o segmento..." />
+                <SelectValue placeholder="Selecione..." />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="educacional">OSC Educacional</SelectItem>
-                <SelectItem value="assistencia_social">OSC de Assistência Social</SelectItem>
-                <SelectItem value="saude">OSC da Saúde</SelectItem>
-                <SelectItem value="multissetorial">OSC Multissetorial</SelectItem>
-                <SelectItem value="geral">OSC em Geral</SelectItem>
+                <SelectItem value="sim">Sim (Contratos, Licitações, Parcerias)</SelectItem>
+                <SelectItem value="nao">Não</SelectItem>
               </SelectContent>
             </Select>
           </div>
         )}
+      </div>
+
+      <div className="space-y-2 border p-4 rounded-md bg-muted/5">
+        <Label>Áreas de Atuação</Label>
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mt-2">
+          {[
+            { id: 'educacao', label: 'Educação' },
+            { id: 'saude', label: 'Saúde' },
+            { id: 'assistencia_social', label: 'Assistência Social' },
+            { id: 'cultura', label: 'Cultura' },
+            { id: 'meio_ambiente', label: 'Meio Ambiente' },
+            { id: 'outra', label: 'Outra' },
+          ].map((area) => {
+            const isChecked = (data.acting_areas || []).includes(area.id)
+            return (
+              <label
+                key={area.id}
+                className="flex items-center space-x-2 text-sm cursor-pointer hover:bg-muted/50 p-2 rounded-md transition-colors border bg-background"
+              >
+                <input
+                  type="checkbox"
+                  className="rounded border-input text-primary focus:ring-primary h-4 w-4"
+                  checked={isChecked}
+                  onChange={(e) => {
+                    const curr = data.acting_areas || []
+                    if (e.target.checked) setField('acting_areas', [...curr, area.id])
+                    else
+                      setField(
+                        'acting_areas',
+                        curr.filter((a: string) => a !== area.id),
+                      )
+                  }}
+                />
+                <span>{area.label}</span>
+              </label>
+            )
+          })}
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
