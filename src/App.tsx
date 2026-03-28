@@ -51,6 +51,7 @@ import LGPDEscolar from './pages/osc/LGPDEscolar'
 import EducacaoInclusiva from './pages/osc/EducacaoInclusiva'
 import LicitacoesContratos from './pages/gov/LicitacoesContratos'
 import ControleInterno from './pages/gov/ControleInterno'
+import RiskTrends from './pages/RiskTrends'
 
 const AuthGuard = ({ children }: { children: React.ReactNode }) => {
   const { user, loading, signIn } = useAuth()
@@ -160,6 +161,7 @@ const App = () => (
                 <Route path="osc/educacao-inclusiva" element={<EducacaoInclusiva />} />
                 <Route path="gov/licitacoes" element={<LicitacoesContratos />} />
                 <Route path="gov/controle-interno" element={<ControleInterno />} />
+                <Route path="risk-trends" element={<RiskTrends />} />
               </Route>
             </Route>
             <Route path="*" element={<NotFound />} />
