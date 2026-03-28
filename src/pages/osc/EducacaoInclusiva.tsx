@@ -7,6 +7,7 @@ import { EquipeTab } from '@/components/osc/inclusive/EquipeTab'
 import { IndicadoresTab } from '@/components/osc/inclusive/IndicadoresTab'
 import { UnidadesEstudantesTab } from '@/components/osc/inclusive/UnidadesEstudantesTab'
 import { AcompanhamentoTab } from '@/components/osc/inclusive/AcompanhamentoTab'
+import { SegurancaIncidentesTab } from '@/components/osc/inclusive/SegurancaIncidentesTab'
 
 export default function EducacaoInclusiva() {
   const { tenantId } = useParams<{ tenantId: string }>()
@@ -25,7 +26,7 @@ export default function EducacaoInclusiva() {
       </div>
 
       <Tabs defaultValue="unidades" className="w-full">
-        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 h-auto p-1 bg-blue-50">
+        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 h-auto p-1 bg-blue-50">
           <TabsTrigger
             value="unidades"
             className="py-2.5 data-[state=active]:bg-white data-[state=active]:text-blue-800"
@@ -62,6 +63,12 @@ export default function EducacaoInclusiva() {
           >
             Indicadores
           </TabsTrigger>
+          <TabsTrigger
+            value="seguranca"
+            className="py-2.5 data-[state=active]:bg-white data-[state=active]:text-red-700 data-[state=active]:border-red-200"
+          >
+            Segurança
+          </TabsTrigger>
         </TabsList>
 
         <div className="mt-6">
@@ -82,6 +89,9 @@ export default function EducacaoInclusiva() {
           </TabsContent>
           <TabsContent value="indicadores" className="outline-none m-0">
             <IndicadoresTab tenantId={tenantId} />
+          </TabsContent>
+          <TabsContent value="seguranca" className="outline-none m-0">
+            <SegurancaIncidentesTab tenantId={tenantId} />
           </TabsContent>
         </div>
       </Tabs>
