@@ -1,11 +1,11 @@
 {
   "_versions": {
-    "admin-invite": 17,
-    "admin-users": 20,
+    "admin-invite": 18,
+    "admin-users": 21,
     "generate-dossier": 7,
-    "send-email": 7,
+    "send-email": 8,
     "resend-webhook": 1,
-    "chat": 3,
+    "chat": 4,
     "analyze-trends": 1
   }
 }
