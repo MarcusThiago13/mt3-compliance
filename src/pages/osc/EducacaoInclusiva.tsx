@@ -6,6 +6,7 @@ import { PlanosTab } from '@/components/osc/inclusive/PlanosTab'
 import { EquipeTab } from '@/components/osc/inclusive/EquipeTab'
 import { IndicadoresTab } from '@/components/osc/inclusive/IndicadoresTab'
 import { UnidadesEstudantesTab } from '@/components/osc/inclusive/UnidadesEstudantesTab'
+import { AcompanhamentoTab } from '@/components/osc/inclusive/AcompanhamentoTab'
 
 export default function EducacaoInclusiva() {
   const { tenantId } = useParams<{ tenantId: string }>()
@@ -24,30 +25,36 @@ export default function EducacaoInclusiva() {
       </div>
 
       <Tabs defaultValue="unidades" className="w-full">
-        <TabsList className="grid w-full grid-cols-1 sm:grid-cols-5 lg:w-[900px] h-auto p-1 bg-blue-50">
+        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 h-auto p-1 bg-blue-50">
           <TabsTrigger
             value="unidades"
             className="py-2.5 data-[state=active]:bg-white data-[state=active]:text-blue-800"
           >
-            Unidades e Estudantes
+            Unidades
           </TabsTrigger>
           <TabsTrigger
             value="estudos"
             className="py-2.5 data-[state=active]:bg-white data-[state=active]:text-blue-800"
           >
-            Estudos de Caso
+            Estudos
           </TabsTrigger>
           <TabsTrigger
             value="planos"
             className="py-2.5 data-[state=active]:bg-white data-[state=active]:text-blue-800"
           >
-            PAEE e PEI
+            PAEE/PEI
+          </TabsTrigger>
+          <TabsTrigger
+            value="acompanhamento"
+            className="py-2.5 data-[state=active]:bg-white data-[state=active]:text-blue-800"
+          >
+            Monitoramento
           </TabsTrigger>
           <TabsTrigger
             value="equipe"
             className="py-2.5 data-[state=active]:bg-white data-[state=active]:text-blue-800"
           >
-            Equipe e Formação
+            Equipe
           </TabsTrigger>
           <TabsTrigger
             value="indicadores"
@@ -66,6 +73,9 @@ export default function EducacaoInclusiva() {
           </TabsContent>
           <TabsContent value="planos" className="outline-none m-0">
             <PlanosTab tenantId={tenantId} />
+          </TabsContent>
+          <TabsContent value="acompanhamento" className="outline-none m-0">
+            <AcompanhamentoTab tenantId={tenantId} />
           </TabsContent>
           <TabsContent value="equipe" className="outline-none m-0">
             <EquipeTab tenantId={tenantId} />
