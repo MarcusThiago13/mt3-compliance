@@ -58,7 +58,7 @@ const phaseIcons: Record<string, any> = {
 export function AppSidebar() {
   const location = useLocation()
   const { activeTenant, auditorMode, setAuditorMode } = useAppStore()
-  const { isSuperAdmin, isAdmin } = useRBAC()
+  const { isSuperAdmin, isAdmin, isGestor, isComplianceOfficer, isAuditor } = useRBAC()
 
   const parentClauses = getParentClauses()
   const tid = activeTenant ? `/${activeTenant.id}` : ''
@@ -134,7 +134,7 @@ export function AppSidebar() {
               <SidebarGroupLabel>Workspace do Cliente</SidebarGroupLabel>
               <SidebarGroupContent>
                 <SidebarMenu>
-                  {isAdmin && (
+                  {(isAdmin || isComplianceOfficer) && (
                     <SidebarMenuItem>
                       <SidebarMenuButton asChild isActive={location.pathname === `${tid}/users`}>
                         <Link to={`${tid}/users`}>
@@ -144,17 +144,19 @@ export function AppSidebar() {
                       </SidebarMenuButton>
                     </SidebarMenuItem>
                   )}
-                  <SidebarMenuItem>
-                    <SidebarMenuButton
-                      asChild
-                      isActive={location.pathname.includes('/intelligence')}
-                    >
-                      <Link to={`${tid}/intelligence`}>
-                        <Activity />
-                        <span>Inteligência & Certificação</span>
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
+                  {(isAdmin || isComplianceOfficer || isAuditor || isGestor) && (
+                    <SidebarMenuItem>
+                      <SidebarMenuButton
+                        asChild
+                        isActive={location.pathname.includes('/intelligence')}
+                      >
+                        <Link to={`${tid}/intelligence`}>
+                          <Activity />
+                          <span>Inteligência & Certificação</span>
+                        </Link>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  )}
                   {activeTenant?.org_type !== 'poder_publico' && (
                     <SidebarMenuItem>
                       <SidebarMenuButton

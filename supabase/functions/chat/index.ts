@@ -8,10 +8,13 @@ Deno.serve(async (req: Request) => {
   try {
     const authHeader = req.headers.get('Authorization')
     if (!authHeader || authHeader.includes('undefined') || authHeader.includes('null')) {
-      return new Response(JSON.stringify({ error: 'Não autorizado (Sessão expirada ou token ausente).' }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 401,
-      })
+      return new Response(
+        JSON.stringify({ error: 'Não autorizado (Sessão expirada ou token ausente).' }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 401,
+        },
+      )
     }
 
     const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? ''
@@ -20,44 +23,56 @@ Deno.serve(async (req: Request) => {
 
     // 1. Validate Authenticated User and Enforce RLS
     const supabaseClient = createClient(supabaseUrl, supabaseAnonKey, {
-      global: { headers: { Authorization: authHeader } }
+      global: { headers: { Authorization: authHeader } },
     })
-    
+
     const token = authHeader.replace('Bearer ', '')
-    const { data: { user }, error: userError } = await supabaseClient.auth.getUser(token)
-    
+    const {
+      data: { user },
+      error: userError,
+    } = await supabaseClient.auth.getUser(token)
+
     if (userError || !user) {
-      return new Response(JSON.stringify({ error: `Não autorizado: ${userError?.message || 'Token inválido'}` }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 401,
-      })
+      return new Response(
+        JSON.stringify({ error: `Não autorizado: ${userError?.message || 'Token inválido'}` }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 401,
+        },
+      )
     }
 
     const { userMessage, history = [], contextData = {} } = await req.json()
     const anthropicKey = Deno.env.get('VITE_ANTHROPIC_API_KEY') || Deno.env.get('ANTHROPIC_API_KEY')
-    
+
     // 2. Validate Strict Tenant Isolation (Security Hardening)
     if (contextData.tenantId) {
-      const isSuperAdmin = 
-        user.email === 'admin@example.com' || 
-        user.email === 'marcusthiago.adv@gmail.com' || 
-        user.app_metadata?.role === 'admin' || 
-        user.user_metadata?.is_admin === true || 
+      const isSuperAdmin =
+        user.email === 'admin@example.com' ||
+        user.email === 'marcusthiago.adv@gmail.com' ||
+        user.app_metadata?.role === 'admin' ||
+        user.app_metadata?.role === 'super_admin' ||
+        user.user_metadata?.is_admin === true ||
         user.user_metadata?.is_admin === 'true'
 
       if (!isSuperAdmin) {
-        const { data: isMember, error: memberError } = await supabaseClient.rpc('is_tenant_member_uuid', { check_tenant_id: contextData.tenantId })
+        const { data: isMember, error: memberError } = await supabaseClient.rpc(
+          'is_tenant_member_uuid',
+          { check_tenant_id: contextData.tenantId },
+        )
         if (memberError || !isMember) {
-          throw new Error('Acesso Negado: Tentativa de injeção de contexto cruzado detectada e bloqueada (Tenant Isolation Violation).')
+          throw new Error(
+            'Acesso Negado: Tentativa de injeção de contexto cruzado detectada e bloqueada (Tenant Isolation Violation).',
+          )
         }
       }
     }
-    
-    let aiResponseText = ""
+
+    let aiResponseText = ''
     let actions: any[] = []
-    
+
     const persona = contextData.persona || 'Geral'
-    
+
     if (anthropicKey) {
       const baseContext = `Você é o Claude, integrado nativamente e de forma onipresente ao sistema "mt3 Compliance".
 O mt3 é um Sistema de Gestão de Compliance (SGC) Multi-tenant focado em governança corporativa e em organizações da sociedade civil (OSC).
@@ -74,11 +89,20 @@ Contexto Visível na Tela Atual (Filtrado de forma segura):
 ${contextData.pageText?.substring(0, 3000) || 'Nenhum contexto textual visível ou disponível'}
 ---`
 
-      let personaInstruction = "Atue como um ASSISTENTE GERAL DE COMPLIANCE. Responda de forma profissional, didática, direta e técnica.";
-      if (persona === 'Auditor') personaInstruction = "Atue como um AUDITOR INTERNO RIGOROSO. Seu foco é rastreabilidade, análise crítica de evidências e conformidade normativa.";
-      if (persona === 'Consultor') personaInstruction = "Atue como um CONSULTOR DE GESTÃO. Seu foco é apoiar a estruturação de metas, revisar indicadores e otimizar processos MROSC.";
-      if (persona === 'DPO') personaInstruction = "Atue como DPO (Data Protection Officer). Seu foco é proteção de dados pessoais, Privacy by Design e mitigação de riscos de vazamento LGPD.";
-      if (persona === 'Compliance') personaInstruction = "Atue como COMPLIANCE OFFICER. Seu foco é integridade, matriz de riscos e implementação estruturada de controles internos.";
+      let personaInstruction =
+        'Atue como um ASSISTENTE GERAL DE COMPLIANCE. Responda de forma profissional, didática, direta e técnica.'
+      if (persona === 'Auditor')
+        personaInstruction =
+          'Atue como um AUDITOR INTERNO RIGOROSO. Seu foco é rastreabilidade, análise crítica de evidências e conformidade normativa.'
+      if (persona === 'Consultor')
+        personaInstruction =
+          'Atue como um CONSULTOR DE GESTÃO. Seu foco é apoiar a estruturação de metas, revisar indicadores e otimizar processos MROSC.'
+      if (persona === 'DPO')
+        personaInstruction =
+          'Atue como DPO (Data Protection Officer). Seu foco é proteção de dados pessoais, Privacy by Design e mitigação de riscos de vazamento LGPD.'
+      if (persona === 'Compliance')
+        personaInstruction =
+          'Atue como COMPLIANCE OFFICER. Seu foco é integridade, matriz de riscos e implementação estruturada de controles internos.'
 
       const systemPrompt = `${baseContext}\n\nPersona Selecionada: ${personaInstruction}\n\nDiretrizes de Atuação:
 1. Forneça respostas contextualizadas utilizando os dados fornecidos.
@@ -93,7 +117,7 @@ ${contextData.pageText?.substring(0, 3000) || 'Nenhum contexto textual visível 
         headers: {
           'x-api-key': anthropicKey,
           'anthropic-version': '2023-06-01',
-          'content-type': 'application/json'
+          'content-type': 'application/json',
         },
         body: JSON.stringify({
           model: 'claude-3-haiku-20240307',
@@ -101,15 +125,15 @@ ${contextData.pageText?.substring(0, 3000) || 'Nenhum contexto textual visível 
           system: systemPrompt,
           messages: [
             ...history.map((h: any) => ({ role: h.role, content: h.content })),
-            { role: 'user', content: userMessage }
-          ]
-        })
+            { role: 'user', content: userMessage },
+          ],
+        }),
       })
-      
+
       const data = await res.json()
       if (data.content && data.content[0]) {
         aiResponseText = data.content[0].text
-        
+
         // Audit log token consumption securely using Admin Client
         try {
           const adminClient = createClient(supabaseUrl, supabaseServiceKey)
@@ -118,21 +142,28 @@ ${contextData.pageText?.substring(0, 3000) || 'Nenhum contexto textual visível 
             user_id: user.id,
             model: data.model || 'claude-3-haiku-20240307',
             input_tokens: data.usage?.input_tokens || 0,
-            output_tokens: data.usage?.output_tokens || 0
+            output_tokens: data.usage?.output_tokens || 0,
           })
         } catch (logError) {
           console.warn('Falha silenciosa ao gravar log de uso de IA:', logError)
         }
       } else {
-        throw new Error(data.error?.message || "Resposta inválida ou vazia recebida do provedor da API Anthropic.")
+        throw new Error(
+          data.error?.message ||
+            'Resposta inválida ou vazia recebida do provedor da API Anthropic.',
+        )
       }
     } else {
       // Intelligent Mock Fallback
       aiResponseText = `[Modo Simulado - Persona: ${persona}]\nCompreendi sua mensagem: "${userMessage}".\nComo estou operando sem a chave da API do Claude configurada, funciono como um assistente pré-programado para validação de contexto.\nO seu acesso ao escopo da organização \`${contextData.tenantId || 'N/A'}\` foi validado com sucesso via backend de segurança.`
-      
+
       const targetLower = userMessage.toLowerCase()
-      if (targetLower.includes('ir para') || targetLower.includes('navegar') || targetLower.includes('dashboard')) {
-         aiResponseText += `\n\nIdentifiquei a intenção de navegação. Executando o redirecionamento seguro:\n\`\`\`json\n{"action": "NAVIGATE", "path": "/tenants"}\n\`\`\``
+      if (
+        targetLower.includes('ir para') ||
+        targetLower.includes('navegar') ||
+        targetLower.includes('dashboard')
+      ) {
+        aiResponseText += `\n\nIdentifiquei a intenção de navegação. Executando o redirecionamento seguro:\n\`\`\`json\n{"action": "NAVIGATE", "path": "/tenants"}\n\`\`\``
       }
     }
 
@@ -143,15 +174,15 @@ ${contextData.pageText?.substring(0, 3000) || 'Nenhum contexto textual visível 
         actions.push(JSON.parse(actionMatch[1]))
         aiResponseText = aiResponseText.replace(actionMatch[0], '')
       } catch (e) {
-        console.warn("Falha ao efetuar parse de comando JSON da IA", e)
+        console.warn('Falha ao efetuar parse de comando JSON da IA', e)
       }
     }
 
     return new Response(JSON.stringify({ message: aiResponseText.trim(), actions }), {
-      headers: { 'Content-Type': 'application/json', ...corsHeaders }
+      headers: { 'Content-Type': 'application/json', ...corsHeaders },
     })
   } catch (e: any) {
-    console.error("Chat API Guard Error:", e.message)
+    console.error('Chat API Guard Error:', e.message)
     return new Response(JSON.stringify({ error: e.message }), { status: 400, headers: corsHeaders })
   }
 })

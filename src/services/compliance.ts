@@ -61,9 +61,14 @@ export const complianceService = {
     const { data } = await q
     return data || []
   },
-  async addAuditLog(clauseId: string, action: string, userEmail: string) {
+  async addAuditLog(clauseId: string, action: string, userEmail: string, metadata?: any) {
     const tid = getCurrentTenantId()
-    const payload: any = { clause_id: clauseId, action, user_email: userEmail }
+    const payload: any = {
+      clause_id: clauseId,
+      action,
+      user_email: userEmail,
+      metadata: metadata || {},
+    }
     if (tid) payload.tenant_id = tid
     await supabase.from('audit_logs').insert([payload])
   },

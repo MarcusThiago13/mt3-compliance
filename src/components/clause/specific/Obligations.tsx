@@ -10,12 +10,28 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Download, Plus, BookOpen } from 'lucide-react'
+import {
+  Download,
+  Plus,
+  BookOpen,
+  MoreHorizontal,
+  ShieldAlert,
+  Link as LinkIcon,
+} from 'lucide-react'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import { useNavigate } from 'react-router-dom'
 import { useAppStore } from '@/stores/main'
 import { toast } from '@/hooks/use-toast'
 
 export function Obligations() {
+  const navigate = useNavigate()
   const { activeTenant } = useAppStore()
+  const tenantPath = activeTenant ? `/${activeTenant.id}` : ''
   const isOSC = activeTenant?.org_type === 'osc'
   const isEducacional = activeTenant?.org_subtype === 'educacional'
 
@@ -149,6 +165,7 @@ export function Obligations() {
                   <TableHead>Tipo</TableHead>
                   <TableHead>Área Responsável</TableHead>
                   <TableHead>Status SGC</TableHead>
+                  <TableHead className="text-right">Ações Transversais</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -182,6 +199,26 @@ export function Obligations() {
                       >
                         {o.status}
                       </Badge>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" className="h-8 w-8 p-0">
+                            <span className="sr-only">Menu</span>
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => navigate(`${tenantPath}/clause/4.6`)}>
+                            <ShieldAlert className="mr-2 h-4 w-4 text-amber-500" />
+                            Avaliar Risco Associado
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => navigate(`${tenantPath}/clause/10.2`)}>
+                            <LinkIcon className="mr-2 h-4 w-4 text-blue-500" />
+                            Plano de Ação (NC)
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </TableCell>
                   </TableRow>
                 ))}

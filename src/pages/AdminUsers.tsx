@@ -62,7 +62,8 @@ import {
   DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { USER_CLASSIFICATIONS, USER_ROLES } from '@/lib/constants'
+import { USER_CLASSIFICATIONS } from '@/lib/constants'
+import { ALL_ROLES, SYSTEM_ROLES, TENANT_ROLES } from '@/lib/roles'
 import { InviteCommunicationModal } from '@/components/shared/InviteCommunicationModal'
 import { format } from 'date-fns'
 
@@ -71,6 +72,7 @@ export default function AdminUsers() {
   const isAdmin =
     currentUser?.email === 'admin@example.com' ||
     currentUser?.email === 'marcusthiago.adv@gmail.com' ||
+    currentUser?.app_metadata?.role === 'super_admin' ||
     currentUser?.app_metadata?.role === 'admin' ||
     currentUser?.user_metadata?.is_admin === true ||
     currentUser?.user_metadata?.is_admin === 'true'
@@ -95,11 +97,11 @@ export default function AdminUsers() {
   const [email, setEmail] = useState('')
   const [name, setName] = useState('')
   const [phone, setPhone] = useState('')
-  const [role, setRole] = useState('viewer')
+  const [role, setRole] = useState('visualizador')
   const [classification, setClassification] = useState(USER_CLASSIFICATIONS[11])
 
   const [editingUser, setEditingUser] = useState<any>(null)
-  const [editRole, setEditRole] = useState('')
+  const [editRole, setEditRole] = useState('visualizador')
   const [editClassification, setEditClassification] = useState('')
   const [editPhone, setEditPhone] = useState('')
 
@@ -306,7 +308,7 @@ export default function AdminUsers() {
       setEmail('')
       setName('')
       setPhone('')
-      setRole('viewer')
+      setRole('visualizador')
       setClassification(USER_CLASSIFICATIONS[11])
 
       if (activeTab === 'global') fetchGlobalUsers()
@@ -417,37 +419,39 @@ export default function AdminUsers() {
   }
 
   const getRoleBadge = (roleValue: string) => {
-    const roleObj = USER_ROLES.find((r) => r.value === roleValue)
+    const roleObj = ALL_ROLES.find((r) => r.value === roleValue)
     const label = roleObj ? roleObj.label : roleValue
 
-    switch (roleValue) {
-      case 'admin':
-        return (
-          <Badge className="bg-purple-100 text-purple-800 hover:bg-purple-100 border-none">
-            {label}
-          </Badge>
-        )
-      case 'editor':
-        return (
-          <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-100 border-none">{label}</Badge>
-        )
-      case 'auditor':
-        return (
-          <Badge className="bg-amber-100 text-amber-800 hover:bg-amber-100 border-none">
-            {label}
-          </Badge>
-        )
-      case 'consultant':
-        return (
-          <Badge className="bg-teal-100 text-teal-800 hover:bg-teal-100 border-none">{label}</Badge>
-        )
-      default:
-        return (
-          <Badge className="bg-gray-100 text-gray-800 hover:bg-gray-100 border-none">
-            {label || 'Apenas Leitura'}
-          </Badge>
-        )
+    if (['super_admin', 'admin', 'admin_tenant'].includes(roleValue)) {
+      return (
+        <Badge className="bg-purple-100 text-purple-800 hover:bg-purple-100 border-none">
+          {label}
+        </Badge>
+      )
     }
+    if (['compliance_officer', 'encarregado_privacidade'].includes(roleValue)) {
+      return (
+        <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-100 border-none">{label}</Badge>
+      )
+    }
+    if (['auditor_interno', 'auditor', 'assessor_admin'].includes(roleValue)) {
+      return (
+        <Badge className="bg-amber-100 text-amber-800 hover:bg-amber-100 border-none">
+          {label}
+        </Badge>
+      )
+    }
+    if (['juridico', 'financeiro', 'rh_trabalhista', 'gestor_area'].includes(roleValue)) {
+      return (
+        <Badge className="bg-teal-100 text-teal-800 hover:bg-teal-100 border-none">{label}</Badge>
+      )
+    }
+
+    return (
+      <Badge className="bg-gray-100 text-gray-800 hover:bg-gray-100 border-none">
+        {label || 'Apenas Leitura'}
+      </Badge>
+    )
   }
 
   const filteredRecords = records.filter((r) => {
@@ -499,7 +503,7 @@ export default function AdminUsers() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Todos os Perfis</SelectItem>
-              {USER_ROLES.map((r) => (
+              {ALL_ROLES.map((r) => (
                 <SelectItem key={r.value} value={r.value}>
                   {r.label}
                 </SelectItem>
@@ -585,7 +589,7 @@ export default function AdminUsers() {
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          {USER_ROLES.map((r) => (
+                          {ALL_ROLES.map((r) => (
                             <SelectItem key={r.value} value={r.value}>
                               {r.label}
                             </SelectItem>
@@ -754,7 +758,7 @@ export default function AdminUsers() {
                                 <DropdownMenuItem
                                   onClick={() => {
                                     setEditingUser(r)
-                                    setEditRole(r.role || 'viewer')
+                                    setEditRole(r.role || 'visualizador')
                                     setEditClassification(
                                       r.classification || USER_CLASSIFICATIONS[11],
                                     )
@@ -848,7 +852,7 @@ export default function AdminUsers() {
                                 }
                               >
                                 <span className="font-semibold mr-1">{t.tenantName}:</span>{' '}
-                                {USER_ROLES.find((r) => r.value === t.role)?.label || t.role}
+                                {ALL_ROLES.find((r) => r.value === t.role)?.label || t.role}
                                 {t.isPending && ' (Pendente)'}
                               </Badge>
                             ))}
@@ -960,7 +964,7 @@ export default function AdminUsers() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {USER_ROLES.map((r) => (
+                  {ALL_ROLES.map((r) => (
                     <SelectItem key={r.value} value={r.value}>
                       {r.label}
                     </SelectItem>

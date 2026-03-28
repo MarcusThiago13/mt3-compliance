@@ -137,10 +137,16 @@ export function Nonconformity102() {
     setIsAlertOpen(true)
   }
 
-  const handleSave5W2H = (plan: any) => {
+  const handleSave5W2H = async (plan: any) => {
+    await complianceService.addAuditLog(
+      '10.2',
+      `Ação Corretiva Gerada (5W2H) para o evento: ${selectedItem?.event}`,
+      user?.email || 'Sistema',
+    )
     toast({
       title: 'Ação Corretiva Gerada',
-      description: 'O plano de ação foi integrado para tratar a causa-raiz.',
+      description:
+        'O plano de ação foi integrado para tratar a causa-raiz. Trilha de auditoria atualizada.',
     })
   }
 
@@ -263,12 +269,13 @@ export function Nonconformity102() {
                 </div>
                 <div className="space-y-3">
                   <h4 className="font-semibold text-foreground">
-                    Definição de Ações Corretivas e Sincronização Sistêmica
+                    Definição de Ações Corretivas e Integração Transversal
                   </h4>
                   <p className="text-sm text-muted-foreground max-w-2xl">
                     As ações definidas para eliminar as causas-raiz da não conformidade são
-                    automaticamente integradas ao{' '}
-                    <strong>Módulo 6.1 (Ações para Abordar Riscos)</strong>.
+                    automaticamente integradas aos motores transversais de risco e melhoria contínua{' '}
+                    <strong>(ISO 37301 - 6.1 / 10.2)</strong>. O registro em <i>audit_logs</i> é
+                    imutável.
                   </p>
                   <div className="flex flex-wrap gap-2 pt-2">
                     <Button size="sm" variant="outline" onClick={handleTrigger} className="text-xs">
