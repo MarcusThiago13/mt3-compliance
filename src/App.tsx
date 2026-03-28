@@ -119,6 +119,7 @@ const App = () => (
                 <AuthGuard>
                   <ErrorBoundary>
                     <Layout />
+                    <ComplianceChat />
                   </ErrorBoundary>
                 </AuthGuard>
               }
@@ -166,8 +167,6 @@ const App = () => (
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>
-
-          <ComplianceChat />
         </TooltipProvider>
       </BrowserRouter>
     </AuthProvider>
