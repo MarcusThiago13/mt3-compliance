@@ -40,7 +40,8 @@ export function SensitiveDataViewer({
         clause_id: 'lgpd_access',
         action: `Acesso LGPD: Dado sensível revelado (${context}) - Ref: ${recordId.substring(0, 8)}`,
         user_email: user?.email || 'desconhecido',
-      })
+        metadata: { recordId, context, action: 'reveal', timestamp: new Date().toISOString() },
+      } as any)
 
       if (error) throw error
 
