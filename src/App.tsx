@@ -19,6 +19,7 @@ import Tenants from './pages/Tenants'
 import TenantUsers from './pages/TenantUsers'
 import AdminUsers from './pages/AdminUsers'
 import AdminAIUsage from './pages/AdminAIUsage'
+import AdminSystemStatus from './pages/AdminSystemStatus'
 import TenantTemplates from './pages/TenantTemplates'
 import Onboarding from './pages/Onboarding'
 import ClauseView from './pages/ClauseView'
@@ -125,6 +126,7 @@ const App = () => (
               <Route path="/tenants" element={<Tenants />} />
               <Route path="/admin/users" element={<AdminUsers />} />
               <Route path="/admin/ai-usage" element={<AdminAIUsage />} />
+              <Route path="/admin/status" element={<AdminSystemStatus />} />
               <Route path="/collection-links" element={<CollectionLinks />} />
               <Route path="/onboarding" element={<Onboarding />} />
               <Route path="/submit/:requestId" element={<SubmitEvidence />} />
