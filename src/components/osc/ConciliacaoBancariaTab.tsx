@@ -28,8 +28,9 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { supabase } from '@/lib/supabase/client'
 import { toast } from '@/hooks/use-toast'
-import { Loader2, UploadCloud, FileSpreadsheet, ScanLine } from 'lucide-react'
+import { Loader2, UploadCloud, FileSpreadsheet, ScanLine, Sparkles } from 'lucide-react'
 import OcrModal from './OcrModal'
+import { aiService } from '@/services/ai'
 
 const CATEGORIAS_DESPESA = [
   { code: '1.1', title: '1.1 - Vencimentos e vantagens' },
@@ -70,6 +71,7 @@ export default function ConciliacaoBancariaTab({ partnership }: any) {
 
   const [classification, setClassification] = useState('')
   const [providerName, setProviderName] = useState('')
+  const [askingAi, setAskingAi] = useState(false)
   const [providerDoc, setProviderDoc] = useState('')
   const [invoiceNum, setInvoiceNum] = useState('')
   const [invoiceDate, setInvoiceDate] = useState('')
@@ -289,7 +291,61 @@ export default function ConciliacaoBancariaTab({ partnership }: any) {
             </div>
 
             <div className="space-y-2">
-              <Label>Natureza da Movimentação *</Label>
+              <div className="flex items-center justify-between">
+                <Label>Natureza da Movimentação *</Label>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 text-xs text-indigo-600 bg-indigo-50 hover:bg-indigo-100"
+                  onClick={async () => {
+                    setAskingAi(true)
+                    try {
+                      const resp = await aiService.chat(
+                        `O histórico do banco é "${selectedLine?.description}" e o valor é ${selectedLine?.amount} (${selectedLine?.transaction_type}). Em uma Prestação de Contas do Terceiro Setor (MROSC), qual seria a classificação mais adequada? Responda APENAS com UMA destas opções exatas, sem aspas: "Despesa Elegível", "Tarifa / Juros (Não Elegível)", "Devolução de Saldo", "Repasse do Ente Público", "Rendimento de Aplicação" ou "Recomposição da Matriz".`,
+                        [],
+                        { persona: 'Consultor' },
+                      )
+                      const suggested = resp.message.trim().replace(/["']/g, '')
+                      const validOptions = [
+                        'Despesa Elegível',
+                        'Tarifa / Juros (Não Elegível)',
+                        'Devolução de Saldo',
+                        'Repasse do Ente Público',
+                        'Rendimento de Aplicação',
+                        'Recomposição da Matriz',
+                      ]
+                      if (validOptions.includes(suggested)) {
+                        setClassification(suggested)
+                        toast({
+                          title: 'Análise da IA',
+                          description: `Classificado automaticamente como: ${suggested}`,
+                        })
+                      } else {
+                        toast({
+                          title: 'IA Indecisa',
+                          description: 'Por favor, analise e selecione a opção manualmente.',
+                          variant: 'destructive',
+                        })
+                      }
+                    } catch (e) {
+                      toast({
+                        title: 'Erro de Comunicação',
+                        description: 'Não foi possível consultar a IA.',
+                        variant: 'destructive',
+                      })
+                    }
+                    setAskingAi(false)
+                  }}
+                  disabled={askingAi}
+                >
+                  {askingAi ? (
+                    <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                  ) : (
+                    <Sparkles className="h-3 w-3 mr-1" />
+                  )}
+                  Auto-classificar (IA)
+                </Button>
+              </div>
               <Select value={classification} onValueChange={setClassification}>
                 <SelectTrigger>
                   <SelectValue placeholder="Selecione a classificação..." />
