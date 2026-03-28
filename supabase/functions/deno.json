@@ -5,6 +5,7 @@
     "generate-dossier": 7,
     "send-email": 7,
     "resend-webhook": 1,
-    "chat": 3
+    "chat": 3,
+    "analyze-trends": 1
   }
 }
