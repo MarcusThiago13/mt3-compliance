@@ -29,7 +29,7 @@ import {
 } from '@/components/ui/select'
 import { supabase } from '@/lib/supabase/client'
 import { toast } from '@/hooks/use-toast'
-import { Loader2, Plus, School, Users } from 'lucide-react'
+import { Loader2, Plus, School, Users, ShieldAlert, Fingerprint } from 'lucide-react'
 
 export function UnidadesEstudantesTab({ tenantId }: { tenantId: string }) {
   const [schools, setSchools] = useState<any[]>([])
@@ -203,7 +203,21 @@ export function UnidadesEstudantesTab({ tenantId }: { tenantId: string }) {
           </Card>
         </TabsContent>
 
-        <TabsContent value="estudantes" className="mt-0">
+        <TabsContent value="estudantes" className="mt-0 space-y-4">
+          <div className="bg-amber-50 border border-amber-100 p-3 rounded-lg flex items-start gap-3">
+            <Fingerprint className="h-5 w-5 text-amber-600 mt-0.5 shrink-0" />
+            <div>
+              <h4 className="text-sm font-semibold text-amber-900">
+                Atenção à Privacidade e Proteção de Dados (LGPD)
+              </h4>
+              <p className="text-xs text-amber-800 mt-1">
+                Os dados listados abaixo pertencem a crianças e adolescentes e podem conter
+                informações de saúde sensíveis. O sistema monitora todos os acessos em conformidade
+                com as exigências legais de proteção de dados.
+              </p>
+            </div>
+          </div>
+
           <Card className="shadow-sm border-slate-200">
             <CardContent className="p-0">
               {loading ? (
@@ -314,7 +328,10 @@ export function UnidadesEstudantesTab({ tenantId }: { tenantId: string }) {
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label>Nome Completo *</Label>
+              <Label className="flex items-center gap-2">
+                Nome Completo *
+                <ShieldAlert className="w-3 h-3 text-amber-500" title="Dado Pessoal Sensível" />
+              </Label>
               <Input
                 value={studentForm.name}
                 onChange={(e) => setStudentForm({ ...studentForm, name: e.target.value })}

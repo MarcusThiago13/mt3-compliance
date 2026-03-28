@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react'
-import { Search, Lock } from 'lucide-react'
+import { Search, Lock, ShieldCheck } from 'lucide-react'
 import { supabase } from '@/lib/supabase/client'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { useToast } from '@/hooks/use-toast'
 import { RegistroTecnicoForm } from './RegistroTecnicoForm'
+import { SensitiveDataViewer } from '@/components/shared/SensitiveDataViewer'
 
 export function RegistroTecnicoTab({ tenantId }: { tenantId: string }) {
   const [logs, setLogs] = useState<any[]>([])
@@ -45,6 +46,20 @@ export function RegistroTecnicoTab({ tenantId }: { tenantId: string }) {
 
   return (
     <div className="space-y-4 animate-fade-in">
+      <div className="bg-blue-50 border border-blue-100 p-4 rounded-lg flex items-start gap-3 mb-4">
+        <ShieldCheck className="h-5 w-5 text-blue-600 mt-0.5" />
+        <div>
+          <h4 className="text-sm font-semibold text-blue-900">
+            Proteção de Dados Sensíveis (Privacy by Design)
+          </h4>
+          <p className="text-xs text-blue-800 mt-1">
+            Esta área contém informações protegidas pela LGPD. O acesso a registros marcados como
+            sigilosos é restrito e todas as visualizações são auditadas com carimbo de tempo,
+            usuário e registro acessado.
+          </p>
+        </div>
+      </div>
+
       <div className="flex flex-col sm:flex-row justify-between gap-4">
         <div className="relative w-full max-w-sm">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -84,14 +99,38 @@ export function RegistroTecnicoTab({ tenantId }: { tenantId: string }) {
               </CardHeader>
               <CardContent>
                 {log.is_secret ? (
-                  <div className="p-4 bg-amber-100/50 rounded-md border border-amber-200 text-amber-800 text-sm flex items-center gap-3">
-                    <Lock className="h-5 w-5" />
-                    <div>
-                      <p className="font-medium">Registro Sigiloso</p>
-                      <p className="text-xs">
-                        Acesso restrito ao profissional responsável e coordenação técnica.
-                      </p>
+                  <div className="space-y-3">
+                    <div className="p-3 bg-amber-100/50 rounded-md border border-amber-200 text-amber-800 text-sm flex items-center gap-3">
+                      <Lock className="h-5 w-5 shrink-0" />
+                      <div>
+                        <p className="font-medium">Registro Sigiloso (Proteção LGPD)</p>
+                        <p className="text-xs">
+                          Dados clínicos e sensíveis. A revelação deste conteúdo será registrada na
+                          trilha de auditoria.
+                        </p>
+                      </div>
                     </div>
+                    <SensitiveDataViewer
+                      content={log.description}
+                      context="Descrição Técnica Sigilosa"
+                      recordId={log.id}
+                      tenantId={tenantId}
+                      blur={true}
+                    />
+                    {log.referrals && (
+                      <div className="mt-2">
+                        <span className="text-xs font-semibold text-slate-500 mb-1 block">
+                          Encaminhamentos Protegidos:
+                        </span>
+                        <SensitiveDataViewer
+                          content={log.referrals}
+                          context="Encaminhamentos Sigilosos"
+                          recordId={log.id}
+                          tenantId={tenantId}
+                          blur={true}
+                        />
+                      </div>
+                    )}
                   </div>
                 ) : (
                   <>

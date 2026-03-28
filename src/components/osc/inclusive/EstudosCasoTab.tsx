@@ -29,7 +29,8 @@ import {
 } from '@/components/ui/select'
 import { supabase } from '@/lib/supabase/client'
 import { toast } from '@/hooks/use-toast'
-import { Loader2, Plus, Users, Search, ClipboardList } from 'lucide-react'
+import { Loader2, Plus, Users, Search, ClipboardList, ShieldAlert } from 'lucide-react'
+import { SensitiveDataViewer } from '@/components/shared/SensitiveDataViewer'
 
 export function EstudosCasoTab({ tenantId }: { tenantId: string }) {
   const [cases, setCases] = useState<any[]>([])
@@ -103,10 +104,15 @@ export function EstudosCasoTab({ tenantId }: { tenantId: string }) {
 
   return (
     <div className="space-y-6 animate-fade-in">
-      <div className="flex justify-between items-center">
-        <h3 className="text-lg font-bold text-slate-800 flex items-center">
-          <ClipboardList className="h-5 w-5 mr-2 text-blue-600" /> Registro de Estudos de Caso
-        </h3>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <h3 className="text-lg font-bold text-slate-800 flex items-center">
+            <ClipboardList className="h-5 w-5 mr-2 text-blue-600" /> Registro de Estudos de Caso
+          </h3>
+          <p className="text-sm text-muted-foreground mt-1">
+            Dados clínicos mascarados por padrão. O acesso revela a identidade e gera log imutável.
+          </p>
+        </div>
         <Button
           onClick={() => setIsModalOpen(true)}
           className="bg-blue-600 hover:bg-blue-700 text-white"
@@ -142,11 +148,21 @@ export function EstudosCasoTab({ tenantId }: { tenantId: string }) {
                     <TableCell className="font-medium">
                       {c.osc_inclusive_students?.name || c.student_name}
                     </TableCell>
-                    <TableCell className="text-sm text-muted-foreground truncate max-w-[200px]">
-                      {c.demands || '-'}
+                    <TableCell className="text-sm text-muted-foreground max-w-[250px]">
+                      <SensitiveDataViewer
+                        content={c.demands}
+                        context="Demandas/Necessidades"
+                        recordId={c.id}
+                        tenantId={tenantId}
+                      />
                     </TableCell>
-                    <TableCell className="text-sm text-muted-foreground truncate max-w-[200px]">
-                      {c.barriers || '-'}
+                    <TableCell className="text-sm text-muted-foreground max-w-[250px]">
+                      <SensitiveDataViewer
+                        content={c.barriers}
+                        context="Barreiras Identificadas"
+                        recordId={c.id}
+                        tenantId={tenantId}
+                      />
                     </TableCell>
                     <TableCell>
                       <Badge variant="outline" className="bg-blue-50 text-blue-700">

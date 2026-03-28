@@ -27,7 +27,7 @@ import {
 } from '@/components/ui/select'
 import { Label } from '@/components/ui/label'
 import { toast } from '@/hooks/use-toast'
-import { Loader2, FileText, CheckCircle2, AlertCircle, Plus } from 'lucide-react'
+import { Loader2, FileText, CheckCircle2, AlertCircle, Plus, ShieldCheck } from 'lucide-react'
 
 export function PlanosTab({ tenantId }: { tenantId: string }) {
   const [plans, setPlans] = useState<any[]>([])
@@ -86,10 +86,16 @@ export function PlanosTab({ tenantId }: { tenantId: string }) {
 
   return (
     <div className="space-y-6 animate-fade-in">
-      <div className="flex justify-between items-center">
-        <h3 className="text-lg font-bold text-slate-800 flex items-center">
-          <FileText className="h-5 w-5 mr-2 text-blue-600" /> Acompanhamento de PAEE e PEI
-        </h3>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <h3 className="text-lg font-bold text-slate-800 flex items-center">
+            <FileText className="h-5 w-5 mr-2 text-blue-600" /> Acompanhamento de PAEE e PEI
+          </h3>
+          <p className="text-sm text-muted-foreground flex items-center mt-1">
+            <ShieldCheck className="w-3.5 h-3.5 mr-1 text-emerald-600" />
+            Acesso auditado: Plano Educacional Individualizado
+          </p>
+        </div>
         <Button
           onClick={() => setIsModalOpen(true)}
           className="bg-blue-600 hover:bg-blue-700 text-white"

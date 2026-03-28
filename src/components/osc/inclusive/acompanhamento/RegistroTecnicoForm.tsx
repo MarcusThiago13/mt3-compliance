@@ -177,21 +177,30 @@ export function RegistroTecnicoForm({
             />
           </div>
 
-          <div className="p-4 bg-slate-50 border rounded-lg flex items-start gap-4">
-            <ShieldAlert className="h-5 w-5 text-amber-600 mt-0.5" />
+          <div
+            className="p-4 bg-slate-50 border border-slate-200 rounded-lg flex items-start gap-4 transition-colors data-[active=true]:bg-amber-50 data-[active=true]:border-amber-200"
+            data-active={formData.is_secret}
+          >
+            <ShieldAlert
+              className={`h-5 w-5 mt-0.5 ${formData.is_secret ? 'text-amber-600' : 'text-slate-400'}`}
+            />
             <div className="flex-1">
               <div className="flex items-center justify-between">
-                <Label className="font-semibold text-amber-900 cursor-pointer">
-                  Marcação de Sigilo Profissional
+                <Label
+                  className={`font-semibold cursor-pointer ${formData.is_secret ? 'text-amber-900' : 'text-slate-700'}`}
+                >
+                  Marcação de Sigilo Profissional (LGPD)
                 </Label>
                 <Switch
                   checked={formData.is_secret}
                   onCheckedChange={(c) => setFormData({ ...formData, is_secret: c })}
+                  className={formData.is_secret ? 'data-[state=checked]:bg-amber-600' : ''}
                 />
               </div>
               <p className="text-xs text-muted-foreground mt-1">
-                Ative esta opção se o registro contiver informações clínicas ou sensíveis protegidas
-                por sigilo profissional. O conteúdo será ocultado para perfis operacionais.
+                Ative esta opção se o registro contiver informações clínicas, diagnósticos ou dados
+                sensíveis protegidos por sigilo profissional. O conteúdo será criptografado/ocultado
+                e gerará alertas de auditoria ao ser acessado.
               </p>
             </div>
           </div>
