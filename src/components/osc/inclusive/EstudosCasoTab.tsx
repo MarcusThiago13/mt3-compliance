@@ -33,51 +33,65 @@ import { Loader2, Plus, Users, Search, ClipboardList } from 'lucide-react'
 
 export function EstudosCasoTab({ tenantId }: { tenantId: string }) {
   const [cases, setCases] = useState<any[]>([])
+  const [students, setStudents] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [saving, setSaving] = useState(false)
 
   const [formData, setFormData] = useState({
-    student_name: '',
+    student_id: '',
     status: 'Ativo',
     demands: '',
     barriers: '',
     potentialities: '',
   })
 
-  const fetchCases = async () => {
+  const fetchData = async () => {
     setLoading(true)
-    const { data } = await supabase
-      .from('osc_inclusive_cases')
-      .select('*')
-      .eq('tenant_id', tenantId)
-      .order('created_at', { ascending: false })
-    if (data) setCases(data)
+    const [casesRes, studentsRes] = await Promise.all([
+      supabase
+        .from('osc_inclusive_cases')
+        .select('*, osc_inclusive_students(name)')
+        .eq('tenant_id', tenantId)
+        .order('created_at', { ascending: false }),
+      supabase
+        .from('osc_inclusive_students')
+        .select('id, name')
+        .eq('tenant_id', tenantId)
+        .order('name'),
+    ])
+    if (casesRes.data) setCases(casesRes.data)
+    if (studentsRes.data) setStudents(studentsRes.data)
     setLoading(false)
   }
 
   useEffect(() => {
-    if (tenantId) fetchCases()
+    if (tenantId) fetchData()
   }, [tenantId])
 
   const handleSave = async () => {
-    if (!formData.student_name)
+    if (!formData.student_id)
       return toast({
         title: 'Atenção',
-        description: 'O nome do estudante é obrigatório.',
+        description: 'A seleção do estudante é obrigatória.',
         variant: 'destructive',
       })
+
+    // Encontrar o nome do estudante para manter retrocompatibilidade com o campo text
+    const student = students.find((s) => s.id === formData.student_id)
+    const student_name = student ? student.name : 'Desconhecido'
+
     setSaving(true)
     const { error } = await supabase
       .from('osc_inclusive_cases')
-      .insert({ tenant_id: tenantId, ...formData })
+      .insert({ tenant_id: tenantId, student_id: formData.student_id, student_name, ...formData })
     if (error) toast({ title: 'Erro', description: error.message, variant: 'destructive' })
     else {
       toast({ title: 'Sucesso', description: 'Estudo de caso registrado.' })
       setIsModalOpen(false)
-      fetchCases()
+      fetchData()
       setFormData({
-        student_name: '',
+        student_id: '',
         status: 'Ativo',
         demands: '',
         barriers: '',
@@ -125,7 +139,9 @@ export function EstudosCasoTab({ tenantId }: { tenantId: string }) {
               <TableBody>
                 {cases.map((c) => (
                   <TableRow key={c.id}>
-                    <TableCell className="font-medium">{c.student_name}</TableCell>
+                    <TableCell className="font-medium">
+                      {c.osc_inclusive_students?.name || c.student_name}
+                    </TableCell>
                     <TableCell className="text-sm text-muted-foreground truncate max-w-[200px]">
                       {c.demands || '-'}
                     </TableCell>
@@ -152,11 +168,22 @@ export function EstudosCasoTab({ tenantId }: { tenantId: string }) {
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label>Nome do Estudante (Público-Alvo da Educação Especial) *</Label>
-              <Input
-                value={formData.student_name}
-                onChange={(e) => setFormData({ ...formData, student_name: e.target.value })}
-              />
+              <Label>Estudante (Público-Alvo da Educação Especial) *</Label>
+              <Select
+                value={formData.student_id}
+                onValueChange={(v) => setFormData({ ...formData, student_id: v })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione um estudante cadastrado..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {students.map((s) => (
+                    <SelectItem key={s.id} value={s.id}>
+                      {s.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <div className="space-y-2">
               <Label>Demandas e Necessidades Específicas</Label>

@@ -5,6 +5,7 @@ import { EstudosCasoTab } from '@/components/osc/inclusive/EstudosCasoTab'
 import { PlanosTab } from '@/components/osc/inclusive/PlanosTab'
 import { EquipeTab } from '@/components/osc/inclusive/EquipeTab'
 import { IndicadoresTab } from '@/components/osc/inclusive/IndicadoresTab'
+import { UnidadesEstudantesTab } from '@/components/osc/inclusive/UnidadesEstudantesTab'
 
 export default function EducacaoInclusiva() {
   const { tenantId } = useParams<{ tenantId: string }>()
@@ -22,8 +23,14 @@ export default function EducacaoInclusiva() {
         </div>
       </div>
 
-      <Tabs defaultValue="estudos" className="w-full">
-        <TabsList className="grid w-full grid-cols-1 sm:grid-cols-4 lg:w-[800px] h-auto p-1 bg-blue-50">
+      <Tabs defaultValue="unidades" className="w-full">
+        <TabsList className="grid w-full grid-cols-1 sm:grid-cols-5 lg:w-[900px] h-auto p-1 bg-blue-50">
+          <TabsTrigger
+            value="unidades"
+            className="py-2.5 data-[state=active]:bg-white data-[state=active]:text-blue-800"
+          >
+            Unidades e Estudantes
+          </TabsTrigger>
           <TabsTrigger
             value="estudos"
             className="py-2.5 data-[state=active]:bg-white data-[state=active]:text-blue-800"
@@ -51,6 +58,9 @@ export default function EducacaoInclusiva() {
         </TabsList>
 
         <div className="mt-6">
+          <TabsContent value="unidades" className="outline-none m-0">
+            <UnidadesEstudantesTab tenantId={tenantId} />
+          </TabsContent>
           <TabsContent value="estudos" className="outline-none m-0">
             <EstudosCasoTab tenantId={tenantId} />
           </TabsContent>
